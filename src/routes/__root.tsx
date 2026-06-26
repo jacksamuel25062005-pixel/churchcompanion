@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SettingsProvider } from "../lib/settings";
 import { Toaster } from "../components/ui/sonner";
 import { initOneSignal } from "../lib/onesignal";
+import { initDiagnostics } from "../lib/diagnostics";
 
 function NotFoundComponent() {
   return (

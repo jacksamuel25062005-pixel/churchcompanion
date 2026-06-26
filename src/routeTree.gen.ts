@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as DiagnosticsRouteImport } from './routes/diagnostics'
 import { Route as BookmarksRouteImport } from './routes/bookmarks'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -33,6 +34,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DiagnosticsRoute = DiagnosticsRouteImport.update({
+  id: '/diagnostics',
+  path: '/diagnostics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BookmarksRoute = BookmarksRouteImport.update({
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/bookmarks': typeof BookmarksRoute
+  '/diagnostics': typeof DiagnosticsRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
@@ -125,6 +132,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/bookmarks': typeof BookmarksRoute
+  '/diagnostics': typeof DiagnosticsRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
@@ -143,6 +151,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/admin': typeof AdminRoute
   '/bookmarks': typeof BookmarksRoute
+  '/diagnostics': typeof DiagnosticsRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
@@ -161,6 +170,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/bookmarks'
+    | '/diagnostics'
     | '/search'
     | '/settings'
     | '/books/$slug'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/bookmarks'
+    | '/diagnostics'
     | '/search'
     | '/settings'
     | '/books/$slug'
@@ -194,6 +205,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/admin'
     | '/bookmarks'
+    | '/diagnostics'
     | '/search'
     | '/settings'
     | '/books/$slug'
@@ -212,6 +224,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AdminRoute: typeof AdminRoute
   BookmarksRoute: typeof BookmarksRoute
+  DiagnosticsRoute: typeof DiagnosticsRoute
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
   BooksSlugRoute: typeof BooksSlugRoute
@@ -233,6 +246,13 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/diagnostics': {
+      id: '/diagnostics'
+      path: '/diagnostics'
+      fullPath: '/diagnostics'
+      preLoaderRoute: typeof DiagnosticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/bookmarks': {
@@ -355,6 +375,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AdminRoute: AdminRoute,
   BookmarksRoute: BookmarksRoute,
+  DiagnosticsRoute: DiagnosticsRoute,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
   BooksSlugRoute: BooksSlugRoute,
