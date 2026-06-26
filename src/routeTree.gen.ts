@@ -21,6 +21,8 @@ import { Route as BooksSongBookIdRouteImport } from './routes/books/song-book.$i
 import { Route as AuthenticatedAdminUploadRouteImport } from './routes/_authenticated/admin.upload'
 import { Route as AuthenticatedAdminTodayRouteImport } from './routes/_authenticated/admin.today'
 import { Route as AuthenticatedAdminRequestsRouteImport } from './routes/_authenticated/admin.requests'
+import { Route as AuthenticatedAdminNotifyRouteImport } from './routes/_authenticated/admin.notify'
+import { Route as AuthenticatedAdminManageRouteImport } from './routes/_authenticated/admin.manage'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated/admin.dashboard'
 
 const SettingsRoute = SettingsRouteImport.update({
@@ -84,6 +86,18 @@ const AuthenticatedAdminRequestsRoute =
     path: '/admin/requests',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminNotifyRoute =
+  AuthenticatedAdminNotifyRouteImport.update({
+    id: '/admin/notify',
+    path: '/admin/notify',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminManageRoute =
+  AuthenticatedAdminManageRouteImport.update({
+    id: '/admin/manage',
+    path: '/admin/manage',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminDashboardRoute =
   AuthenticatedAdminDashboardRouteImport.update({
     id: '/admin/dashboard',
@@ -99,6 +113,8 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/admin/manage': typeof AuthenticatedAdminManageRoute
+  '/admin/notify': typeof AuthenticatedAdminNotifyRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsRoute
   '/admin/today': typeof AuthenticatedAdminTodayRoute
   '/admin/upload': typeof AuthenticatedAdminUploadRoute
@@ -113,6 +129,8 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/admin/manage': typeof AuthenticatedAdminManageRoute
+  '/admin/notify': typeof AuthenticatedAdminNotifyRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsRoute
   '/admin/today': typeof AuthenticatedAdminTodayRoute
   '/admin/upload': typeof AuthenticatedAdminUploadRoute
@@ -129,6 +147,8 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
   '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/_authenticated/admin/manage': typeof AuthenticatedAdminManageRoute
+  '/_authenticated/admin/notify': typeof AuthenticatedAdminNotifyRoute
   '/_authenticated/admin/requests': typeof AuthenticatedAdminRequestsRoute
   '/_authenticated/admin/today': typeof AuthenticatedAdminTodayRoute
   '/_authenticated/admin/upload': typeof AuthenticatedAdminUploadRoute
@@ -145,6 +165,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/books/$slug'
     | '/admin/dashboard'
+    | '/admin/manage'
+    | '/admin/notify'
     | '/admin/requests'
     | '/admin/today'
     | '/admin/upload'
@@ -159,6 +181,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/books/$slug'
     | '/admin/dashboard'
+    | '/admin/manage'
+    | '/admin/notify'
     | '/admin/requests'
     | '/admin/today'
     | '/admin/upload'
@@ -174,6 +198,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/books/$slug'
     | '/_authenticated/admin/dashboard'
+    | '/_authenticated/admin/manage'
+    | '/_authenticated/admin/notify'
     | '/_authenticated/admin/requests'
     | '/_authenticated/admin/today'
     | '/_authenticated/admin/upload'
@@ -279,6 +305,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRequestsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/notify': {
+      id: '/_authenticated/admin/notify'
+      path: '/admin/notify'
+      fullPath: '/admin/notify'
+      preLoaderRoute: typeof AuthenticatedAdminNotifyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/manage': {
+      id: '/_authenticated/admin/manage'
+      path: '/admin/manage'
+      fullPath: '/admin/manage'
+      preLoaderRoute: typeof AuthenticatedAdminManageRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/dashboard': {
       id: '/_authenticated/admin/dashboard'
       path: '/admin/dashboard'
@@ -291,6 +331,8 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
+  AuthenticatedAdminManageRoute: typeof AuthenticatedAdminManageRoute
+  AuthenticatedAdminNotifyRoute: typeof AuthenticatedAdminNotifyRoute
   AuthenticatedAdminRequestsRoute: typeof AuthenticatedAdminRequestsRoute
   AuthenticatedAdminTodayRoute: typeof AuthenticatedAdminTodayRoute
   AuthenticatedAdminUploadRoute: typeof AuthenticatedAdminUploadRoute
@@ -298,6 +340,8 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
+  AuthenticatedAdminManageRoute: AuthenticatedAdminManageRoute,
+  AuthenticatedAdminNotifyRoute: AuthenticatedAdminNotifyRoute,
   AuthenticatedAdminRequestsRoute: AuthenticatedAdminRequestsRoute,
   AuthenticatedAdminTodayRoute: AuthenticatedAdminTodayRoute,
   AuthenticatedAdminUploadRoute: AuthenticatedAdminUploadRoute,
