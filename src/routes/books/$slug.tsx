@@ -51,7 +51,7 @@ function BookView() {
   useEffect(() => {
     if (!bookQ.data || !sectionsQ.data) return;
     if (!snap) return;
-    saveBook(slug, { book: bookQ.data, sections: sectionsQ.data, at: Date.now() });
+    void saveBook(slug, { book: bookQ.data, sections: sectionsQ.data, at: Date.now() });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookQ.data, sectionsQ.data, slug]);
 
@@ -86,7 +86,7 @@ function BookView() {
       if (error) throw error;
       sections = data as BookSection[];
     }
-    saveBook(slug, { book: book!, sections: sections!, at: Date.now() });
+    await saveBook(slug, { book: book!, sections: sections!, at: Date.now() });
   };
 
   return (
