@@ -6,6 +6,7 @@ import { Card } from "../../components/ui-bits";
 import { toast } from "sonner";
 import type { Book } from "../../lib/types";
 import { FileUp } from "lucide-react";
+import { useAdminGuard } from "../../lib/use-admin-guard";
 
 export const Route = createFileRoute("/_authenticated/admin/upload")({
   component: UploadPage,
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/_authenticated/admin/upload")({
 type Kind = "song" | "section";
 
 function UploadPage() {
+  const { checked } = useAdminGuard();
   const [books, setBooks] = useState<Book[]>([]);
   const [bookId, setBookId] = useState<string>("");
   const [kind, setKind] = useState<Kind>("song");
