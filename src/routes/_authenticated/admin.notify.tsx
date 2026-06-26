@@ -34,6 +34,7 @@ function NotifyPage() {
     }
   };
 
+  if (!checked) return null;
   return (
     <AppShell title="Send notification" left={<Link to="/admin/dashboard" className="-ml-2 text-sm font-medium px-2 py-1.5 rounded-lg hover:bg-accent">‹ Back</Link>} hideNav>
       <div className="pt-4 space-y-4">
