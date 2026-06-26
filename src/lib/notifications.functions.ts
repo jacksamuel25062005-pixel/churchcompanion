@@ -16,11 +16,13 @@ export const sendPushNotification = createServerFn({ method: "POST" })
     return { title, message, url };
   })
   .handler(async ({ data, context }) => {
-    // Verify caller is admin or super_admin
-    const { data: isAdmin, error: roleError } = await context.supabase.rpc("is_admin_or_super", {
-      _user_id: context.userId,
-    });
+    // Verify caller is admin or super_admin via user_roles table (RLS allows self-read)
+    const { data: roles, error: roleError } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId);
     if (roleError) throw new Error(roleError.message);
+    const isAdmin = (roles ?? []).some((r) => r.role === "admin" || r.role === "super_admin");
     if (!isAdmin) throw new Error("Forbidden");
 
     const appId = process.env.ONESIGNAL_APP_ID;

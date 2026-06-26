@@ -6,12 +6,14 @@ import { Card } from "../../components/ui-bits";
 import { toast } from "sonner";
 import type { Song } from "../../lib/types";
 import { Plus, X } from "lucide-react";
+import { useAdminGuard } from "../../lib/use-admin-guard";
 
 export const Route = createFileRoute("/_authenticated/admin/today")({
   component: TodayPicker,
 });
 
 function TodayPicker() {
+  const { checked } = useAdminGuard();
   const today = new Date().toISOString().slice(0, 10);
   const [songs, setSongs] = useState<Song[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -86,6 +88,7 @@ function TodayPicker() {
     }
   };
 
+  if (!checked) return null;
   return (
     <AppShell title="Today's Songs" left={<Link to="/admin/dashboard" className="-ml-2 text-sm font-medium px-2 py-1.5 rounded-lg hover:bg-accent">‹ Back</Link>} hideNav>
       <div className="pt-4 space-y-4">

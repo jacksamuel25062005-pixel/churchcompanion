@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../../components/AppShell";
 import { BackButton, Card } from "../../components/ui-bits";
 import { toast } from "sonner";
+import { useAdminGuard } from "../../lib/use-admin-guard";
 
 export const Route = createFileRoute("/_authenticated/admin/requests")({
   component: RequestsPage,
@@ -19,6 +20,7 @@ interface Req {
 }
 
 function RequestsPage() {
+  const { checked } = useAdminGuard();
   const [items, setItems] = useState<Req[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,6 +53,7 @@ function RequestsPage() {
     else { toast.success(`Request ${status}`); load(); }
   };
 
+  if (!checked) return null;
   return (
     <AppShell title="Admin requests" left={<Link to="/admin/dashboard" className="-ml-2 text-sm font-medium px-2 py-1.5 rounded-lg hover:bg-accent">‹ Back</Link>} hideNav>
       <div className="pt-4 space-y-3">

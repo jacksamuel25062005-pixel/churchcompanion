@@ -6,12 +6,14 @@ import { Card } from "../../components/ui-bits";
 import { toast } from "sonner";
 import { Bell } from "lucide-react";
 import { sendPushNotification } from "../../lib/notifications.functions";
+import { useAdminGuard } from "../../lib/use-admin-guard";
 
 export const Route = createFileRoute("/_authenticated/admin/notify")({
   component: NotifyPage,
 });
 
 function NotifyPage() {
+  const { checked } = useAdminGuard();
   const send = useServerFn(sendPushNotification);
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
@@ -32,6 +34,7 @@ function NotifyPage() {
     }
   };
 
+  if (!checked) return null;
   return (
     <AppShell title="Send notification" left={<Link to="/admin/dashboard" className="-ml-2 text-sm font-medium px-2 py-1.5 rounded-lg hover:bg-accent">‹ Back</Link>} hideNav>
       <div className="pt-4 space-y-4">
