@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SettingsProvider } from "../lib/settings";
 import { Toaster } from "../components/ui/sonner";
+import { initOneSignal } from "../lib/onesignal";
 
 function NotFoundComponent() {
   return (
@@ -122,6 +123,10 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    initOneSignal();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

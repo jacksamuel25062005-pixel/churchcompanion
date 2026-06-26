@@ -165,9 +165,24 @@ function UploadPage() {
             <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={10} className="mt-1 w-full rounded-xl border bg-secondary px-3 py-2 text-sm font-hi" />
           </label>
 
-          <button onClick={publish} disabled={saving} className="w-full rounded-xl brand-bg py-3 text-sm font-semibold disabled:opacity-50">
-            {saving ? "Publishing…" : "Publish to library"}
-          </button>
+          <div className="flex gap-2">
+            <button onClick={publish} disabled={saving} className="flex-1 rounded-xl brand-bg py-3 text-sm font-semibold disabled:opacity-50">
+              {saving ? "Publishing…" : "Publish to library"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (saving) return;
+                if (!(titleHi || titleEn || number || body)) return;
+                if (!confirm("Clear all fields and start over?")) return;
+                setTitleHi(""); setTitleEn(""); setNumber(""); setBody("");
+                toast.success("Cleared — write fresh");
+              }}
+              className="rounded-xl border px-4 py-3 text-sm font-semibold hover:bg-accent"
+            >
+              Clear
+            </button>
+          </div>
         </Card>
       </div>
     </AppShell>
