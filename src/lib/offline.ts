@@ -1,19 +1,23 @@
-// Offline content snapshots: persist books / songs / today's set in
-// localStorage so users can read without a network connection.
+// Offline content snapshots persisted to IndexedDB (via idb-keyval), with a
+// small metadata index kept in localStorage so the UI can render download
+// status synchronously. Snapshots themselves are stored in IDB to avoid the
+// ~5MB localStorage cap and to keep big books fast.
 
+import { del, get, set } from "idb-keyval";
+import { useEffect, useState } from "react";
 import type { Book, BookSection, Song, TodaySet } from "./types";
 
 const PREFIX = "cc.offline.";
-const INDEX_KEY = `${PREFIX}index`;
+const INDEX_KEY = "cc.offline.index.v2";
 
 export type OfflineKind = "song-book" | "book" | "today";
 
 export interface OfflineEntry {
-  key: string; // storage key
+  key: string;
   kind: OfflineKind;
-  slug: string; // "song-book", book slug, or "today"
+  slug: string;
   label: string;
-  count: number; // songs or sections
+  count: number;
   bytes: number;
   at: number;
 }
@@ -35,44 +39,19 @@ export interface TodaySnap {
   for_date: string;
 }
 
-function read<T>(key: string, fallback: T): T {
-  if (typeof window === "undefined") return fallback;
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function write(key: string, value: unknown): number {
-  if (typeof window === "undefined") return 0;
-  const raw = JSON.stringify(value);
-  try {
-    localStorage.setItem(key, raw);
-  } catch (e) {
-    throw new Error("Storage full. Remove other downloads and try again.");
-  }
-  try {
-    window.dispatchEvent(new CustomEvent("cc:offline"));
-  } catch {}
-  return raw.length;
-}
-
-function remove(key: string) {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.removeItem(key);
-  } catch {}
-  try {
-    window.dispatchEvent(new CustomEvent("cc:offline"));
-  } catch {}
-}
+// ---------------- Index (localStorage, sync) ----------------
 
 function readIndex(): Record<string, OfflineEntry> {
-  return read<Record<string, OfflineEntry>>(INDEX_KEY, {});
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(INDEX_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, OfflineEntry>) : {};
+  } catch {
+    return {};
+  }
 }
 function writeIndex(idx: Record<string, OfflineEntry>) {
+  if (typeof window === "undefined") return;
   try {
     localStorage.setItem(INDEX_KEY, JSON.stringify(idx));
   } catch {}
@@ -80,7 +59,6 @@ function writeIndex(idx: Record<string, OfflineEntry>) {
     window.dispatchEvent(new CustomEvent("cc:offline"));
   } catch {}
 }
-
 function setIndex(entry: OfflineEntry) {
   const idx = readIndex();
   idx[entry.key] = entry;
@@ -92,14 +70,44 @@ function unsetIndex(key: string) {
   writeIndex(idx);
 }
 
-// ----- Song Book ----------------------------------------------------------
+// ---------------- IDB helpers ----------------
+
+async function putSnap(key: string, value: unknown): Promise<number> {
+  await set(key, value);
+  try {
+    return JSON.stringify(value).length;
+  } catch {
+    return 0;
+  }
+}
+async function getSnap<T>(key: string): Promise<T | null> {
+  try {
+    const v = await get<T>(key);
+    return (v ?? null) as T | null;
+  } catch {
+    return null;
+  }
+}
+
+// ---------------- Keys ----------------
 
 const songBookKey = () => `${PREFIX}song-book`;
+const bookKey = (slug: string) => `${PREFIX}book.${slug}`;
+const todayKey = () => `${PREFIX}today`;
 
-export function saveSongBook(snap: SongBookSnap) {
-  const bytes = write(songBookKey(), snap);
+export const OFFLINE_KEYS = {
+  songBook: songBookKey,
+  book: bookKey,
+  today: todayKey,
+};
+
+// ---------------- Song Book ----------------
+
+export async function saveSongBook(snap: SongBookSnap) {
+  const key = songBookKey();
+  const bytes = await putSnap(key, snap);
   setIndex({
-    key: songBookKey(),
+    key,
     kind: "song-book",
     slug: "song-book",
     label: snap.book.title_en || snap.book.title_hi || "Song Book",
@@ -108,22 +116,17 @@ export function saveSongBook(snap: SongBookSnap) {
     at: snap.at,
   });
 }
-export function getSongBookSnap(): SongBookSnap | null {
-  return read<SongBookSnap | null>(songBookKey(), null);
-}
-export function getCachedSong(id: string): Song | null {
-  const snap = getSongBookSnap();
-  return snap?.songs.find((s) => s.id === id) ?? null;
+export async function loadSongBookSnap(): Promise<SongBookSnap | null> {
+  return getSnap<SongBookSnap>(songBookKey());
 }
 
-// ----- Generic Book (sections) -------------------------------------------
+// ---------------- Generic Book ----------------
 
-const bookKey = (slug: string) => `${PREFIX}book.${slug}`;
-
-export function saveBook(slug: string, snap: BookSnap) {
-  const bytes = write(bookKey(slug), snap);
+export async function saveBook(slug: string, snap: BookSnap) {
+  const key = bookKey(slug);
+  const bytes = await putSnap(key, snap);
   setIndex({
-    key: bookKey(slug),
+    key,
     kind: "book",
     slug,
     label: snap.book.title_en || snap.book.title_hi || slug,
@@ -132,18 +135,17 @@ export function saveBook(slug: string, snap: BookSnap) {
     at: snap.at,
   });
 }
-export function getBookSnap(slug: string): BookSnap | null {
-  return read<BookSnap | null>(bookKey(slug), null);
+export async function loadBookSnap(slug: string): Promise<BookSnap | null> {
+  return getSnap<BookSnap>(bookKey(slug));
 }
 
-// ----- Today --------------------------------------------------------------
+// ---------------- Today ----------------
 
-const todayKey = () => `${PREFIX}today`;
-
-export function saveToday(snap: TodaySnap) {
-  const bytes = write(todayKey(), snap);
+export async function saveToday(snap: TodaySnap) {
+  const key = todayKey();
+  const bytes = await putSnap(key, snap);
   setIndex({
-    key: todayKey(),
+    key,
     kind: "today",
     slug: "today",
     label: snap.set?.title || "Today's Songs",
@@ -152,14 +154,16 @@ export function saveToday(snap: TodaySnap) {
     at: snap.at,
   });
 }
-export function getTodaySnap(): TodaySnap | null {
-  return read<TodaySnap | null>(todayKey(), null);
+export async function loadTodaySnap(): Promise<TodaySnap | null> {
+  return getSnap<TodaySnap>(todayKey());
 }
 
-// ----- Removal & listing --------------------------------------------------
+// ---------------- Removal & listing ----------------
 
-export function removeOffline(key: string) {
-  remove(key);
+export async function removeOffline(key: string) {
+  try {
+    await del(key);
+  } catch {}
   unsetIndex(key);
 }
 export function listOffline(): OfflineEntry[] {
@@ -175,10 +179,9 @@ export function formatBytes(n: number): string {
   return `${(n / (1024 * 1024)).toFixed(2)} MB`;
 }
 
-// React hook to subscribe to offline changes.
-import { useEffect, useState } from "react";
+// ---------------- Hooks ----------------
 
-export function useOfflineIndex() {
+function useOfflineTick() {
   const [tick, setTick] = useState(0);
   useEffect(() => {
     const h = () => setTick((x) => x + 1);
@@ -189,8 +192,11 @@ export function useOfflineIndex() {
       window.removeEventListener("storage", h);
     };
   }, []);
-  // tick used only to trigger re-render
-  void tick;
+  return tick;
+}
+
+export function useOfflineIndex() {
+  useOfflineTick();
   return listOffline();
 }
 
@@ -199,8 +205,28 @@ export function useIsDownloaded(key: string) {
   return list.find((e) => e.key === key) ?? null;
 }
 
-export const OFFLINE_KEYS = {
-  songBook: songBookKey,
-  book: bookKey,
-  today: todayKey,
-};
+function useIdbSnap<T>(loader: () => Promise<T | null>, deps: unknown[] = []) {
+  const tick = useOfflineTick();
+  const [snap, setSnap] = useState<T | null>(null);
+  useEffect(() => {
+    let alive = true;
+    loader().then((v) => {
+      if (alive) setSnap(v);
+    });
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tick, ...deps]);
+  return snap;
+}
+
+export function useSongBookSnap() {
+  return useIdbSnap<SongBookSnap>(loadSongBookSnap);
+}
+export function useBookSnap(slug: string) {
+  return useIdbSnap<BookSnap>(() => loadBookSnap(slug), [slug]);
+}
+export function useTodaySnap() {
+  return useIdbSnap<TodaySnap>(loadTodaySnap);
+}
