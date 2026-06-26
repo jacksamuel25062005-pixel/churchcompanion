@@ -4,8 +4,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../components/AppShell";
 import { Card } from "../components/ui-bits";
+import { OfflineButton } from "../components/OfflineButton";
 import { useT, pickLang } from "../lib/i18n";
 import { Music, BookOpen, Sparkles } from "lucide-react";
+import { getTodaySnap, saveToday, removeOffline, OFFLINE_KEYS } from "../lib/offline";
 import type { Book, Song } from "../lib/types";
 
 export const Route = createFileRoute("/")({
