@@ -118,7 +118,7 @@ function BookView() {
           ) : !sectionsQ.data || sectionsQ.data.length === 0 ? (
             <EmptyState title={t("common.empty")} hint="Admins can upload content from the Admin section." />
           ) : (
-            sectionsQ.data.map((s) => (
+            sectionsQ.data.map((s: BookSection) => (
               <SectionCard key={s.id} section={s} slug={slug} />
             ))
           )}
