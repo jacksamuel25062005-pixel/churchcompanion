@@ -110,6 +110,7 @@ function UploadPage() {
     }
   };
 
+  if (!checked) return null;
   return (
     <AppShell title="Upload content" left={<Link to="/admin/dashboard" className="-ml-2 text-sm font-medium px-2 py-1.5 rounded-lg hover:bg-accent">‹ Back</Link>} hideNav>
       <div className="pt-6 pb-10 space-y-5 font-display">
