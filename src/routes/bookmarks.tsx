@@ -4,6 +4,7 @@ import { AppShell } from "../components/AppShell";
 import { EmptyState } from "../components/ui-bits";
 import { useT } from "../lib/i18n";
 import { bookmarks, continueReading, type Bookmark, type ContinueItem } from "../lib/storage";
+import { supabase } from "@/integrations/supabase/client";
 import { Trash2, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/bookmarks")({
@@ -11,15 +12,65 @@ export const Route = createFileRoute("/bookmarks")({
   component: BookmarksPage,
 });
 
+async function pruneStaleBookmarks(list: Bookmark[]): Promise<Bookmark[]> {
+  if (list.length === 0) return list;
+  const songIds = list.filter((b) => b.kind === "song").map((b) => b.id);
+  const sectionIds = list.filter((b) => b.kind === "section").map((b) => b.id);
+  const valid = new Set<string>();
+  try {
+    if (songIds.length) {
+      const { data } = await supabase.from("songs").select("id").in("id", songIds);
+      data?.forEach((r: any) => valid.add(r.id));
+    }
+    if (sectionIds.length) {
+      const { data } = await supabase.from("book_sections").select("id").in("id", sectionIds);
+      data?.forEach((r: any) => valid.add(r.id));
+    }
+  } catch {
+    // Network/offline: don't prune — keep current list.
+    return list;
+  }
+  const kept = list.filter((b) => valid.has(b.id));
+  if (kept.length !== list.length) {
+    list.filter((b) => !valid.has(b.id)).forEach((b) => bookmarks.remove(b.id));
+  }
+  return kept;
+}
+
+async function pruneContinue(c: ContinueItem | null): Promise<ContinueItem | null> {
+  if (!c) return null;
+  try {
+    const table = c.kind === "song" ? "songs" : "book_sections";
+    const { data } = await supabase.from(table).select("id").eq("id", c.id).maybeSingle();
+    if (!data) { continueReading.clear(); return null; }
+    return c;
+  } catch {
+    return c;
+  }
+}
+
 function BookmarksPage() {
   const { t } = useT();
   const [list, setList] = useState<Bookmark[]>([]);
   const [cont, setCont] = useState<ContinueItem | null>(null);
+
   useEffect(() => {
-    const refresh = () => { setList(bookmarks.list()); setCont(continueReading.get()); };
+    let alive = true;
+    const refresh = async () => {
+      const raw = bookmarks.list();
+      const rawCont = continueReading.get();
+      // Show local data immediately, then prune async.
+      if (alive) { setList(raw); setCont(rawCont); }
+      const [pruned, prunedCont] = await Promise.all([
+        pruneStaleBookmarks(raw),
+        pruneContinue(rawCont),
+      ]);
+      if (alive) { setList(pruned); setCont(prunedCont); }
+    };
     refresh();
-    window.addEventListener("cc:storage", refresh);
-    return () => window.removeEventListener("cc:storage", refresh);
+    const handler = () => refresh();
+    window.addEventListener("cc:storage", handler);
+    return () => { alive = false; window.removeEventListener("cc:storage", handler); };
   }, []);
 
   return (

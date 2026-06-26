@@ -4,9 +4,10 @@ import { Bell, BellOff } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "../components/AppShell";
 import { Card } from "../components/ui-bits";
+import { Switch } from "../components/ui/switch";
 import { useT } from "../lib/i18n";
 import { ACCENT_PRESETS, useSettings, type FontSize, type ThemeMode, type Language } from "../lib/settings";
-import { getPushPermission, promptForPush } from "../lib/onesignal";
+import { getPushPermission, promptForPush, setPushOptIn, getPushOptedIn } from "../lib/onesignal";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Settings — Church Companion" }] }),
@@ -92,17 +93,33 @@ function Section({ label, children }: { label: string; children: React.ReactNode
 
 function NotificationsSection() {
   const [perm, setPerm] = useState<"granted" | "denied" | "default" | "unsupported">("default");
+  const [optedIn, setOptedIn] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => { getPushPermission().then(setPerm); }, []);
+  useEffect(() => {
+    getPushPermission().then(setPerm);
+    getPushOptedIn().then(setOptedIn);
+  }, []);
 
   const enable = async () => {
     setBusy(true);
     try {
       const ok = await promptForPush();
       setPerm(ok ? "granted" : (Notification.permission as any));
-      if (ok) toast.success("Notifications enabled");
-      else toast.error("Permission not granted");
+      if (ok) {
+        await setPushOptIn(true);
+        setOptedIn(true);
+        toast.success("Notifications enabled");
+      } else toast.error("Permission not granted");
+    } finally { setBusy(false); }
+  };
+
+  const toggle = async (next: boolean) => {
+    setBusy(true);
+    try {
+      await setPushOptIn(next);
+      setOptedIn(next);
+      toast.success(next ? "Push notifications on" : "Push notifications off");
     } finally { setBusy(false); }
   };
 
@@ -112,7 +129,13 @@ function NotificationsSection() {
         {perm === "unsupported" ? (
           <p className="text-xs text-muted-foreground">Push notifications are not supported on this device.</p>
         ) : perm === "granted" ? (
-          <div className="flex items-center gap-2 text-sm"><Bell className="h-4 w-4 brand-text" /> You'll receive new song & service alerts.</div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-sm">
+              {optedIn ? <Bell className="h-4 w-4 brand-text" /> : <BellOff className="h-4 w-4 text-muted-foreground" />}
+              <span>{optedIn ? "Push notifications on" : "Push notifications off"}</span>
+            </div>
+            <Switch checked={optedIn} onCheckedChange={toggle} disabled={busy} aria-label="Toggle push notifications" />
+          </div>
         ) : perm === "denied" ? (
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-sm"><BellOff className="h-4 w-4 text-muted-foreground" /> Notifications are blocked.</div>
