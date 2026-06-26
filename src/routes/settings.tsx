@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Bell, BellOff } from "lucide-react";
 import { toast } from "sonner";
@@ -72,8 +72,9 @@ function SettingsPage() {
 
         <NotificationsSection />
 
-        <Card className="p-4 text-xs text-muted-foreground">
+        <Card className="p-4 text-xs text-muted-foreground space-y-2">
           <p>Bookmarks and preferences are stored on this device only.</p>
+          <Link to="/diagnostics" className="inline-block text-foreground font-medium underline-offset-2 hover:underline">Open diagnostics →</Link>
         </Card>
       </div>
     </AppShell>
