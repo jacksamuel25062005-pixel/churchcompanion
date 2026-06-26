@@ -25,19 +25,15 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground relative">
-      {/* Ambient orbs — Lovable-style soft color wash */}
+      {/* Ambient orbs — kept light for mid-range GPUs (two fixed layers, no animation) */}
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         <div
-          className="absolute -top-32 -left-24 h-[420px] w-[420px] rounded-full opacity-50 blur-3xl"
-          style={{ background: "radial-gradient(circle, color-mix(in oklab, var(--brand) 55%, transparent), transparent 70%)" }}
+          className="absolute -top-24 -left-20 h-[360px] w-[360px] rounded-full opacity-40 blur-3xl"
+          style={{ background: "radial-gradient(circle, color-mix(in oklab, var(--brand) 50%, transparent), transparent 70%)", transform: "translateZ(0)" }}
         />
         <div
-          className="absolute top-1/3 -right-32 h-[380px] w-[380px] rounded-full opacity-35 blur-3xl"
-          style={{ background: "radial-gradient(circle, color-mix(in oklab, var(--brand) 35%, transparent), transparent 70%)" }}
-        />
-        <div
-          className="absolute bottom-0 left-1/3 h-[320px] w-[320px] rounded-full opacity-30 blur-3xl"
-          style={{ background: "radial-gradient(circle, color-mix(in oklab, var(--brand) 25%, transparent), transparent 70%)" }}
+          className="absolute bottom-0 right-0 h-[320px] w-[320px] rounded-full opacity-25 blur-3xl"
+          style={{ background: "radial-gradient(circle, color-mix(in oklab, var(--brand) 30%, transparent), transparent 70%)", transform: "translateZ(0)" }}
         />
       </div>
 
