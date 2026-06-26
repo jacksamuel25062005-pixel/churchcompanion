@@ -8,7 +8,7 @@ import { OfflineButton } from "../../components/OfflineButton";
 import { useT, pickLang } from "../../lib/i18n";
 import { useBrandOverride } from "../../lib/settings";
 import {
-  getSongBookSnap,
+  useSongBookSnap,
   saveSongBook,
   removeOffline,
   OFFLINE_KEYS,
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/books/song-book/")({
 function SongList() {
   const { t, language } = useT();
   const [q, setQ] = useState("");
-  const snap = typeof window !== "undefined" ? getSongBookSnap() : null;
+  const snap = useSongBookSnap();
 
   const bookQ = useQuery({
     queryKey: ["book", "song-book"],
@@ -61,7 +61,7 @@ function SongList() {
   useEffect(() => {
     if (!bookQ.data || !songsQ.data) return;
     if (!snap) return; // only auto-refresh when user opted in
-    saveSongBook({ book: bookQ.data, songs: songsQ.data, at: Date.now() });
+    void saveSongBook({ book: bookQ.data, songs: songsQ.data, at: Date.now() });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookQ.data, songsQ.data]);
 
@@ -94,7 +94,7 @@ function SongList() {
       if (error) throw error;
       songs = data as Song[];
     }
-    saveSongBook({ book: book!, songs: songs!, at: Date.now() });
+    await saveSongBook({ book: book!, songs: songs!, at: Date.now() });
   };
 
   return (

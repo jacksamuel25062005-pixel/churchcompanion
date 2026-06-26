@@ -11,6 +11,8 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { SettingsProvider } from "../lib/settings";
+import { Toaster } from "../components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -76,10 +78,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "Church Campanion" },
       { name: "description", content: "A Hindi-language Android app serving as a digital church library and worship companion." },
       { name: "author", content: "Lovable" },
+      { name: "theme-color", content: "#0f172a" },
       { property: "og:title", content: "Church Campanion" },
       { property: "og:description", content: "A Hindi-language Android app serving as a digital church library and worship companion." },
       { property: "og:type", content: "website" },
@@ -91,10 +94,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/4nh01HXxQAhVOtX2WoD9BwamItV2/social-images/social-1782457063060-1000552170.webp" },
     ],
     links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
+      { rel: "stylesheet", href: appCss },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/icon-192.png" },
+      { rel: "icon", type: "image/png", href: "/icon-192.png" },
     ],
   }),
   shellComponent: RootShell,
@@ -122,8 +125,10 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <SettingsProvider>
+        <Outlet />
+        <Toaster />
+      </SettingsProvider>
     </QueryClientProvider>
   );
 }

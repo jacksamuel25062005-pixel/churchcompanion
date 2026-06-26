@@ -8,7 +8,7 @@ import { OfflineButton } from "../../components/OfflineButton";
 import { useT, pickLang } from "../../lib/i18n";
 import { useBrandOverride } from "../../lib/settings";
 import { continueReading } from "../../lib/storage";
-import { getBookSnap, saveBook, removeOffline, OFFLINE_KEYS } from "../../lib/offline";
+import { useBookSnap, saveBook, removeOffline, OFFLINE_KEYS } from "../../lib/offline";
 import type { Book, BookSection } from "../../lib/types";
 
 export const Route = createFileRoute("/books/$slug")({
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/books/$slug")({
 function BookView() {
   const { slug } = useParams({ from: "/books/$slug" });
   const { t, language } = useT();
-  const snap = typeof window !== "undefined" ? getBookSnap(slug) : null;
+  const snap = useBookSnap(slug);
 
   const bookQ = useQuery({
     queryKey: ["book", slug],
@@ -51,7 +51,7 @@ function BookView() {
   useEffect(() => {
     if (!bookQ.data || !sectionsQ.data) return;
     if (!snap) return;
-    saveBook(slug, { book: bookQ.data, sections: sectionsQ.data, at: Date.now() });
+    void saveBook(slug, { book: bookQ.data, sections: sectionsQ.data, at: Date.now() });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookQ.data, sectionsQ.data, slug]);
 
@@ -86,7 +86,7 @@ function BookView() {
       if (error) throw error;
       sections = data as BookSection[];
     }
-    saveBook(slug, { book: book!, sections: sections!, at: Date.now() });
+    await saveBook(slug, { book: book!, sections: sections!, at: Date.now() });
   };
 
   return (
@@ -118,7 +118,7 @@ function BookView() {
           ) : !sectionsQ.data || sectionsQ.data.length === 0 ? (
             <EmptyState title={t("common.empty")} hint="Admins can upload content from the Admin section." />
           ) : (
-            sectionsQ.data.map((s) => (
+            sectionsQ.data.map((s: BookSection) => (
               <SectionCard key={s.id} section={s} slug={slug} />
             ))
           )}
