@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import { Trash2, Copy, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "../components/AppShell";
@@ -13,11 +13,13 @@ export const Route = createFileRoute("/diagnostics")({
 });
 
 function useEntries(): DiagEntry[] {
-  return useSyncExternalStore(
-    (cb) => subscribe(cb),
-    () => getEntries(),
-    () => [],
-  );
+  const [entries, setEntries] = useState<DiagEntry[]>([]);
+  useEffect(() => {
+    setEntries(getEntries());
+    const unsub = subscribe(() => setEntries(getEntries()));
+    return () => { unsub(); };
+  }, []);
+  return entries;
 }
 
 function DiagnosticsPage() {
