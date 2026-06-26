@@ -23,12 +23,15 @@ function useEntries(): DiagEntry[] {
 }
 
 function DiagnosticsPage() {
+  const [mounted, setMounted] = useState(false);
   const entries = useEntries();
   const [filter, setFilter] = useState<DiagLevel | "all">("all");
   const [storage, setStorage] = useState<{ usage?: number; quota?: number }>({});
-  const offline = listOffline();
+  const [offline, setOffline] = useState<ReturnType<typeof listOffline>>([]);
 
   useEffect(() => {
+    setMounted(true);
+    setOffline(listOffline());
     if (navigator?.storage?.estimate) {
       navigator.storage.estimate().then((e) => setStorage({ usage: e.usage, quota: e.quota }));
     }
@@ -52,11 +55,12 @@ function DiagnosticsPage() {
     <AppShell title="Diagnostics">
       <div className="pt-4 space-y-4">
         <Card className="p-4 space-y-2 text-xs">
-          <div className="flex justify-between"><span className="text-muted-foreground">User Agent</span><span className="truncate max-w-[60%] text-right">{typeof navigator !== "undefined" ? navigator.userAgent : "—"}</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Online</span><span>{typeof navigator !== "undefined" && navigator.onLine ? "Yes" : "No"}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">User Agent</span><span className="truncate max-w-[60%] text-right">{mounted ? navigator.userAgent : "—"}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Online</span><span>{mounted ? (navigator.onLine ? "Yes" : "No") : "—"}</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Storage</span><span>{storage.usage != null ? `${formatBytes(storage.usage)} / ${formatBytes(storage.quota ?? 0)}` : "—"}</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Offline packs</span><span>{offline.length} ({formatBytes(offline.reduce((a, b) => a + b.bytes, 0))})</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Offline packs</span><span>{mounted ? `${offline.length} (${formatBytes(offline.reduce((a, b) => a + b.bytes, 0))})` : "—"}</span></div>
         </Card>
+
 
         <div className="flex items-center gap-2">
           <div className="flex rounded-xl bg-secondary p-1 text-xs font-medium">
