@@ -124,35 +124,51 @@
   &:active { transform: scale(0.97); }
 }
 
-/* Glass surfaces — Lovable-style frosted panels */
+/* Glass surfaces — Lovable-style frosted panels. Blur amounts kept moderate
+   for mid-range Android GPUs; use `will-change` so the compositor promotes
+   them to their own layer instead of repainting on scroll. */
 @utility glass {
-  background: color-mix(in oklab, var(--color-card) 55%, transparent);
-  backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid color-mix(in oklab, var(--color-foreground) 10%, transparent);
-  box-shadow:
-    0 1px 0 0 color-mix(in oklab, white 40%, transparent) inset,
-    0 10px 30px -12px color-mix(in oklab, black 35%, transparent);
-}
-.dark .glass {
-  background: color-mix(in oklab, var(--color-card) 50%, transparent);
-  box-shadow:
-    0 1px 0 0 color-mix(in oklab, white 8%, transparent) inset,
-    0 14px 40px -14px color-mix(in oklab, black 70%, transparent);
-}
-@utility glass-strong {
-  background: color-mix(in oklab, var(--color-card) 72%, transparent);
-  backdrop-filter: blur(32px) saturate(180%);
-  border: 1px solid color-mix(in oklab, var(--color-foreground) 12%, transparent);
-}
-@utility glass-chip {
   background: color-mix(in oklab, var(--color-card) 60%, transparent);
   backdrop-filter: blur(18px) saturate(160%);
   border: 1px solid color-mix(in oklab, var(--color-foreground) 10%, transparent);
+  box-shadow:
+    0 1px 0 0 color-mix(in oklab, white 35%, transparent) inset,
+    0 10px 24px -14px color-mix(in oklab, black 35%, transparent);
+  will-change: backdrop-filter;
 }
+.dark .glass {
+  background: color-mix(in oklab, var(--color-card) 55%, transparent);
+  box-shadow:
+    0 1px 0 0 color-mix(in oklab, white 8%, transparent) inset,
+    0 14px 32px -16px color-mix(in oklab, black 70%, transparent);
+}
+@utility glass-strong {
+  background: color-mix(in oklab, var(--color-card) 75%, transparent);
+  backdrop-filter: blur(22px) saturate(160%);
+  border: 1px solid color-mix(in oklab, var(--color-foreground) 12%, transparent);
+  will-change: backdrop-filter;
+}
+@utility glass-chip {
+  background: color-mix(in oklab, var(--color-card) 65%, transparent);
+  backdrop-filter: blur(12px) saturate(150%);
+  border: 1px solid color-mix(in oklab, var(--color-foreground) 10%, transparent);
+}
+@utility font-display { font-family: var(--font-display); letter-spacing: -0.011em; }
 
 /* Soft fade-in for splash & route mounts */
 @keyframes cc-fade-up {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.animate-fade-up { animation: cc-fade-up 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.animate-fade-up { animation: cc-fade-up 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+/* Respect reduced-motion and pull back expensive effects on low-end devices */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  .animate-fade-up { animation: none !important; }
+}
+@media (max-width: 380px) {
+  .glass { backdrop-filter: blur(14px) saturate(150%); }
+  .glass-strong { backdrop-filter: blur(18px) saturate(150%); }
+}
+
