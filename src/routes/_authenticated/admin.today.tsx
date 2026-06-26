@@ -6,12 +6,14 @@ import { Card } from "../../components/ui-bits";
 import { toast } from "sonner";
 import type { Song } from "../../lib/types";
 import { Plus, X } from "lucide-react";
+import { useAdminGuard } from "../../lib/use-admin-guard";
 
 export const Route = createFileRoute("/_authenticated/admin/today")({
   component: TodayPicker,
 });
 
 function TodayPicker() {
+  const { checked } = useAdminGuard();
   const today = new Date().toISOString().slice(0, 10);
   const [songs, setSongs] = useState<Song[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
