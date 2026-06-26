@@ -9,38 +9,141 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SearchRouteImport } from './routes/search'
+import { Route as BookmarksRouteImport } from './routes/bookmarks'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BooksSlugRouteImport } from './routes/books/$slug'
+import { Route as BooksSongBookIndexRouteImport } from './routes/books/song-book.index'
+import { Route as BooksSongBookIdRouteImport } from './routes/books/song-book.$id'
 
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookmarksRoute = BookmarksRouteImport.update({
+  id: '/bookmarks',
+  path: '/bookmarks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BooksSlugRoute = BooksSlugRouteImport.update({
+  id: '/books/$slug',
+  path: '/books/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BooksSongBookIndexRoute = BooksSongBookIndexRouteImport.update({
+  id: '/books/song-book/',
+  path: '/books/song-book/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BooksSongBookIdRoute = BooksSongBookIdRouteImport.update({
+  id: '/books/song-book/$id',
+  path: '/books/song-book/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/bookmarks': typeof BookmarksRoute
+  '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
+  '/books/$slug': typeof BooksSlugRoute
+  '/books/song-book/$id': typeof BooksSongBookIdRoute
+  '/books/song-book/': typeof BooksSongBookIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/bookmarks': typeof BookmarksRoute
+  '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
+  '/books/$slug': typeof BooksSlugRoute
+  '/books/song-book/$id': typeof BooksSongBookIdRoute
+  '/books/song-book': typeof BooksSongBookIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/bookmarks': typeof BookmarksRoute
+  '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
+  '/books/$slug': typeof BooksSlugRoute
+  '/books/song-book/$id': typeof BooksSongBookIdRoute
+  '/books/song-book/': typeof BooksSongBookIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/bookmarks'
+    | '/search'
+    | '/settings'
+    | '/books/$slug'
+    | '/books/song-book/$id'
+    | '/books/song-book/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/bookmarks'
+    | '/search'
+    | '/settings'
+    | '/books/$slug'
+    | '/books/song-book/$id'
+    | '/books/song-book'
+  id:
+    | '__root__'
+    | '/'
+    | '/bookmarks'
+    | '/search'
+    | '/settings'
+    | '/books/$slug'
+    | '/books/song-book/$id'
+    | '/books/song-book/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BookmarksRoute: typeof BookmarksRoute
+  SearchRoute: typeof SearchRoute
+  SettingsRoute: typeof SettingsRoute
+  BooksSlugRoute: typeof BooksSlugRoute
+  BooksSongBookIdRoute: typeof BooksSongBookIdRoute
+  BooksSongBookIndexRoute: typeof BooksSongBookIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bookmarks': {
+      id: '/bookmarks'
+      path: '/bookmarks'
+      fullPath: '/bookmarks'
+      preLoaderRoute: typeof BookmarksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +151,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/books/$slug': {
+      id: '/books/$slug'
+      path: '/books/$slug'
+      fullPath: '/books/$slug'
+      preLoaderRoute: typeof BooksSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/books/song-book/': {
+      id: '/books/song-book/'
+      path: '/books/song-book'
+      fullPath: '/books/song-book/'
+      preLoaderRoute: typeof BooksSongBookIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/books/song-book/$id': {
+      id: '/books/song-book/$id'
+      path: '/books/song-book/$id'
+      fullPath: '/books/song-book/$id'
+      preLoaderRoute: typeof BooksSongBookIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BookmarksRoute: BookmarksRoute,
+  SearchRoute: SearchRoute,
+  SettingsRoute: SettingsRoute,
+  BooksSlugRoute: BooksSlugRoute,
+  BooksSongBookIdRoute: BooksSongBookIdRoute,
+  BooksSongBookIndexRoute: BooksSongBookIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

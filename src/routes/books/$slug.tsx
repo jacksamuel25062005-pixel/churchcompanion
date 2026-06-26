@@ -106,13 +106,11 @@ function SectionCard({ section, slug }: { section: BookSection; slug: string }) 
         <span className="text-xs text-muted-foreground group-open:hidden">Open</span>
         <span className="text-xs text-muted-foreground hidden group-open:inline">Close</span>
       </summary>
-      <Card className="mt-2 p-5"
-        onClick={() => {
-          continueReading.set({ id: section.id, kind: "section", bookSlug: slug, title, at: Date.now() });
-        }}
-      >
-        <div className={`reader-prose ${language === "hi" ? "font-hi" : ""}`}>{body}</div>
-      </Card>
+      <div onClick={() => continueReading.set({ id: section.id, kind: "section", bookSlug: slug, title, at: Date.now() })}>
+        <Card className="mt-2 p-5">
+          <div className={`reader-prose ${language === "hi" ? "font-hi" : ""}`}>{body}</div>
+        </Card>
+      </div>
     </details>
   );
 }
