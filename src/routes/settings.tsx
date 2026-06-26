@@ -4,9 +4,10 @@ import { Bell, BellOff } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "../components/AppShell";
 import { Card } from "../components/ui-bits";
+import { Switch } from "../components/ui/switch";
 import { useT } from "../lib/i18n";
 import { ACCENT_PRESETS, useSettings, type FontSize, type ThemeMode, type Language } from "../lib/settings";
-import { getPushPermission, promptForPush } from "../lib/onesignal";
+import { getPushPermission, promptForPush, setPushOptIn, getPushOptedIn } from "../lib/onesignal";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Settings — Church Companion" }] }),
