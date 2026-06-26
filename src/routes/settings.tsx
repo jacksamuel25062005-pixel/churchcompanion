@@ -1,13 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Bell, BellOff } from "lucide-react";
+import { Bell, BellOff, Download, Loader2, CheckCircle2, Trash2, HardDrive } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../components/AppShell";
 import { Card } from "../components/ui-bits";
 import { Switch } from "../components/ui/switch";
 import { useT } from "../lib/i18n";
 import { ACCENT_PRESETS, useSettings, type FontSize, type ThemeMode, type Language } from "../lib/settings";
 import { getPushPermission, promptForPush, setPushOptIn, getPushOptedIn } from "../lib/onesignal";
+import { downloadEntireApp, removeAllOffline, useOfflineIndex, formatBytes, type FullDownloadProgress } from "../lib/offline";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Settings — Church Companion" }] }),
@@ -72,6 +74,8 @@ function SettingsPage() {
         </Section>
 
         <NotificationsSection />
+
+        <OfflineSection />
 
         <Card className="p-4 text-xs text-muted-foreground space-y-2">
           <p>Bookmarks and preferences are stored on this device only.</p>
