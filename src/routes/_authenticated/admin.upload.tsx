@@ -110,65 +110,72 @@ function UploadPage() {
 
   return (
     <AppShell title="Upload content" left={<Link to="/admin/dashboard" className="-ml-2 text-sm font-medium px-2 py-1.5 rounded-lg hover:bg-accent">‹ Back</Link>} hideNav>
-      <div className="pt-4 space-y-4">
-        <Card className="p-5">
+      <div className="pt-6 pb-10 space-y-5 font-display">
+        <div className="text-center space-y-1">
+          <h2 className="text-2xl font-semibold tracking-tight">Add to the library</h2>
+          <p className="text-sm text-muted-foreground">Import a file or write directly — review, then publish.</p>
+        </div>
+
+        <Card className="p-6">
           <label className="block">
-            <span className="text-xs font-medium text-muted-foreground">Choose PDF, DOCX or TXT</span>
-            <div className="mt-2 rounded-2xl border-2 border-dashed p-6 text-center">
-              <FileUp className="mx-auto h-7 w-7 text-muted-foreground" />
+            <span className="block text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Import file</span>
+            <div className="mt-3 rounded-2xl border-2 border-dashed border-border/70 p-7 text-center transition-colors hover:border-foreground/30">
+              <FileUp className="mx-auto h-8 w-8 text-muted-foreground" />
+              <p className="mt-2 text-sm font-medium">Choose PDF, DOCX or TXT</p>
+              <p className="text-xs text-muted-foreground">We'll parse the text — you confirm before publishing.</p>
               <input
                 type="file"
                 accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); }}
-                className="mt-3 mx-auto block text-xs"
+                className="mt-3 mx-auto block text-xs file:mr-3 file:rounded-full file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-xs file:font-medium hover:file:bg-accent"
               />
               {parsing && <p className="mt-2 text-xs text-muted-foreground">Parsing…</p>}
             </div>
           </label>
         </Card>
 
-        <Card className="p-5 space-y-3">
-          <div className="grid grid-cols-2 gap-2 rounded-xl bg-secondary p-1 text-sm font-medium">
-            <button onClick={() => setKind("song")} className={`rounded-lg py-2 ${kind === "song" ? "bg-card shadow" : ""}`}>As a song</button>
-            <button onClick={() => setKind("section")} className={`rounded-lg py-2 ${kind === "section" ? "bg-card shadow" : ""}`}>As book section</button>
+        <Card className="p-6 space-y-4">
+          <div className="grid grid-cols-2 gap-2 rounded-2xl bg-secondary/70 p-1 text-sm font-medium">
+            <button onClick={() => setKind("song")} className={`rounded-xl py-2 transition ${kind === "song" ? "bg-card shadow-sm" : "text-muted-foreground"}`}>As a song</button>
+            <button onClick={() => setKind("section")} className={`rounded-xl py-2 transition ${kind === "section" ? "bg-card shadow-sm" : "text-muted-foreground"}`}>As book section</button>
           </div>
 
           {kind === "section" && (
-            <label className="block">
-              <span className="text-xs font-medium text-muted-foreground">Target book</span>
-              <select value={bookId} onChange={(e) => setBookId(e.target.value)} className="mt-1 w-full rounded-xl border bg-secondary px-3 py-2 text-sm">
+            <Field label="Target book">
+              <select value={bookId} onChange={(e) => setBookId(e.target.value)} className={inputCls}>
                 {books.filter((b) => b.slug !== "song-book").map((b) => (
                   <option key={b.id} value={b.id}>{b.title_en}</option>
                 ))}
               </select>
-            </label>
+            </Field>
           )}
 
-          <div className="grid grid-cols-3 gap-2">
-            <label className="block col-span-2">
-              <span className="text-xs font-medium text-muted-foreground">Title (Hindi)</span>
-              <input value={titleHi} onChange={(e) => setTitleHi(e.target.value)} className="mt-1 w-full rounded-xl border bg-secondary px-3 py-2 text-sm font-hi" />
-            </label>
-            <label className="block">
-              <span className="text-xs font-medium text-muted-foreground">Number</span>
-              <input value={number} onChange={(e) => setNumber(e.target.value)} inputMode="numeric" className="mt-1 w-full rounded-xl border bg-secondary px-3 py-2 text-sm" />
-            </label>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-2">
+              <Field label="Title (Hindi)">
+                <input value={titleHi} onChange={(e) => setTitleHi(e.target.value)} className={`${inputCls} font-hi text-center`} placeholder="शीर्षक" />
+              </Field>
+            </div>
+            <Field label="Number">
+              <input value={number} onChange={(e) => setNumber(e.target.value)} inputMode="numeric" className={`${inputCls} text-center`} placeholder="#" />
+            </Field>
           </div>
 
-          <label className="block">
-            <span className="text-xs font-medium text-muted-foreground">Title (English, optional)</span>
-            <input value={titleEn} onChange={(e) => setTitleEn(e.target.value)} className="mt-1 w-full rounded-xl border bg-secondary px-3 py-2 text-sm" />
-          </label>
+          <Field label="Title (English, optional)">
+            <input value={titleEn} onChange={(e) => setTitleEn(e.target.value)} className={`${inputCls} text-center`} placeholder="Title" />
+          </Field>
 
-          <label className="block">
-            <span className="text-xs font-medium text-muted-foreground">Body</span>
-            <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={10} className="mt-1 w-full rounded-xl border bg-secondary px-3 py-2 text-sm font-hi" />
-          </label>
+          <Field label="Body">
+            <textarea
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              rows={11}
+              className={`${inputCls} font-hi leading-relaxed text-left`}
+              placeholder="Type or paste content here…"
+            />
+          </Field>
 
-          <div className="flex gap-2">
-            <button onClick={publish} disabled={saving} className="flex-1 rounded-xl brand-bg py-3 text-sm font-semibold disabled:opacity-50">
-              {saving ? "Publishing…" : "Publish to library"}
-            </button>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row">
             <button
               type="button"
               onClick={() => {
@@ -178,13 +185,27 @@ function UploadPage() {
                 setTitleHi(""); setTitleEn(""); setNumber(""); setBody("");
                 toast.success("Cleared — write fresh");
               }}
-              className="rounded-xl border px-4 py-3 text-sm font-semibold hover:bg-accent"
+              className="rounded-2xl border px-5 py-3 text-sm font-semibold hover:bg-accent"
             >
               Clear
+            </button>
+            <button onClick={publish} disabled={saving} className="flex-1 rounded-2xl brand-bg py-3 text-sm font-semibold tracking-wide disabled:opacity-50">
+              {saving ? "Publishing…" : "Publish to library"}
             </button>
           </div>
         </Card>
       </div>
     </AppShell>
+  );
+}
+
+const inputCls = "mt-1.5 w-full rounded-2xl border border-border/70 bg-secondary/60 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/15 focus:bg-card transition";
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="block text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
+      {children}
+    </label>
   );
 }
