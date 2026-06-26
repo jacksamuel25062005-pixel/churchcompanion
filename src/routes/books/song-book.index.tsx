@@ -8,7 +8,7 @@ import { OfflineButton } from "../../components/OfflineButton";
 import { useT, pickLang } from "../../lib/i18n";
 import { useBrandOverride } from "../../lib/settings";
 import {
-  getSongBookSnap,
+  useSongBookSnap,
   saveSongBook,
   removeOffline,
   OFFLINE_KEYS,
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/books/song-book/")({
 function SongList() {
   const { t, language } = useT();
   const [q, setQ] = useState("");
-  const snap = typeof window !== "undefined" ? getSongBookSnap() : null;
+  const snap = useSongBookSnap();
 
   const bookQ = useQuery({
     queryKey: ["book", "song-book"],
