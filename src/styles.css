@@ -34,8 +34,9 @@
   --color-ring-offset-background: var(--background);
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
-  --font-sans: "Inter", "Noto Sans Devanagari", system-ui, sans-serif;
-  --font-devanagari: "Noto Sans Devanagari", "Inter", sans-serif;
+  --font-sans: "Manrope", "Inter", "Noto Sans Devanagari", system-ui, sans-serif;
+  --font-display: "Manrope", "Inter", system-ui, sans-serif;
+  --font-devanagari: "Noto Sans Devanagari", "Manrope", "Inter", sans-serif;
 }
 
 :root {
