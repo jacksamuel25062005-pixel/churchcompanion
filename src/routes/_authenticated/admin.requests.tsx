@@ -53,6 +53,7 @@ function RequestsPage() {
     else { toast.success(`Request ${status}`); load(); }
   };
 
+  if (!checked) return null;
   return (
     <AppShell title="Admin requests" left={<Link to="/admin/dashboard" className="-ml-2 text-sm font-medium px-2 py-1.5 rounded-lg hover:bg-accent">‹ Back</Link>} hideNav>
       <div className="pt-4 space-y-3">
