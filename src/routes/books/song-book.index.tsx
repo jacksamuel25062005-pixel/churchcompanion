@@ -61,7 +61,7 @@ function SongList() {
   useEffect(() => {
     if (!bookQ.data || !songsQ.data) return;
     if (!snap) return; // only auto-refresh when user opted in
-    saveSongBook({ book: bookQ.data, songs: songsQ.data, at: Date.now() });
+    void saveSongBook({ book: bookQ.data, songs: songsQ.data, at: Date.now() });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookQ.data, songsQ.data]);
 
@@ -94,7 +94,7 @@ function SongList() {
       if (error) throw error;
       songs = data as Song[];
     }
-    saveSongBook({ book: book!, songs: songs!, at: Date.now() });
+    await saveSongBook({ book: book!, songs: songs!, at: Date.now() });
   };
 
   return (
