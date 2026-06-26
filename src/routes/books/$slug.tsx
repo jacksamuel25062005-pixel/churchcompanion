@@ -18,7 +18,7 @@ export const Route = createFileRoute("/books/$slug")({
 function BookView() {
   const { slug } = useParams({ from: "/books/$slug" });
   const { t, language } = useT();
-  const snap = typeof window !== "undefined" ? getBookSnap(slug) : null;
+  const snap = useBookSnap(slug);
 
   const bookQ = useQuery({
     queryKey: ["book", slug],
