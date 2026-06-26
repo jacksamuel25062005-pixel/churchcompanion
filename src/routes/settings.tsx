@@ -1,13 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Bell, BellOff } from "lucide-react";
+import { Bell, BellOff, Download, Loader2, CheckCircle2, Trash2, HardDrive } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../components/AppShell";
 import { Card } from "../components/ui-bits";
 import { Switch } from "../components/ui/switch";
 import { useT } from "../lib/i18n";
 import { ACCENT_PRESETS, useSettings, type FontSize, type ThemeMode, type Language } from "../lib/settings";
 import { getPushPermission, promptForPush, setPushOptIn, getPushOptedIn } from "../lib/onesignal";
+import { downloadEntireApp, removeAllOffline, useOfflineIndex, formatBytes, type FullDownloadProgress } from "../lib/offline";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Settings — Church Companion" }] }),
@@ -72,6 +74,8 @@ function SettingsPage() {
         </Section>
 
         <NotificationsSection />
+
+        <OfflineSection />
 
         <Card className="p-4 text-xs text-muted-foreground space-y-2">
           <p>Bookmarks and preferences are stored on this device only.</p>
@@ -146,6 +150,93 @@ function NotificationsSection() {
             <Bell className="h-4 w-4" /> {busy ? "…" : "Enable notifications"}
           </button>
         )}
+      </Card>
+    </Section>
+  );
+}
+
+function OfflineSection() {
+  const entries = useOfflineIndex();
+  const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState<FullDownloadProgress | null>(null);
+  const totalBytes = entries.reduce((a, e) => a + e.bytes, 0);
+  const hasAny = entries.length > 0;
+
+  const downloadAll = async () => {
+    if (busy) return;
+    setBusy(true);
+    setProgress({ step: "Starting…", done: 0, total: 1 });
+    try {
+      const r = await downloadEntireApp(supabase, (p) => setProgress(p));
+      toast.success(`Saved ${r.books} books · ${r.songs} sections${r.today ? " · today" : ""}`);
+    } catch (e: any) {
+      toast.error(e?.message || "Download failed");
+    } finally {
+      setBusy(false);
+      setProgress(null);
+    }
+  };
+
+  const removeAll = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await removeAllOffline();
+      toast.success("Offline content cleared");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const pct = progress && progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
+
+  return (
+    <Section label="Offline access">
+      <Card className="p-4 space-y-3">
+        <div className="flex items-center gap-2 text-sm">
+          <HardDrive className="h-4 w-4 brand-text" />
+          <span className="font-medium">Whole app offline</span>
+          {hasAny && (
+            <span className="ml-auto text-xs text-muted-foreground">
+              {entries.length} packs · {formatBytes(totalBytes)}
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Download every book, song, and today's set to this device. Once saved, the app opens and reads without internet.
+        </p>
+
+        {busy && progress && (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground truncate">{progress.step}</span>
+              <span className="tabular-nums">{pct}%</span>
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+              <div className="h-full brand-bg transition-all" style={{ width: `${pct}%` }} />
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          <button
+            onClick={downloadAll}
+            disabled={busy}
+            className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl brand-bg py-2.5 text-sm font-medium disabled:opacity-50"
+          >
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : hasAny ? <CheckCircle2 className="h-4 w-4" /> : <Download className="h-4 w-4" />}
+            {busy ? "Downloading…" : hasAny ? "Refresh offline copy" : "Download everything"}
+          </button>
+          {hasAny && !busy && (
+            <button
+              onClick={removeAll}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border bg-card px-3 py-2.5 text-sm font-medium"
+              aria-label="Remove all offline content"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </Card>
     </Section>
   );
