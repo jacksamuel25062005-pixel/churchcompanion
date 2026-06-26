@@ -7,7 +7,7 @@ import { BackButton, Card } from "../../components/ui-bits";
 import { useT, pickLang } from "../../lib/i18n";
 import { useBrandOverride } from "../../lib/settings";
 import { favorites, bookmarks, continueReading } from "../../lib/storage";
-import { getCachedSong, getSongBookSnap } from "../../lib/offline";
+import { useSongBookSnap } from "../../lib/offline";
 import { Heart, Share2, Copy, Bookmark as BookmarkIcon } from "lucide-react";
 import { toast } from "sonner";
 import type { Book, Song } from "../../lib/types";

@@ -95,7 +95,7 @@ function Home() {
   useEffect(() => {
     if (!todayQ.data?.set) return;
     if (!todaySnap) return;
-    saveToday({
+    void saveToday({
       set: todayQ.data.set as any,
       items: todayQ.data.items,
       at: Date.now(),
@@ -106,7 +106,7 @@ function Home() {
 
   const handleDownloadToday = async () => {
     if (!todayQ.data?.set) throw new Error("No songs published for today yet");
-    saveToday({
+    await saveToday({
       set: todayQ.data.set as any,
       items: todayQ.data.items,
       at: Date.now(),
