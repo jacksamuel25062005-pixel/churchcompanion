@@ -6,12 +6,14 @@ import { Card } from "../../components/ui-bits";
 import { toast } from "sonner";
 import { Bell } from "lucide-react";
 import { sendPushNotification } from "../../lib/notifications.functions";
+import { useAdminGuard } from "../../lib/use-admin-guard";
 
 export const Route = createFileRoute("/_authenticated/admin/notify")({
   component: NotifyPage,
 });
 
 function NotifyPage() {
+  const { checked } = useAdminGuard();
   const send = useServerFn(sendPushNotification);
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
