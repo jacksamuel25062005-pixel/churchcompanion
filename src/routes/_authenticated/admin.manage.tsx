@@ -6,6 +6,7 @@ import { Card } from "../../components/ui-bits";
 import { toast } from "sonner";
 import { Pencil, Trash2, Save, X, Search } from "lucide-react";
 import type { Book, Song, BookSection } from "../../lib/types";
+import { useAdminGuard } from "../../lib/use-admin-guard";
 
 export const Route = createFileRoute("/_authenticated/admin/manage")({
   component: ManagePage,
@@ -14,7 +15,9 @@ export const Route = createFileRoute("/_authenticated/admin/manage")({
 type Tab = "songs" | "sections";
 
 function ManagePage() {
+  const { checked } = useAdminGuard();
   const [tab, setTab] = useState<Tab>("songs");
+  if (!checked) return null;
   return (
     <AppShell title="Manage content" left={<Link to="/admin/dashboard" className="-ml-2 text-sm font-medium px-2 py-1.5 rounded-lg hover:bg-accent">‹ Back</Link>} hideNav>
       <div className="pt-4 space-y-4">
