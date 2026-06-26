@@ -14,16 +14,336 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      admin_requests: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          reason: string | null
+          status: Database["public"]["Enums"]["admin_request_status"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          reason?: string | null
+          status?: Database["public"]["Enums"]["admin_request_status"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          reason?: string | null
+          status?: Database["public"]["Enums"]["admin_request_status"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          id: string
+          payload: Json | null
+          target: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          target?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          target?: string | null
+        }
+        Relationships: []
+      }
+      book_sections: {
+        Row: {
+          body_en: string | null
+          body_hi: string | null
+          book_id: string
+          created_at: string
+          id: string
+          number: number | null
+          search: unknown
+          sort_order: number
+          title_en: string | null
+          title_hi: string | null
+        }
+        Insert: {
+          body_en?: string | null
+          body_hi?: string | null
+          book_id: string
+          created_at?: string
+          id?: string
+          number?: number | null
+          search?: unknown
+          sort_order?: number
+          title_en?: string | null
+          title_hi?: string | null
+        }
+        Update: {
+          body_en?: string | null
+          body_hi?: string | null
+          book_id?: string
+          created_at?: string
+          id?: string
+          number?: number | null
+          search?: unknown
+          sort_order?: number
+          title_en?: string | null
+          title_hi?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_sections_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      books: {
+        Row: {
+          accent_color: string
+          created_at: string
+          description_en: string | null
+          description_hi: string | null
+          id: string
+          slug: string
+          sort_order: number
+          title_en: string
+          title_hi: string
+        }
+        Insert: {
+          accent_color?: string
+          created_at?: string
+          description_en?: string | null
+          description_hi?: string | null
+          id?: string
+          slug: string
+          sort_order?: number
+          title_en: string
+          title_hi: string
+        }
+        Update: {
+          accent_color?: string
+          created_at?: string
+          description_en?: string | null
+          description_hi?: string | null
+          id?: string
+          slug?: string
+          sort_order?: number
+          title_en?: string
+          title_hi?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      songs: {
+        Row: {
+          created_at: string
+          id: string
+          lyrics_en: string | null
+          lyrics_hi: string
+          number: number | null
+          search: unknown
+          tags: string[] | null
+          title_en: string | null
+          title_hi: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lyrics_en?: string | null
+          lyrics_hi: string
+          number?: number | null
+          search?: unknown
+          tags?: string[] | null
+          title_en?: string | null
+          title_hi: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lyrics_en?: string | null
+          lyrics_hi?: string
+          number?: number | null
+          search?: unknown
+          tags?: string[] | null
+          title_en?: string | null
+          title_hi?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      today_song_items: {
+        Row: {
+          id: string
+          position: number
+          set_id: string
+          song_id: string
+        }
+        Insert: {
+          id?: string
+          position?: number
+          set_id: string
+          song_id: string
+        }
+        Update: {
+          id?: string
+          position?: number
+          set_id?: string
+          song_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "today_song_items_set_id_fkey"
+            columns: ["set_id"]
+            isOneToOne: false
+            referencedRelation: "today_song_sets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "today_song_items_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      today_song_sets: {
+        Row: {
+          for_date: string
+          id: string
+          note: string | null
+          published_at: string
+          published_by: string | null
+          title: string | null
+        }
+        Insert: {
+          for_date: string
+          id?: string
+          note?: string | null
+          published_at?: string
+          published_by?: string | null
+          title?: string | null
+        }
+        Update: {
+          for_date?: string
+          id?: string
+          note?: string | null
+          published_at?: string
+          published_by?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          granted_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          granted_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin_or_super: { Args: { _user_id: string }; Returns: boolean }
+      search_content: {
+        Args: { q: string }
+        Returns: {
+          book_slug: string
+          id: string
+          kind: string
+          number: number
+          snippet: string
+          title: string
+        }[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      admin_request_status: "pending" | "approved" | "rejected"
+      app_role: "super_admin" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +470,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      admin_request_status: ["pending", "approved", "rejected"],
+      app_role: ["super_admin", "admin"],
+    },
   },
 } as const
