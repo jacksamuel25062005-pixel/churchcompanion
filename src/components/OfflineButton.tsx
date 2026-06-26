@@ -37,8 +37,8 @@ export function OfflineButton({ storageKey, label = "Download for offline", onDo
     <button
       onClick={handle}
       disabled={busy}
-      className={`tap-card inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium ${
-        entry ? "brand-bg brand-border" : "bg-card"
+      className={`tap-card inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ${
+        entry ? "brand-bg" : "glass-chip"
       } ${className}`}
       title={entry ? `Saved · ${formatBytes(entry.bytes)}` : label}
     >
