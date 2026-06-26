@@ -22,6 +22,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SettingsProvider } from "../lib/settings";
 import { Toaster } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { registerPWA } from "../lib/pwa-register";
 
 function NotFoundComponent() {
   return (
@@ -130,6 +131,9 @@ function AuthSync() {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(() => {
+    registerPWA();
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <SettingsProvider>
