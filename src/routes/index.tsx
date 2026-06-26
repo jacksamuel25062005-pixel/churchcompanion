@@ -62,7 +62,7 @@ function Home() {
     },
   });
 
-  const todaySnap = typeof window !== "undefined" ? getTodaySnap() : null;
+  const todaySnap = useTodaySnap();
   const todayDate = new Date().toISOString().slice(0, 10);
 
   const todayQ = useQuery({
