@@ -58,3 +58,32 @@ export async function getPushPermission(): Promise<"granted" | "denied" | "defau
   if (typeof Notification === "undefined") return "unsupported";
   return Notification.permission as any;
 }
+
+export async function setPushOptIn(optIn: boolean): Promise<void> {
+  return new Promise((resolve) => {
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    window.OneSignalDeferred.push(async function (OneSignal: any) {
+      try {
+        if (optIn) await OneSignal.User.PushSubscription.optIn();
+        else await OneSignal.User.PushSubscription.optOut();
+      } catch (e) {
+        console.warn("[OneSignal] opt toggle failed", e);
+      } finally {
+        resolve();
+      }
+    });
+  });
+}
+
+export async function getPushOptedIn(): Promise<boolean> {
+  return new Promise((resolve) => {
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    window.OneSignalDeferred.push(async function (OneSignal: any) {
+      try {
+        resolve(!!OneSignal.User?.PushSubscription?.optedIn);
+      } catch {
+        resolve(false);
+      }
+    });
+  });
+}
