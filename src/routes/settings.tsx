@@ -70,6 +70,8 @@ function SettingsPage() {
           </div>
         </Section>
 
+        <NotificationsSection />
+
         <Card className="p-4 text-xs text-muted-foreground">
           <p>Bookmarks and preferences are stored on this device only.</p>
         </Card>
@@ -84,5 +86,43 @@ function Section({ label, children }: { label: string; children: React.ReactNode
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">{label}</p>
       {children}
     </div>
+  );
+}
+
+function NotificationsSection() {
+  const [perm, setPerm] = useState<"granted" | "denied" | "default" | "unsupported">("default");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => { getPushPermission().then(setPerm); }, []);
+
+  const enable = async () => {
+    setBusy(true);
+    try {
+      const ok = await promptForPush();
+      setPerm(ok ? "granted" : (Notification.permission as any));
+      if (ok) toast.success("Notifications enabled");
+      else toast.error("Permission not granted");
+    } finally { setBusy(false); }
+  };
+
+  return (
+    <Section label="Notifications">
+      <Card className="p-4">
+        {perm === "unsupported" ? (
+          <p className="text-xs text-muted-foreground">Push notifications are not supported on this device.</p>
+        ) : perm === "granted" ? (
+          <div className="flex items-center gap-2 text-sm"><Bell className="h-4 w-4 brand-text" /> You'll receive new song & service alerts.</div>
+        ) : perm === "denied" ? (
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-sm"><BellOff className="h-4 w-4 text-muted-foreground" /> Notifications are blocked.</div>
+            <p className="text-xs text-muted-foreground">Allow notifications for this site in your browser settings.</p>
+          </div>
+        ) : (
+          <button onClick={enable} disabled={busy} className="w-full inline-flex items-center justify-center gap-2 rounded-xl brand-bg py-2.5 text-sm font-medium disabled:opacity-50">
+            <Bell className="h-4 w-4" /> {busy ? "…" : "Enable notifications"}
+          </button>
+        )}
+      </Card>
+    </Section>
   );
 }
