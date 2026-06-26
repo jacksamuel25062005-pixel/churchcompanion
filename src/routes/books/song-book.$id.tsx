@@ -20,8 +20,8 @@ function SongReader() {
   const { id } = Route.useParams();
   const { t, language } = useT();
   const [tick, setTick] = useState(0);
-  const offSnap = typeof window !== "undefined" ? getSongBookSnap() : null;
-  const offSong = typeof window !== "undefined" ? getCachedSong(id) : null;
+  const offSnap = useSongBookSnap();
+  const offSong = offSnap?.songs.find((s) => s.id === id) ?? null;
 
   const bookQ = useQuery({
     queryKey: ["book", "song-book"],
@@ -41,8 +41,7 @@ function SongReader() {
       const { data, error } = await supabase.from("songs").select("*").eq("id", id).single();
       if (error) {
         // Fall back to offline copy when network/RLS fails.
-        const cached = getCachedSong(id);
-        if (cached) return cached;
+        if (offSong) return offSong;
         throw error;
       }
       return data as Song;

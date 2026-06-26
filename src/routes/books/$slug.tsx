@@ -8,7 +8,7 @@ import { OfflineButton } from "../../components/OfflineButton";
 import { useT, pickLang } from "../../lib/i18n";
 import { useBrandOverride } from "../../lib/settings";
 import { continueReading } from "../../lib/storage";
-import { getBookSnap, saveBook, removeOffline, OFFLINE_KEYS } from "../../lib/offline";
+import { useBookSnap, saveBook, removeOffline, OFFLINE_KEYS } from "../../lib/offline";
 import type { Book, BookSection } from "../../lib/types";
 
 export const Route = createFileRoute("/books/$slug")({
