@@ -13,7 +13,7 @@ export function BackButton({ to = "/", label }: { to?: string; label?: string })
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`rounded-2xl border bg-card text-card-foreground shadow-sm ${className}`}>
+    <div className={`glass rounded-2xl text-card-foreground ${className}`}>
       {children}
     </div>
   );
