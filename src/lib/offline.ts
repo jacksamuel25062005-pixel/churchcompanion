@@ -173,6 +173,97 @@ export function isDownloaded(key: string): boolean {
   return !!readIndex()[key];
 }
 
+// ---------------- Download everything ----------------
+
+export interface FullDownloadProgress {
+  step: string;
+  done: number;
+  total: number;
+}
+
+export async function downloadEntireApp(
+  supabase: any,
+  onProgress?: (p: FullDownloadProgress) => void,
+): Promise<{ books: number; songs: number; today: boolean }> {
+  const todayDate = new Date().toISOString().slice(0, 10);
+
+  // 1. Books list
+  onProgress?.({ step: "Loading books…", done: 0, total: 1 });
+  const { data: books, error: be } = await supabase.from("books").select("*").order("sort_order");
+  if (be) throw be;
+  const bookList = (books ?? []) as Book[];
+
+  // Steps: songs + each non-song book + today
+  const total = 1 + bookList.filter((b) => b.slug !== "song-book").length + 1;
+  let done = 0;
+
+  // 2. Song book (songs table)
+  const songBookMeta = bookList.find((b) => b.slug === "song-book");
+  if (songBookMeta) {
+    onProgress?.({ step: "Songs…", done, total });
+    const { data: songs, error } = await supabase
+      .from("songs")
+      .select("*")
+      .order("number", { ascending: true, nullsFirst: false });
+    if (error) throw error;
+    await saveSongBook({ book: songBookMeta, songs: (songs ?? []) as Song[], at: Date.now() });
+  }
+  done++;
+
+  // 3. Each generic book
+  let songCount = 0;
+  for (const b of bookList) {
+    if (b.slug === "song-book") continue;
+    onProgress?.({ step: `${b.title_en || b.slug}…`, done, total });
+    const { data: sections, error } = await supabase
+      .from("book_sections")
+      .select("*")
+      .eq("book_id", b.id)
+      .order("sort_order")
+      .order("number");
+    if (error) throw error;
+    const list = (sections ?? []) as BookSection[];
+    songCount += list.length;
+    await saveBook(b.slug, { book: b, sections: list, at: Date.now() });
+    done++;
+  }
+
+  // 4. Today
+  onProgress?.({ step: "Today's songs…", done, total });
+  let todaySaved = false;
+  try {
+    const { data: sets } = await supabase
+      .from("today_song_sets")
+      .select("id, title, note, for_date")
+      .eq("for_date", todayDate)
+      .order("published_at", { ascending: false })
+      .limit(1);
+    const set = sets?.[0] ?? null;
+    let items: Song[] = [];
+    if (set) {
+      const { data: rows } = await supabase
+        .from("today_song_items")
+        .select("position, songs:song_id(*)")
+        .eq("set_id", set.id)
+        .order("position");
+      items = ((rows ?? []) as any[]).map((r) => r.songs).filter(Boolean) as Song[];
+    }
+    await saveToday({ set, items, at: Date.now(), for_date: todayDate });
+    todaySaved = true;
+  } catch {
+    /* today is best-effort */
+  }
+  done++;
+  onProgress?.({ step: "Done", done, total });
+
+  return { books: bookList.length, songs: songCount, today: todaySaved };
+}
+
+export async function removeAllOffline() {
+  const all = listOffline();
+  for (const e of all) await removeOffline(e.key);
+}
+
 export function formatBytes(n: number): string {
   if (n < 1024) return `${n} B`;
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
