@@ -42,14 +42,14 @@ function UploadPage() {
       if (ext === "txt") {
         text = new TextDecoder("utf-8").decode(buf);
       } else if (ext === "docx") {
-        const mammoth = await import("mammoth/mammoth.browser");
-        const result = await (mammoth as any).extractRawText({ arrayBuffer: buf });
+        // @ts-expect-error - browser build has no types
+        const mammoth: any = await import("mammoth/mammoth.browser");
+        const result = await mammoth.extractRawText({ arrayBuffer: buf });
         text = result.value;
       } else if (ext === "pdf") {
         const pdfjs: any = await import("pdfjs-dist");
-        // @ts-expect-error worker URL
-        const workerUrl = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
-        pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+        const workerMod: any = await import("pdfjs-dist/build/pdf.worker.min.mjs?url");
+        pdfjs.GlobalWorkerOptions.workerSrc = workerMod.default;
         const pdf = await pdfjs.getDocument({ data: buf }).promise;
         const parts: string[] = [];
         for (let i = 1; i <= pdf.numPages; i++) {

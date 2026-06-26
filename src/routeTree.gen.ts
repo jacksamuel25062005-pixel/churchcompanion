@@ -12,10 +12,16 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as BookmarksRouteImport } from './routes/bookmarks'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BooksSlugRouteImport } from './routes/books/$slug'
 import { Route as BooksSongBookIndexRouteImport } from './routes/books/song-book.index'
 import { Route as BooksSongBookIdRouteImport } from './routes/books/song-book.$id'
+import { Route as AuthenticatedAdminUploadRouteImport } from './routes/_authenticated/admin.upload'
+import { Route as AuthenticatedAdminTodayRouteImport } from './routes/_authenticated/admin.today'
+import { Route as AuthenticatedAdminRequestsRouteImport } from './routes/_authenticated/admin.requests'
+import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated/admin.dashboard'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -30,6 +36,15 @@ const SearchRoute = SearchRouteImport.update({
 const BookmarksRoute = BookmarksRouteImport.update({
   id: '/bookmarks',
   path: '/bookmarks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -52,32 +67,71 @@ const BooksSongBookIdRoute = BooksSongBookIdRouteImport.update({
   path: '/books/song-book/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminUploadRoute =
+  AuthenticatedAdminUploadRouteImport.update({
+    id: '/admin/upload',
+    path: '/admin/upload',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminTodayRoute = AuthenticatedAdminTodayRouteImport.update({
+  id: '/admin/today',
+  path: '/admin/today',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminRequestsRoute =
+  AuthenticatedAdminRequestsRouteImport.update({
+    id: '/admin/requests',
+    path: '/admin/requests',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminDashboardRoute =
+  AuthenticatedAdminDashboardRouteImport.update({
+    id: '/admin/dashboard',
+    path: '/admin/dashboard',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/bookmarks': typeof BookmarksRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
+  '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/admin/requests': typeof AuthenticatedAdminRequestsRoute
+  '/admin/today': typeof AuthenticatedAdminTodayRoute
+  '/admin/upload': typeof AuthenticatedAdminUploadRoute
   '/books/song-book/$id': typeof BooksSongBookIdRoute
   '/books/song-book/': typeof BooksSongBookIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/bookmarks': typeof BookmarksRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
+  '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/admin/requests': typeof AuthenticatedAdminRequestsRoute
+  '/admin/today': typeof AuthenticatedAdminTodayRoute
+  '/admin/upload': typeof AuthenticatedAdminUploadRoute
   '/books/song-book/$id': typeof BooksSongBookIdRoute
   '/books/song-book': typeof BooksSongBookIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/admin': typeof AdminRoute
   '/bookmarks': typeof BookmarksRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
+  '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/_authenticated/admin/requests': typeof AuthenticatedAdminRequestsRoute
+  '/_authenticated/admin/today': typeof AuthenticatedAdminTodayRoute
+  '/_authenticated/admin/upload': typeof AuthenticatedAdminUploadRoute
   '/books/song-book/$id': typeof BooksSongBookIdRoute
   '/books/song-book/': typeof BooksSongBookIndexRoute
 }
@@ -85,34 +139,52 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/bookmarks'
     | '/search'
     | '/settings'
     | '/books/$slug'
+    | '/admin/dashboard'
+    | '/admin/requests'
+    | '/admin/today'
+    | '/admin/upload'
     | '/books/song-book/$id'
     | '/books/song-book/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/bookmarks'
     | '/search'
     | '/settings'
     | '/books/$slug'
+    | '/admin/dashboard'
+    | '/admin/requests'
+    | '/admin/today'
+    | '/admin/upload'
     | '/books/song-book/$id'
     | '/books/song-book'
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
+    | '/admin'
     | '/bookmarks'
     | '/search'
     | '/settings'
     | '/books/$slug'
+    | '/_authenticated/admin/dashboard'
+    | '/_authenticated/admin/requests'
+    | '/_authenticated/admin/today'
+    | '/_authenticated/admin/upload'
     | '/books/song-book/$id'
     | '/books/song-book/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AdminRoute: typeof AdminRoute
   BookmarksRoute: typeof BookmarksRoute
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
@@ -144,6 +216,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookmarksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -172,11 +258,58 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BooksSongBookIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/upload': {
+      id: '/_authenticated/admin/upload'
+      path: '/admin/upload'
+      fullPath: '/admin/upload'
+      preLoaderRoute: typeof AuthenticatedAdminUploadRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/today': {
+      id: '/_authenticated/admin/today'
+      path: '/admin/today'
+      fullPath: '/admin/today'
+      preLoaderRoute: typeof AuthenticatedAdminTodayRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/requests': {
+      id: '/_authenticated/admin/requests'
+      path: '/admin/requests'
+      fullPath: '/admin/requests'
+      preLoaderRoute: typeof AuthenticatedAdminRequestsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/dashboard': {
+      id: '/_authenticated/admin/dashboard'
+      path: '/admin/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
+  AuthenticatedAdminRequestsRoute: typeof AuthenticatedAdminRequestsRoute
+  AuthenticatedAdminTodayRoute: typeof AuthenticatedAdminTodayRoute
+  AuthenticatedAdminUploadRoute: typeof AuthenticatedAdminUploadRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
+  AuthenticatedAdminRequestsRoute: AuthenticatedAdminRequestsRoute,
+  AuthenticatedAdminTodayRoute: AuthenticatedAdminTodayRoute,
+  AuthenticatedAdminUploadRoute: AuthenticatedAdminUploadRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AdminRoute: AdminRoute,
   BookmarksRoute: BookmarksRoute,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
