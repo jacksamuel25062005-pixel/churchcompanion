@@ -1,12 +1,14 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../../components/AppShell";
 import { BackButton, Card, EmptyState } from "../../components/ui-bits";
+import { OfflineButton } from "../../components/OfflineButton";
 import { useT, pickLang } from "../../lib/i18n";
 import { useBrandOverride } from "../../lib/settings";
 import { continueReading } from "../../lib/storage";
+import { getBookSnap, saveBook, removeOffline, OFFLINE_KEYS } from "../../lib/offline";
 import type { Book, BookSection } from "../../lib/types";
 
 export const Route = createFileRoute("/books/$slug")({
@@ -16,9 +18,11 @@ export const Route = createFileRoute("/books/$slug")({
 function BookView() {
   const { slug } = useParams({ from: "/books/$slug" });
   const { t, language } = useT();
+  const snap = typeof window !== "undefined" ? getBookSnap(slug) : null;
 
   const bookQ = useQuery({
     queryKey: ["book", slug],
+    initialData: snap?.book,
     queryFn: async () => {
       const { data, error } = await supabase.from("books").select("*").eq("slug", slug).single();
       if (error) throw error;
@@ -30,6 +34,7 @@ function BookView() {
   const sectionsQ = useQuery({
     queryKey: ["sections", slug],
     enabled: !!bookQ.data,
+    initialData: snap?.sections,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("book_sections")
@@ -41,6 +46,14 @@ function BookView() {
       return data as BookSection[];
     },
   });
+
+  // Refresh offline snapshot if the user has previously downloaded this book.
+  useEffect(() => {
+    if (!bookQ.data || !sectionsQ.data) return;
+    if (!snap) return;
+    saveBook(slug, { book: bookQ.data, sections: sectionsQ.data, at: Date.now() });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookQ.data, sectionsQ.data, slug]);
 
   // Redirect song-book to its dedicated index
   if (slug === "song-book") {
@@ -54,6 +67,27 @@ function BookView() {
   }
 
   const title = pickLang(bookQ.data?.title_en, bookQ.data?.title_hi, language) || "";
+
+  const handleDownload = async () => {
+    let book = bookQ.data;
+    if (!book) {
+      const { data, error } = await supabase.from("books").select("*").eq("slug", slug).single();
+      if (error) throw error;
+      book = data as Book;
+    }
+    let sections = sectionsQ.data;
+    if (!sections) {
+      const { data, error } = await supabase
+        .from("book_sections")
+        .select("*")
+        .eq("book_id", book!.id)
+        .order("sort_order")
+        .order("number");
+      if (error) throw error;
+      sections = data as BookSection[];
+    }
+    saveBook(slug, { book: book!, sections: sections!, at: Date.now() });
+  };
 
   return (
     <AppShell title={title} left={<BackButton to="/" />}>
@@ -70,8 +104,16 @@ function BookView() {
           </div>
         )}
 
+        <div className="mt-3">
+          <OfflineButton
+            storageKey={OFFLINE_KEYS.book(slug)}
+            onDownload={handleDownload}
+            onRemove={() => removeOffline(OFFLINE_KEYS.book(slug))}
+          />
+        </div>
+
         <div className="mt-5 space-y-3">
-          {sectionsQ.isLoading ? (
+          {sectionsQ.isLoading && !sectionsQ.data ? (
             <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
           ) : !sectionsQ.data || sectionsQ.data.length === 0 ? (
             <EmptyState title={t("common.empty")} hint="Admins can upload content from the Admin section." />
@@ -93,7 +135,6 @@ function SectionCard({ section, slug }: { section: BookSection; slug: string }) 
 
   useEffect(() => {
     if (!title) return;
-    // Don't aggressively overwrite; only set when reader opens via expand
   }, [title]);
 
   return (

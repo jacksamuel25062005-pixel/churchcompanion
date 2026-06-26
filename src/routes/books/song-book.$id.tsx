@@ -7,6 +7,7 @@ import { BackButton, Card } from "../../components/ui-bits";
 import { useT, pickLang } from "../../lib/i18n";
 import { useBrandOverride } from "../../lib/settings";
 import { favorites, bookmarks, continueReading } from "../../lib/storage";
+import { getCachedSong, getSongBookSnap } from "../../lib/offline";
 import { Heart, Share2, Copy, Bookmark as BookmarkIcon } from "lucide-react";
 import { toast } from "sonner";
 import type { Book, Song } from "../../lib/types";
@@ -19,9 +20,12 @@ function SongReader() {
   const { id } = Route.useParams();
   const { t, language } = useT();
   const [tick, setTick] = useState(0);
+  const offSnap = typeof window !== "undefined" ? getSongBookSnap() : null;
+  const offSong = typeof window !== "undefined" ? getCachedSong(id) : null;
 
   const bookQ = useQuery({
     queryKey: ["book", "song-book"],
+    initialData: offSnap?.book,
     queryFn: async () => {
       const { data, error } = await supabase.from("books").select("*").eq("slug", "song-book").single();
       if (error) throw error;
@@ -32,9 +36,15 @@ function SongReader() {
 
   const songQ = useQuery({
     queryKey: ["song", id],
+    initialData: offSong ?? undefined,
     queryFn: async () => {
       const { data, error } = await supabase.from("songs").select("*").eq("id", id).single();
-      if (error) throw error;
+      if (error) {
+        // Fall back to offline copy when network/RLS fails.
+        const cached = getCachedSong(id);
+        if (cached) return cached;
+        throw error;
+      }
       return data as Song;
     },
   });

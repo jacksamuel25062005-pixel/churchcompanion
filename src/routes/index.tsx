@@ -4,8 +4,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../components/AppShell";
 import { Card } from "../components/ui-bits";
+import { OfflineButton } from "../components/OfflineButton";
 import { useT, pickLang } from "../lib/i18n";
 import { Music, BookOpen, Sparkles } from "lucide-react";
+import { getTodaySnap, saveToday, removeOffline, OFFLINE_KEYS } from "../lib/offline";
 import type { Book, Song } from "../lib/types";
 
 export const Route = createFileRoute("/")({
@@ -60,14 +62,20 @@ function Home() {
     },
   });
 
+  const todaySnap = typeof window !== "undefined" ? getTodaySnap() : null;
+  const todayDate = new Date().toISOString().slice(0, 10);
+
   const todayQ = useQuery({
     queryKey: ["today"],
+    initialData:
+      todaySnap && todaySnap.for_date === todayDate
+        ? { set: todaySnap.set, items: todaySnap.items }
+        : undefined,
     queryFn: async () => {
-      const today = new Date().toISOString().slice(0, 10);
       const { data: sets, error } = await supabase
         .from("today_song_sets")
         .select("id, title, note, for_date")
-        .eq("for_date", today)
+        .eq("for_date", todayDate)
         .order("published_at", { ascending: false })
         .limit(1);
       if (error) throw error;
@@ -83,6 +91,28 @@ function Home() {
       return { set, items: songs };
     },
   });
+
+  useEffect(() => {
+    if (!todayQ.data?.set) return;
+    if (!todaySnap) return;
+    saveToday({
+      set: todayQ.data.set as any,
+      items: todayQ.data.items,
+      at: Date.now(),
+      for_date: todayDate,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [todayQ.data]);
+
+  const handleDownloadToday = async () => {
+    if (!todayQ.data?.set) throw new Error("No songs published for today yet");
+    saveToday({
+      set: todayQ.data.set as any,
+      items: todayQ.data.items,
+      at: Date.now(),
+      for_date: todayDate,
+    });
+  };
 
   useEffect(() => {
     const ch = supabase
@@ -109,11 +139,19 @@ function Home() {
         <div className="flex items-center gap-2 mb-2">
           <Sparkles className="h-4 w-4 brand-text" />
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            {t("home.today")}
+          {t("home.today")}
           </h2>
+          <div className="ml-auto">
+            <OfflineButton
+              storageKey={OFFLINE_KEYS.today()}
+              label="Save today"
+              onDownload={handleDownloadToday}
+              onRemove={() => removeOffline(OFFLINE_KEYS.today())}
+            />
+          </div>
         </div>
         <Card className="overflow-hidden">
-          {todayQ.isLoading ? (
+          {todayQ.isLoading && !todayQ.data ? (
             <div className="p-5 text-sm text-muted-foreground">{t("common.loading")}</div>
           ) : !todayQ.data?.set || todayQ.data.items.length === 0 ? (
             <div className="p-6 text-center">

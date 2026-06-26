@@ -1,11 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../../components/AppShell";
 import { BackButton, EmptyState } from "../../components/ui-bits";
+import { OfflineButton } from "../../components/OfflineButton";
 import { useT, pickLang } from "../../lib/i18n";
 import { useBrandOverride } from "../../lib/settings";
+import {
+  getSongBookSnap,
+  saveSongBook,
+  removeOffline,
+  OFFLINE_KEYS,
+} from "../../lib/offline";
 import { Search as SearchIcon } from "lucide-react";
 import type { Book, Song } from "../../lib/types";
 
@@ -24,9 +31,11 @@ export const Route = createFileRoute("/books/song-book/")({
 function SongList() {
   const { t, language } = useT();
   const [q, setQ] = useState("");
+  const snap = typeof window !== "undefined" ? getSongBookSnap() : null;
 
   const bookQ = useQuery({
     queryKey: ["book", "song-book"],
+    initialData: snap?.book,
     queryFn: async () => {
       const { data, error } = await supabase.from("books").select("*").eq("slug", "song-book").single();
       if (error) throw error;
@@ -37,6 +46,7 @@ function SongList() {
 
   const songsQ = useQuery({
     queryKey: ["songs"],
+    initialData: snap?.songs,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("songs")
@@ -46,6 +56,14 @@ function SongList() {
       return data as Song[];
     },
   });
+
+  // Refresh the offline snapshot when both book + songs are loaded fresh.
+  useEffect(() => {
+    if (!bookQ.data || !songsQ.data) return;
+    if (!snap) return; // only auto-refresh when user opted in
+    saveSongBook({ book: bookQ.data, songs: songsQ.data, at: Date.now() });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookQ.data, songsQ.data]);
 
   const filtered = useMemo(() => {
     const list = songsQ.data ?? [];
@@ -59,6 +77,25 @@ function SongList() {
       (s.lyrics_en ?? "").toLowerCase().includes(needle),
     );
   }, [songsQ.data, q]);
+
+  const handleDownload = async () => {
+    let book = bookQ.data;
+    let songs = songsQ.data;
+    if (!book) {
+      const { data, error } = await supabase.from("books").select("*").eq("slug", "song-book").single();
+      if (error) throw error;
+      book = data as Book;
+    }
+    if (!songs) {
+      const { data, error } = await supabase
+        .from("songs")
+        .select("*")
+        .order("number", { ascending: true, nullsFirst: false });
+      if (error) throw error;
+      songs = data as Song[];
+    }
+    saveSongBook({ book: book!, songs: songs!, at: Date.now() });
+  };
 
   return (
     <AppShell
@@ -76,10 +113,17 @@ function SongList() {
             inputMode="search"
           />
         </div>
+        <div className="mt-3">
+          <OfflineButton
+            storageKey={OFFLINE_KEYS.songBook()}
+            onDownload={handleDownload}
+            onRemove={() => removeOffline(OFFLINE_KEYS.songBook())}
+          />
+        </div>
       </div>
 
       <div className="mt-4">
-        {songsQ.isLoading ? (
+        {songsQ.isLoading && !songsQ.data ? (
           <p className="text-sm text-muted-foreground py-8 text-center">{t("common.loading")}</p>
         ) : filtered.length === 0 ? (
           <EmptyState title={t("common.empty")} hint="Admins can upload songs from the Admin section." />
