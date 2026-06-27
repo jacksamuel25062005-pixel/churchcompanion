@@ -197,17 +197,48 @@ function Home() {
             <Link
               key={b.id}
               to={`/books/${b.slug}` as any}
-              className="tap-card relative overflow-hidden rounded-2xl p-4 min-h-32 flex flex-col justify-end text-white shadow-md"
+              className="tap-card relative overflow-hidden rounded-[22px] min-h-36 text-white shadow-md isolate"
               style={{
                 background: `linear-gradient(140deg, ${b.accent_color}, ${shade(b.accent_color, -25)})`,
               }}
             >
-              <BookOpen className="absolute right-3 top-3 h-5 w-5 opacity-50" />
-              <p className="text-[11px] uppercase tracking-wide opacity-80">{b.title_en}</p>
-              <p className="font-hi text-base font-semibold leading-tight">{b.title_hi}</p>
+              {/* Pebble noise texture */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 opacity-[0.22] mix-blend-overlay"
+                style={{
+                  backgroundImage:
+                    "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")",
+                  backgroundSize: "180px 180px",
+                }}
+              />
+              {/* Frosted glass pebble panel */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-x-3 inset-y-3 rounded-[18px] border border-white/25"
+                style={{
+                  background:
+                    "radial-gradient(120% 100% at 20% 0%, rgba(255,255,255,0.35), rgba(255,255,255,0.08) 60%, rgba(255,255,255,0.04))",
+                  backdropFilter: "blur(28px) saturate(160%)",
+                  WebkitBackdropFilter: "blur(28px) saturate(160%)",
+                  boxShadow:
+                    "inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -1px 0 rgba(0,0,0,0.1), 0 8px 24px -12px rgba(0,0,0,0.35)",
+                }}
+              />
+              <BookOpen className="absolute right-4 top-4 h-5 w-5 opacity-80 z-10" />
+              <div className="relative z-10 flex h-full min-h-36 flex-col items-center justify-center px-4 text-center">
+                <p
+                  className="text-lg font-extrabold leading-tight tracking-tight drop-shadow-sm"
+                  style={{ fontFamily: "'Fraunces', 'Manrope', serif", fontOpticalSizing: "auto" } as any}
+                >
+                  {b.title_en}
+                </p>
+                <p className="font-hi mt-1 text-[11px] font-medium opacity-80">{b.title_hi}</p>
+              </div>
             </Link>
           ))}
         </div>
+
       </section>
     </AppShell>
   );
