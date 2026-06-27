@@ -202,17 +202,7 @@ function Home() {
                 background: `linear-gradient(140deg, ${b.accent_color}, ${shade(b.accent_color, -25)})`,
               }}
             >
-              {/* Pebble noise texture */}
-              <span
-                aria-hidden
-                className="pointer-events-none absolute inset-0 opacity-[0.22] mix-blend-overlay"
-                style={{
-                  backgroundImage:
-                    "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")",
-                  backgroundSize: "180px 180px",
-                }}
-              />
-              {/* Frosted glass pebble panel */}
+              {/* Frosted glass panel */}
               <span
                 aria-hidden
                 className="pointer-events-none absolute inset-x-3 inset-y-3 rounded-[18px] border border-white/25"
@@ -220,7 +210,6 @@ function Home() {
                   background:
                     "radial-gradient(120% 100% at 20% 0%, rgba(255,255,255,0.35), rgba(255,255,255,0.08) 60%, rgba(255,255,255,0.04))",
                   backdropFilter: "blur(28px) saturate(160%)",
-                  WebkitBackdropFilter: "blur(28px) saturate(160%)",
                   boxShadow:
                     "inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -1px 0 rgba(0,0,0,0.1), 0 8px 24px -12px rgba(0,0,0,0.35)",
                 }}
