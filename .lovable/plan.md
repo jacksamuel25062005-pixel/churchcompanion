@@ -1,139 +1,120 @@
-## Church Companion — v1 Build Plan (Installable PWA)
+# Offline-First PWA Upgrade Plan
 
-A mobile-first installable web app (PWA) for a Hindi-speaking church community. Reads all five books without login, syncs Today's Songs in real time, and supports a full admin workflow with content uploads.
+Goal: turn Church Companion into a true offline-first PWA. Zero UI/UX changes. Existing routes, auth, admin flows, and Supabase data model stay intact. We add a local-first data layer, a sync engine, an upload queue, and tighten the service worker.
 
-> Note: This is a Lovable web app, not a React Native APK. It installs to Android home screens via "Add to Home Screen" and works offline-friendly. Push notifications via OneSignal are deferred (web push needs a separate setup; we'll wire it in a follow-up if you want it).
+## Scope check before we start
 
----
+A few of the asks don't map 1:1 to this project, and I want your call before I build them:
 
-### 1. Stack & infra
+1. **Backend sync endpoints (`/sync/push`, `/sync/pull`) + PostgreSQL schema.** This app talks directly to Supabase (Lovable Cloud) via RLS. We don't have a custom Node/Express server. Two options:
+   - **A. Supabase-native sync** (recommended): implement Push/Pull as TanStack server functions backed by Supabase, using existing tables + new `updated_at`/`is_deleted` columns and a Postgres function for delta pull. Same semantics (LWW, soft delete, batched push), no extra infra.
+   - **B. Add Node/Express service** in front of Supabase. More code, another deploy target, no real benefit here.
+2. **All data in IndexedDB + intercept every API call.** Today: songs/sections/today's-sets are read-mostly for end users; only admins write. I'll make *all reads* IndexedDB-first with background revalidate, but I'll only queue *admin writes* offline (songs/sections/today). Auth, role checks, and notifications stay online-only — queueing those offline is unsafe. Tell me if you want end-user writes too (e.g. bookmarks already local; favorites; "request admin" form).
+3. **No UI changes** — I'll keep every screen pixel-identical. The new connectivity/sync status will surface only in the existing Diagnostics page (no new chrome). If you want a small status pill somewhere, say where.
 
-- TanStack Start + React 19 + Tailwind v4 + shadcn/ui (already scaffolded).
-- Lovable Cloud (Supabase under the hood) for auth, DB, storage, realtime, RLS.
-- Mobile-first design, smooth iOS-style transitions, 390px viewport as primary target.
-- PWA manifest + icons so it installs on Android. No service worker in v1 (keeps previews stable); we add offline caching in a follow-up if needed.
-- i18n with a lightweight EN/HI dictionary (no extra library), stored preference in `localStorage`.
+Assuming **1A** and **2 as scoped above** unless you say otherwise.
 
-### 2. Design system
+## Architecture
 
-- 5 per-book accent themes (Song Book, Lord's Supper, Ashaya Rabbani, Prata Kaal & Sayan Kalin, Almanac) — each book route swaps a CSS custom property.
-- Global user-selectable accent override + light/dark mode + font-size scale (S/M/L/XL), all in `localStorage`.
-- Devanagari-capable font for Hindi (Noto Sans Devanagari) + clean sans for English (Inter), via `@fontsource`.
-
-### 3. Routes
-
-```
-/                       Splash → home (logo 1.5s, then Today's Songs + 5 book cards)
-/books/song-book        List + search (number, title, lyrics)
-/books/song-book/$id    Reader (favorite, share, copy, continue reading)
-/books/lords-supper     Sectioned reader
-/books/ashaya-rabbani   Sectioned reader
-/books/prata-sayan      Sectioned reader
-/books/almanac          English content, date-indexed
-/search                 Global full-text search
-/bookmarks              Local bookmarks list
-/settings               Font size, theme, accent, language
-/admin                  Tabbed: Super Admin login | Admin login/request
-/_authenticated/admin/dashboard   Approved-admin & super-admin only
-/_authenticated/admin/upload      PDF / DOCX / TXT → parse → review → publish
-/_authenticated/admin/today       Pick today's songs (realtime publish)
-/_authenticated/admin/requests    Super admin + admins approve requests
-/auth                   Lovable-managed auth page (used by admin login)
+```text
+UI (unchanged)
+  │
+  ▼
+Repositories  ──►  Dexie (IndexedDB)  ◄── Sync Engine ──► Supabase (RLS)
+  │                     ▲                     ▲
+  ▼                     │                     │
+React Query        Upload Queue          Workbox SW
+                   (Blobs + jobs)        (shell + API cache)
 ```
 
-Auth uses the integration-managed `_authenticated` layout. Regular users never hit auth.
+Folders:
+```
+src/offline/
+  db.ts                 // Dexie schema + migrations
+  repos/                // songs, sections, books, today, bookmarks, uploads
+  sync/
+    engine.ts           // orchestrator (push → pull → revalidate)
+    push.ts  pull.ts    // batched delta sync
+    conflict.ts         // LWW
+  uploads/
+    queue.ts            // job store, retry, backoff, resume
+    processor.ts        // sequential worker, Background Sync hook
+  hooks/                // useOffline, useConnectivity, useSync,
+                        // useUploadQueue, useBackgroundSync
+  net/
+    fetch-interceptor.ts
+    online.ts
+  index.ts
+src/lib/sync.functions.ts  // server fns: sync.push / sync.pull
+```
 
-### 4. Database (Lovable Cloud migration)
+## Phased delivery
 
-Tables, all with explicit GRANTs and RLS:
+### Phase 1 — Local-first data layer (no behavior change)
+- Add `dexie` + `dexie-react-hooks`.
+- `db.ts` tables: `books`, `book_sections`, `songs`, `today_sets`, `today_items`, `bookmarks`, `meta` (last-sync cursors), `outbox` (pending writes), `uploads` (file jobs + Blobs). Every row: `id` (uuid), `created_at`, `updated_at`, `is_dirty`, `is_deleted`, plus per-table indexes (`number`, `book_id`, `for_date`, etc.).
+- Migrate existing `idb-keyval` snapshots → Dexie on first load; keep `localStorage` only for prefs and bookmark IDs that already live there.
+- Repos expose `list/get/upsert/remove` that read Dexie first, return instantly, and trigger a background pull.
+- Wire existing TanStack Query `queryFn`s through repos. `initialData` comes from Dexie — same `useQuery` call sites, no component changes.
 
-- `profiles` (id → auth.users, display_name, created_at)
-- `user_roles` (user_id, role enum: `super_admin` | `admin`) + `has_role()` security-definer fn
-- `books` (slug, title_en, title_hi, accent_color, order)
-- `book_sections` (book_id, number, title_hi, title_en, body_hi, body_en, search tsvector)
-- `songs` (number, title_hi, lyrics_hi, lyrics_en?, tags, search tsvector)
-- `today_song_sets` (date, published_by, published_at)
-- `today_song_items` (set_id, song_id, position)
-- `admin_requests` (user_id, reason, status, decided_by, decided_at)
-- `audit_logs` (actor_id, action, target, payload, created_at)
-- `app_settings` (key, value jsonb)  — admin-tunable
+### Phase 2 — Sync engine (Supabase-native)
+- Migration: add `updated_at timestamptz default now()` + `is_deleted bool default false` + update triggers on `songs`, `book_sections`, `today_song_sets`, `today_song_items` (books already static). Index `(updated_at)`.
+- Postgres function `sync_pull(since timestamptz)` returns changed rows per table since cursor (RLS-respecting, `SECURITY INVOKER`).
+- Server fns in `src/lib/sync.functions.ts`:
+  - `syncPull({ since })` → calls `sync_pull`, returns `{ rows, server_time }`.
+  - `syncPush({ ops })` → validates with Zod, applies upserts/soft-deletes via authenticated supabase client, returns per-op `{ id, status, server_updated_at }`. Admin-only ops gated by `has_role`.
+- Engine loop:
+  1. Drain `outbox` in batches of 100 → `syncPush` → on success mark clean, store server `updated_at`.
+  2. `syncPull(since=meta.lastSyncedAt)` → upsert into Dexie using LWW (`server.updated_at >= local.updated_at` wins; deletions tombstoned).
+  3. Update `meta.lastSyncedAt = server_time`.
+- Triggers: online event, app focus, route change to data-heavy pages, periodic 5-min timer, Background Sync tag `cc-sync` when supported.
 
-Public `TO anon` SELECT on books, book_sections, songs, today_song_sets/items (current date only).  
-Writes restricted via `has_role()`. Admin requests insertable by any authenticated user; status changes restricted to admins/super_admin. Today's set auto-filtered to current date in queries; no cron needed.
+### Phase 3 — Upload queue for admin file ingest
+- New table `uploads`: `{ id, kind: 'songs-import'|'pdf'|'docx'|'txt', blob, filename, mime, status, retries, progress, created_at, updated_at, error }`.
+- Wrap existing admin upload flow: enqueue Blob immediately, return success to UI, processor uploads sequentially with exponential backoff (1s → 30s, cap 5 retries), resumes on `online` / Background Sync.
+- Existing parsing (`mammoth`, `pdfjs-dist`) happens locally before push; parsed payload goes into `outbox`, original Blob optionally stored in Supabase Storage if you want — say the word.
 
-### 5. Reading experience
+### Phase 4 — Service worker hardening (Workbox via existing `vite-plugin-pwa`)
+- Keep current guarded `pwa-register.ts` (no SW in preview/iframe).
+- Strategies:
+  - **CacheFirst** — `/assets/*`, fonts, icons, manifest (already in place; expand globs).
+  - **NetworkFirst w/ cache fallback** — HTML navigations and Supabase REST `GET`s (4s timeout, cache 30d).
+  - **StaleWhileRevalidate** — book/song listing endpoints (tag `supabase-lists`).
+  - **NetworkOnly + BackgroundSyncPlugin** — Supabase `POST/PATCH/DELETE` for songs/sections/today, queue name `cc-writes`, 24h retention. Engine still owns LWW; SW queue is a belt-and-suspenders for raw fetches.
+- Precache app shell via `globPatterns` (already done) + add manifest.webmanifest.
 
-- Server-side Postgres full-text search across `songs` and `book_sections` via a public `search_content()` SQL function (anon-callable).
-- Bookmarks + "continue reading" + favorites stored in `localStorage` (per spec — no cross-device sync).
-- Share uses Web Share API with clipboard fallback; copy uses Clipboard API.
-- Font-size, theme, accent, language stored in `localStorage` and applied via CSS variables on `<html>`.
+### Phase 5 — Hooks & status surface
+- `useOnline()`, `useConnectivity()` (RTT + saveData), `useSync()` (`idle|syncing|error`, last-synced, pending count), `useUploadQueue()` (jobs + progress), `useBackgroundSync()` (capability + tag state).
+- Surface only in `/diagnostics` panel; no other UI changes.
 
-### 6. Today's Songs (realtime)
+### Phase 6 — Manifest & installability
+- Audit `public/manifest.webmanifest`: add `id`, `categories`, `screenshots` (narrow + wide), `shortcuts` (Today's Songs, Song Book, Bookmarks), `display_override: ["standalone","minimal-ui"]`. Verify 192/512 maskable icons exist. Adds Windows/macOS/Linux/Chrome/Edge install support; iOS keeps its existing apple-touch-icon path.
 
-- Home screen subscribes to `today_song_sets` + `today_song_items` for today's date via Supabase Realtime channel.
-- Shows "No songs selected today" (HI/EN) when empty.
-- Admin "Today" screen: pick songs → publish → instantly visible to all clients.
-- OneSignal push: deferred — flagged as a follow-up turn (needs Firebase Messaging worker + OneSignal app id from you).
+## Cross-cutting
 
-### 7. Admin system
+- **Race conditions**: per-op `id` (uuid) idempotency; push results keyed by id; Dexie transactions for outbox drain.
+- **Auth refresh**: existing `attachSupabaseAuth` middleware already refreshes; engine retries 401 once after `supabase.auth.refreshSession()`.
+- **Logging**: route through existing `src/lib/diagnostics.ts`.
+- **Migration safety**: SW update keeps Dexie + Cache Storage; only the kill-switch path (already in `pwa-register.ts`) clears app caches.
+- **Browser support**: Chromium/Edge/Firefox full; Safari — Dexie + SW work, Background Sync falls back to `online` event + focus trigger.
 
-- `/admin` page: tabs for "Super Admin" (email+password sign-in) and "Admin" (sign-in if already approved, otherwise "Request admin access" form).
-- After sign-in, role checked server-side via `has_role()`.
-- Super Admin account: you create the user in Lovable Cloud → Users, then a one-time migration grants `super_admin` to that email's `user_id` if found. Password never touches code.
-- Approved admins can: upload content, edit/delete songs & book sections, publish Today's Songs, approve/reject admin requests.
-- All admin mutations write to `audit_logs`.
+## Testing
 
-### 8. Content upload (PDF / DOCX / TXT)
+- Unit: repos (CRUD + dirty marking), conflict resolver, outbox drainer, backoff.
+- Integration: simulate offline with Playwright (`context.setOffline(true)`), enqueue admin upload, go online, assert sync runs and rows land in Supabase.
+- Manual checklist on `/diagnostics`: storage quota, outbox size, last sync, upload queue.
 
-- Upload UI accepts the three formats and stores the raw file in Supabase Storage (`uploads` bucket, admin-only).
-- Server function parses:
-  - TXT: read as UTF-8.
-  - DOCX: `mammoth` → plain text.
-  - PDF: `pdfjs-dist` text extraction (Worker-compatible build).
-- Parsed text shown in a Review screen where admin assigns: target book, section/song number, title (HI/EN), and body. Then "Publish" inserts rows; realtime sync propagates to users instantly.
+## What I will NOT change
 
-### 9. Settings screen
+- Any route, component, layout, styling, copy, or navigation.
+- Auth flow, role checks, RLS policies, Supabase client wiring.
+- OneSignal, notifications, diagnostics UI (just adds rows).
+- `localStorage` bookmark format (migrated in place, same shape).
 
-- Font size slider (S/M/L/XL).
-- Light / Dark / System toggle.
-- Accent color palette (6 preset swatches + per-book auto override option).
-- Language: English / हिन्दी toggle.
+## Confirm before I build
 
-### 10. Splash & home
+1. Go with **Supabase-native sync (1A)**? (Yes/No)
+2. Scope writes to **admin-only as listed**, or include end-user writes (which ones)?
+3. Keep status surface to **Diagnostics page only**, or add a tiny indicator (where)?
 
-- First visit each session: 1.5s splash with church logo (placeholder until you upload one) and fade-out.
-- Home: Today's Songs card at top → 5 book cards with their accent colors → quick links to Search, Bookmarks, Settings, Admin.
-
-### 11. PWA install
-
-- `public/manifest.webmanifest` with name "Church Companion", short_name "Church", standalone display, theme/background colors, 192/512 maskable icons (placeholder; replaceable).
-- Head tags for manifest + theme-color + apple-touch-icon.
-- No service worker in v1 — keeps Lovable previews safe and meets the manifest-only home-screen support path. Offline caching can be added later via `vite-plugin-pwa` with the guarded wrapper.
-
-### 12. Out of scope for v1 (call out follow-ups)
-
-- OneSignal push notifications (needs web-push setup + your OneSignal app id).
-- Offline reading via service worker (additive, do after PWA installs cleanly).
-- Cross-device bookmark sync (spec says local-only; leaving as local).
-- Church logo + final brand colors — placeholder until you upload assets.
-
-### 13. Implementation order (single build pass)
-
-1. Enable Lovable Cloud.
-2. Migration: enums, tables, GRANTs, RLS, `has_role`, `search_content`, seed 5 books.
-3. Design tokens: theme CSS vars, fonts, accent palettes, i18n dictionary + hook.
-4. App shell: `__root` head/manifest, splash, bottom tab navigation (Home / Books / Search / Bookmarks / Settings).
-5. Home screen with realtime Today's Songs.
-6. Book list + reader components (shared, themed per book).
-7. Song Book with search, favorites, share/copy, continue reading.
-8. Settings screen.
-9. `/admin` tabs + auth flows, request submission, `_authenticated/admin/*` pages.
-10. Upload → parse → review → publish flow.
-11. Bookmarks screen, global search.
-12. SEO `head()` per route, PWA manifest assets, smoke test on 390px viewport.
-
-### 14. After plan approval — what I need from you
-
-- Enable Lovable Cloud (I'll trigger the prompt).
-- Create the Super Admin user in Cloud → Users with `emanualmridha2@gmail.com` and a NEW password (please rotate the one you pasted).
-- Optional: upload church logo + any seed song/book content; otherwise I'll ship with placeholders and an empty library ready for admin upload.
+Once you confirm, I'll ship in the phase order above, with each phase verified before moving on.
