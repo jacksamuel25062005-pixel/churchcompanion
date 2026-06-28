@@ -96,11 +96,13 @@ export type Database = {
           book_id: string
           created_at: string
           id: string
+          is_deleted: boolean
           number: number | null
           search: unknown
           sort_order: number
           title_en: string | null
           title_hi: string | null
+          updated_at: string
         }
         Insert: {
           body_en?: string | null
@@ -108,11 +110,13 @@ export type Database = {
           book_id: string
           created_at?: string
           id?: string
+          is_deleted?: boolean
           number?: number | null
           search?: unknown
           sort_order?: number
           title_en?: string | null
           title_hi?: string | null
+          updated_at?: string
         }
         Update: {
           body_en?: string | null
@@ -120,11 +124,13 @@ export type Database = {
           book_id?: string
           created_at?: string
           id?: string
+          is_deleted?: boolean
           number?: number | null
           search?: unknown
           sort_order?: number
           title_en?: string | null
           title_hi?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -197,6 +203,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_deleted: boolean
           lyrics_en: string | null
           lyrics_hi: string
           number: number | null
@@ -209,6 +216,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_deleted?: boolean
           lyrics_en?: string | null
           lyrics_hi: string
           number?: number | null
@@ -221,6 +229,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_deleted?: boolean
           lyrics_en?: string | null
           lyrics_hi?: string
           number?: number | null
@@ -235,21 +244,27 @@ export type Database = {
       today_song_items: {
         Row: {
           id: string
+          is_deleted: boolean
           position: number
           set_id: string
           song_id: string
+          updated_at: string
         }
         Insert: {
           id?: string
+          is_deleted?: boolean
           position?: number
           set_id: string
           song_id: string
+          updated_at?: string
         }
         Update: {
           id?: string
+          is_deleted?: boolean
           position?: number
           set_id?: string
           song_id?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -272,26 +287,32 @@ export type Database = {
         Row: {
           for_date: string
           id: string
+          is_deleted: boolean
           note: string | null
           published_at: string
           published_by: string | null
           title: string | null
+          updated_at: string
         }
         Insert: {
           for_date: string
           id?: string
+          is_deleted?: boolean
           note?: string | null
           published_at?: string
           published_by?: string | null
           title?: string | null
+          updated_at?: string
         }
         Update: {
           for_date?: string
           id?: string
+          is_deleted?: boolean
           note?: string | null
           published_at?: string
           published_by?: string | null
           title?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -332,6 +353,8 @@ export type Database = {
           title: string
         }[]
       }
+      server_now: { Args: never; Returns: string }
+      sync_pull: { Args: { since?: string }; Returns: Json }
     }
     Enums: {
       admin_request_status: "pending" | "approved" | "rejected"
