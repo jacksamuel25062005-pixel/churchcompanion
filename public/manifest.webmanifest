@@ -1,15 +1,25 @@
 {
   "name": "Church Companion",
   "short_name": "Church",
-  "description": "Digital church library and worship companion",
+  "id": "/?source=pwa",
+  "description": "Digital church library and worship companion — works fully offline.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
   "background_color": "#ffffff",
-  "theme_color": "#6366f1",
+  "theme_color": "#0f172a",
+  "categories": ["books", "lifestyle", "music"],
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Today's Songs", "short_name": "Today", "url": "/today", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Song Book", "short_name": "Songs", "url": "/books/song-book", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Bookmarks", "short_name": "Saved", "url": "/bookmarks", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
   ]
 }

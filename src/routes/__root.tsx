@@ -15,6 +15,7 @@ import { SettingsProvider } from "../lib/settings";
 import { Toaster } from "../components/ui/sonner";
 import { initOneSignal } from "../lib/onesignal";
 import { initDiagnostics } from "../lib/diagnostics";
+import { initOffline } from "../offline";
 
 function NotFoundComponent() {
   return (
@@ -131,6 +132,7 @@ function RootComponent() {
   useEffect(() => {
     initDiagnostics();
     initOneSignal();
+    initOffline();
   }, []);
 
   return (
