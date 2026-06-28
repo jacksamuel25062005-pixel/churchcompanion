@@ -54,15 +54,61 @@ function DiagnosticsPage() {
     }
   };
 
+  const sync = useSync();
+  const conn = useConnectivity();
+  const uploads = useUploadQueue();
+  const bgSync = useBackgroundSync();
+
   return (
     <AppShell title="Diagnostics">
       <div className="pt-4 space-y-4">
         <Card className="p-4 space-y-2 text-xs">
           <div className="flex justify-between"><span className="text-muted-foreground">User Agent</span><span className="truncate max-w-[60%] text-right">{mounted ? navigator.userAgent : "—"}</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Online</span><span>{mounted ? (navigator.onLine ? "Yes" : "No") : "—"}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Online</span><span>{mounted ? (conn.online ? "Yes" : "No") : "—"}</span></div>
+          {conn.effectiveType && (
+            <div className="flex justify-between"><span className="text-muted-foreground">Network</span><span>{conn.effectiveType}{conn.rtt ? ` · ${conn.rtt}ms` : ""}{conn.saveData ? " · saveData" : ""}</span></div>
+          )}
           <div className="flex justify-between"><span className="text-muted-foreground">Storage</span><span>{storage.usage != null ? `${formatBytes(storage.usage)} / ${formatBytes(storage.quota ?? 0)}` : "—"}</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Offline packs</span><span>{mounted ? `${offline.length} (${formatBytes(offline.reduce((a, b) => a + b.bytes, 0))})` : "—"}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Background Sync</span><span>{bgSync.supported ? "Supported" : "Unsupported"}</span></div>
         </Card>
+
+        <Card className="p-4 space-y-2 text-xs">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-sm">Sync</span>
+            <button onClick={() => runSync()} className="inline-flex items-center gap-1 glass-chip rounded-full px-3 py-1 text-[11px] font-medium">
+              <RotateCw className="h-3 w-3" /> Sync now
+            </button>
+          </div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Status</span><span className="capitalize">{sync.status}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Pending writes</span><span>{sync.pending}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Last synced</span><span>{sync.lastSyncedAt ? new Date(sync.lastSyncedAt).toLocaleString() : "Never"}</span></div>
+          {sync.lastError && <div className="text-destructive break-words">{sync.lastError}</div>}
+        </Card>
+
+        <Card className="p-4 space-y-2 text-xs">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-sm">Upload queue</span>
+            <button onClick={() => processQueue()} className="inline-flex items-center gap-1 glass-chip rounded-full px-3 py-1 text-[11px] font-medium">
+              <RotateCw className="h-3 w-3" /> Resume
+            </button>
+          </div>
+          {uploads.length === 0 ? (
+            <p className="text-muted-foreground">No uploads queued.</p>
+          ) : uploads.map((j) => (
+            <div key={j.id} className="flex items-center gap-2">
+              <div className="flex-1 min-w-0">
+                <p className="truncate font-medium">{j.filename}</p>
+                <p className="text-muted-foreground">{j.status} · {formatBytes(j.size)}{j.last_error ? ` · ${j.last_error}` : ""}</p>
+              </div>
+              {j.status === "failed" && (
+                <button onClick={() => retryUpload(j.id)} className="glass-chip rounded-full px-2 py-1 text-[10px]">Retry</button>
+              )}
+              <button onClick={() => removeUpload(j.id)} className="glass-chip rounded-full px-2 py-1 text-[10px]">Remove</button>
+            </div>
+          ))}
+        </Card>
+
 
 
         <div className="flex items-center gap-2">
