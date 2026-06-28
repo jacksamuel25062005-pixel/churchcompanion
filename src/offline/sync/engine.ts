@@ -11,7 +11,7 @@
 // trigger (online / focus / interval / route) tries again.
 
 import { supabase } from "@/integrations/supabase/client";
-import { logDiag } from "../../lib/diagnostics";
+import { log as logDiag } from "../../lib/diagnostics";
 import {
   getDB,
   META_KEYS,

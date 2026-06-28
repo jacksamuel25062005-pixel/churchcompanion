@@ -6,7 +6,7 @@
 //   `online` event and Background Sync `cc-uploads` tag.
 
 import { supabase } from "@/integrations/supabase/client";
-import { logDiag } from "../../lib/diagnostics";
+import { log as logDiag } from "../../lib/diagnostics";
 import { getDB, type UploadRow, type UploadStatus } from "../db";
 
 type Listener = (jobs: UploadRow[]) => void;

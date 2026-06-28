@@ -2,7 +2,7 @@
 // client. Sets up sync triggers (online, focus, periodic, route changes via
 // `document.visibilitychange`) and resumes any pending uploads.
 
-import { logDiag } from "../lib/diagnostics";
+import { log as logDiag } from "../lib/diagnostics";
 import { refreshPendingCount, runSync } from "./sync/engine";
 import { processQueue } from "./uploads/queue";
 
