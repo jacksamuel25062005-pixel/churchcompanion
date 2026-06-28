@@ -1,11 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Trash2, Copy, RefreshCw } from "lucide-react";
+import { Trash2, Copy, RefreshCw, RotateCw } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "../components/AppShell";
 import { Card } from "../components/ui-bits";
 import { clearEntries, getEntries, subscribe, type DiagEntry, type DiagLevel } from "../lib/diagnostics";
 import { listOffline, formatBytes } from "../lib/offline";
+import { useSync, useConnectivity, useUploadQueue, useBackgroundSync } from "../offline/hooks";
+import { runSync } from "../offline/sync/engine";
+import { processQueue, retryUpload, removeUpload } from "../offline/uploads/queue";
 
 export const Route = createFileRoute("/diagnostics")({
   head: () => ({ meta: [{ title: "Diagnostics — Church Companion" }] }),
