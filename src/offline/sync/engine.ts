@@ -98,7 +98,7 @@ async function applyPullPayload(payload: Record<string, unknown>): Promise<void>
 }
 
 async function pullOnce(): Promise<void> {
-  const since = (await metaGet<string>(META_KEYS.lastSyncedAt)) ?? null;
+  const since = (await metaGet<string>(META_KEYS.lastSyncedAt)) ?? undefined;
   const { data, error } = await supabase.rpc("sync_pull", { since });
   if (error) throw error;
   const payload = data as Record<string, unknown> & { server_time?: string };
