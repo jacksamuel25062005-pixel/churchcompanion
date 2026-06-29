@@ -19,7 +19,6 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
     { to: "/", label: t("nav.home"), icon: Home, match: (p: string) => p === "/" },
     { to: "/search", label: t("nav.search"), icon: Search, match: (p: string) => p.startsWith("/search") },
     { to: "/bookmarks", label: t("nav.bookmarks"), icon: Bookmark, match: (p: string) => p.startsWith("/bookmarks") },
-    { to: "/admin", label: t("nav.admin"), icon: User, match: (p: string) => p.startsWith("/admin") },
     { to: "/settings", label: t("nav.settings"), icon: SettingsIcon, match: (p: string) => p.startsWith("/settings") },
   ] as const;
 
