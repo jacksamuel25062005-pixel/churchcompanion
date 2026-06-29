@@ -14,7 +14,8 @@ export const Route = createFileRoute("/_authenticated/admin/dashboard")({
 function Dashboard() {
   const navigate = useNavigate();
   const [role, setRole] = useState<string | null>(null);
-  const [email, setEmail] = useState("");
+  const [displayName, setDisplayName] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
   const [stats, setStats] = useState({ songs: 0, sections: 0, pending: 0 });
 
   useEffect(() => {
@@ -22,10 +23,14 @@ function Dashboard() {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) { navigate({ to: "/admin" }); return; }
       setEmail(u.user.email ?? "");
-      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", u.user.id);
+      const [{ data: roles }, { data: profile }] = await Promise.all([
+        supabase.from("user_roles").select("role").eq("user_id", u.user.id),
+        supabase.from("profiles").select("display_name, email").eq("id", u.user.id).maybeSingle(),
+      ]);
       const r = (roles ?? []).map((x) => x.role);
       if (!r.includes("admin") && !r.includes("super_admin")) { navigate({ to: "/admin" }); return; }
       setRole(r.includes("super_admin") ? "super_admin" : "admin");
+      setDisplayName(profile?.display_name ?? "");
 
       const [{ count: songs }, { count: sections }, { count: pending }] = await Promise.all([
         supabase.from("songs").select("*", { count: "exact", head: true }),
