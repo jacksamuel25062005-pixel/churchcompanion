@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Bell, BellOff, Download, Loader2, CheckCircle2, Trash2, HardDrive } from "lucide-react";
+import { Bell, BellOff, Download, Loader2, CheckCircle2, Trash2, HardDrive, Shield, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../components/AppShell";
