@@ -6,6 +6,7 @@ import { Card, BackButton } from "../components/ui-bits";
 import { useT } from "../lib/i18n";
 import { toast } from "sonner";
 import { Shield, UserPlus } from "lucide-react";
+import { firstNameFrom } from "@/lib/admin-name";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — Church Companion" }] }),
