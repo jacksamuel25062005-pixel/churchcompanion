@@ -79,6 +79,7 @@ function LoginForm({ role }: { role: "super" | "admin" }) {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
@@ -86,16 +87,41 @@ function LoginForm({ role }: { role: "super" | "admin" }) {
     setSubmitting(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        // Create the account, file an admin request, then sign the user OUT.
+        // They cannot log in again until the Super Admin approves them.
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email, password,
           options: { emailRedirectTo: window.location.origin + "/admin" },
         });
         if (error) throw error;
-        toast.success("Account created — check your email if confirmation is required, then sign in.");
+        const newUserId = signUpData.user?.id;
+        if (newUserId) {
+          await supabase.from("admin_requests").insert({
+            user_id: newUserId,
+            reason: reason.trim() || "Requesting admin access",
+          });
+        }
+        await supabase.auth.signOut();
+        toast.success("Request submitted. You can sign in after the Super Admin approves your account.");
         setMode("login");
+        setReason("");
+        setPassword("");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        // Gate: only users with an approved role may stay signed in.
+        const uid = signInData.user?.id;
+        if (!uid) throw new Error("Sign-in failed");
+        const { data: roles } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", uid);
+        const isAdmin = (roles ?? []).some((r) => r.role === "admin" || r.role === "super_admin");
+        if (!isAdmin) {
+          await supabase.auth.signOut();
+          toast.error("Your account is pending Super Admin approval. You'll be able to sign in once approved.");
+          return;
+        }
         toast.success("Signed in");
         navigate({ to: "/admin/dashboard" });
       }
@@ -111,7 +137,9 @@ function LoginForm({ role }: { role: "super" | "admin" }) {
       <p className="text-sm text-muted-foreground mb-4">
         {role === "super"
           ? "Sign in as the Super Admin."
-          : "Sign in if you are already an admin, or create an account and request access."}
+          : mode === "login"
+            ? "Sign in if you are already an approved admin."
+            : "Create an account and request admin access. The Super Admin must approve before you can sign in."}
       </p>
       <form onSubmit={submit} className="space-y-3">
         <Field label={t("admin.email")}>
@@ -120,8 +148,13 @@ function LoginForm({ role }: { role: "super" | "admin" }) {
         <Field label={t("admin.password")}>
           <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required minLength={6} autoComplete={mode === "signup" ? "new-password" : "current-password"} className="input" />
         </Field>
+        {role === "admin" && mode === "signup" && (
+          <Field label={t("admin.request_reason")}>
+            <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} className="input" placeholder="Why do you need admin access?" />
+          </Field>
+        )}
         <button disabled={submitting} className="w-full rounded-xl brand-bg py-2.5 text-sm font-medium disabled:opacity-50">
-          {submitting ? "…" : mode === "login" ? t("admin.sign_in") : t("admin.sign_up")}
+          {submitting ? "…" : mode === "login" ? t("admin.sign_in") : "Request access"}
         </button>
         {role === "admin" && (
           <button
@@ -129,7 +162,7 @@ function LoginForm({ role }: { role: "super" | "admin" }) {
             onClick={() => setMode(mode === "login" ? "signup" : "login")}
             className="w-full text-xs text-muted-foreground underline"
           >
-            {mode === "login" ? "Create account" : "Have an account? Sign in"}
+            {mode === "login" ? "Create account & request access" : "Have an approved account? Sign in"}
           </button>
         )}
       </form>

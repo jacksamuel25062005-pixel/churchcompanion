@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Bell, BellOff, Download, Loader2, CheckCircle2, Trash2, HardDrive } from "lucide-react";
+import { Bell, BellOff, Download, Loader2, CheckCircle2, Trash2, HardDrive, Shield, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../components/AppShell";
@@ -23,7 +23,24 @@ function SettingsPage() {
   return (
     <AppShell title={t("nav.settings")}>
       <div className="space-y-5 pt-4">
+        <Section label="Admin">
+          <Link
+            to="/admin"
+            className="flex items-center gap-3 rounded-2xl border bg-card p-4 hover:bg-secondary/60 transition-colors"
+          >
+            <span className="grid place-items-center h-10 w-10 rounded-xl brand-bg">
+              <Shield className="h-5 w-5" />
+            </span>
+            <span className="flex-1">
+              <span className="block text-sm font-semibold">Admin Login</span>
+              <span className="block text-xs text-muted-foreground">Sign in or request admin access</span>
+            </span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Link>
+        </Section>
+
         <Section label={t("settings.font_size")}>
+
           <div className="grid grid-cols-4 gap-2">
             {(["s","m","l","xl"] as FontSize[]).map((sz) => (
               <button
