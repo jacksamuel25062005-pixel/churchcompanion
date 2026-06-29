@@ -50,7 +50,9 @@ function Dashboard() {
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider opacity-90">
             <Shield className="h-3.5 w-3.5" /> {role === "super_admin" ? "Super Admin" : "Admin"}
           </div>
-          <p className="mt-1 font-medium">{email}</p>
+          <p className="mt-1 text-xl font-semibold tracking-tight">
+            {adminDisplayName({ role, displayName, email })}
+          </p>
         </Card>
 
         <div className="grid grid-cols-3 gap-2">
