@@ -67,8 +67,9 @@ function RequestsPage() {
             <Card key={r.id} className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="font-medium truncate">{r.profile?.display_name || r.profile?.email || r.user_id.slice(0, 8)}</p>
-                  <p className="text-xs text-muted-foreground truncate">{r.profile?.email}</p>
+                  <p className="font-medium truncate">
+                    {firstNameFrom({ displayName: r.profile?.display_name, email: r.profile?.email }) || r.user_id.slice(0, 8)}
+                  </p>
                 </div>
                 <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
                   r.status === "pending" ? "bg-secondary" : r.status === "approved" ? "brand-bg" : "bg-destructive text-destructive-foreground"
