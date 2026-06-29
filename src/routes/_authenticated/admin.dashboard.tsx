@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../../components/AppShell";
 import { Card, BackButton } from "../../components/ui-bits";
 import { Upload, ListMusic, UserCheck, LogOut, Shield, Database, Bell } from "lucide-react";
+import { adminDisplayName } from "@/lib/admin-name";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/dashboard")({
