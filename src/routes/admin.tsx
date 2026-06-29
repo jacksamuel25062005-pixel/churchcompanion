@@ -6,6 +6,7 @@ import { Card, BackButton } from "../components/ui-bits";
 import { useT } from "../lib/i18n";
 import { toast } from "sonner";
 import { Shield, UserPlus } from "lucide-react";
+import { firstNameFrom } from "@/lib/admin-name";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — Church Companion" }] }),
@@ -212,7 +213,7 @@ function RequestAdminAccess({ email, userId }: { email: string; userId: string }
       <div className="pt-4 space-y-4">
         <Card className="p-5">
           <p className="text-xs text-muted-foreground">Signed in as</p>
-          <p className="font-medium">{email}</p>
+          <p className="font-medium">{firstNameFrom({ email })}</p>
         </Card>
 
         {existing ? (

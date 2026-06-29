@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../../components/AppShell";
 import { Card, BackButton } from "../../components/ui-bits";
 import { Upload, ListMusic, UserCheck, LogOut, Shield, Database, Bell } from "lucide-react";
+import { adminDisplayName } from "@/lib/admin-name";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/dashboard")({
@@ -13,7 +14,8 @@ export const Route = createFileRoute("/_authenticated/admin/dashboard")({
 function Dashboard() {
   const navigate = useNavigate();
   const [role, setRole] = useState<string | null>(null);
-  const [email, setEmail] = useState("");
+  const [displayName, setDisplayName] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
   const [stats, setStats] = useState({ songs: 0, sections: 0, pending: 0 });
 
   useEffect(() => {
@@ -21,10 +23,14 @@ function Dashboard() {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) { navigate({ to: "/admin" }); return; }
       setEmail(u.user.email ?? "");
-      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", u.user.id);
+      const [{ data: roles }, { data: profile }] = await Promise.all([
+        supabase.from("user_roles").select("role").eq("user_id", u.user.id),
+        supabase.from("profiles").select("display_name, email").eq("id", u.user.id).maybeSingle(),
+      ]);
       const r = (roles ?? []).map((x) => x.role);
       if (!r.includes("admin") && !r.includes("super_admin")) { navigate({ to: "/admin" }); return; }
       setRole(r.includes("super_admin") ? "super_admin" : "admin");
+      setDisplayName(profile?.display_name ?? "");
 
       const [{ count: songs }, { count: sections }, { count: pending }] = await Promise.all([
         supabase.from("songs").select("*", { count: "exact", head: true }),
@@ -44,7 +50,9 @@ function Dashboard() {
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider opacity-90">
             <Shield className="h-3.5 w-3.5" /> {role === "super_admin" ? "Super Admin" : "Admin"}
           </div>
-          <p className="mt-1 font-medium">{email}</p>
+          <p className="mt-1 text-xl font-semibold tracking-tight">
+            {adminDisplayName({ role, displayName, email })}
+          </p>
         </Card>
 
         <div className="grid grid-cols-3 gap-2">
