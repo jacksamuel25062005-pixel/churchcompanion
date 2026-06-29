@@ -212,7 +212,7 @@ function RequestAdminAccess({ email, userId }: { email: string; userId: string }
       <div className="pt-4 space-y-4">
         <Card className="p-5">
           <p className="text-xs text-muted-foreground">Signed in as</p>
-          <p className="font-medium">{email}</p>
+          <p className="font-medium">{firstNameFrom({ email })}</p>
         </Card>
 
         {existing ? (
