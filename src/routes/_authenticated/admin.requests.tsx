@@ -5,6 +5,7 @@ import { AppShell } from "../../components/AppShell";
 import { BackButton, Card } from "../../components/ui-bits";
 import { toast } from "sonner";
 import { useAdminGuard } from "../../lib/use-admin-guard";
+import { firstNameFrom } from "@/lib/admin-name";
 
 export const Route = createFileRoute("/_authenticated/admin/requests")({
   component: RequestsPage,
