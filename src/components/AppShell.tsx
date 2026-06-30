@@ -37,11 +37,13 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
       </div>
 
       {title || left || right ? (
-        <header className="sticky top-0 z-30">
+        <header className="sticky top-0 z-30 safe-top">
           <div className="glass-strong border-b border-transparent">
             <div className="mx-auto max-w-screen-sm px-4 h-14 flex items-center gap-2">
               {left}
-              <h1 className="flex-1 text-base font-semibold truncate">{title}</h1>
+              <h1 className="flex-1 text-base font-semibold truncate">
+                <span lang="en">{title}</span>
+              </h1>
               {right}
             </div>
           </div>
@@ -54,11 +56,12 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
 
       {!hideNav && (
         <nav
-          className="fixed inset-x-0 z-40 flex justify-center px-3"
+          className="fixed inset-x-0 z-40 flex justify-center px-3 safe-bottom"
           style={{ bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
         >
           <div className="glass rounded-[28px] w-full max-w-screen-sm">
-            <ul className="grid grid-cols-5 px-1.5 py-1.5">
+            <ul className="grid grid-cols-4 px-1.5 py-1.5">
+
               {items.map((it) => {
                 const Active = it.match(pathname);
                 const Icon = it.icon;
