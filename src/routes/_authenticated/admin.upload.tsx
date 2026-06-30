@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import type { Book } from "../../lib/types";
 import { FileUp } from "lucide-react";
 import { useAdminGuard } from "../../lib/use-admin-guard";
+import { EnhancedUpload } from "../../components/EnhancedUpload";
 
 export const Route = createFileRoute("/_authenticated/admin/upload")({
   component: UploadPage,
