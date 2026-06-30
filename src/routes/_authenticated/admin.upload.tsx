@@ -122,7 +122,7 @@ function UploadPage() {
 
         <Card className="p-6">
           <label className="block">
-            <span className="block text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Import file</span>
+            <span className="block text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quick import (PDF / DOCX / TXT)</span>
             <div className="mt-3 rounded-2xl border-2 border-dashed border-border/70 p-7 text-center transition-colors hover:border-foreground/30">
               <FileUp className="mx-auto h-8 w-8 text-muted-foreground" />
               <p className="mt-2 text-sm font-medium">Choose PDF, DOCX or TXT</p>
@@ -136,6 +136,16 @@ function UploadPage() {
               {parsing && <p className="mt-2 text-xs text-muted-foreground">Parsing…</p>}
             </div>
           </label>
+        </Card>
+
+        <Card className="p-6">
+          <div className="text-center space-y-1">
+            <span className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Enhanced upload</span>
+            <p className="text-xs text-muted-foreground">Attach to view, or Scan to extract text (image OCR, PDF text layer, TXT song splitter).</p>
+          </div>
+          <div className="mt-4">
+            <EnhancedUpload onExtracted={(t) => { setBody(t); if (!titleHi) setTitleHi(t.split("\n")[0]?.slice(0, 120) ?? ""); toast.success("Text extracted into editor"); }} />
+          </div>
         </Card>
 
         <Card className="p-6 space-y-4">
