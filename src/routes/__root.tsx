@@ -16,6 +16,8 @@ import { Toaster } from "../components/ui/sonner";
 import { initOneSignal } from "../lib/onesignal";
 import { initDiagnostics } from "../lib/diagnostics";
 import { initOffline } from "../offline";
+import { initHighRefreshRate } from "../lib/smoothness";
+
 
 function NotFoundComponent() {
   return (
