@@ -135,7 +135,9 @@ function RootComponent() {
     initDiagnostics();
     initOneSignal();
     initOffline();
+    initHighRefreshRate();
   }, []);
+
 
   return (
     <QueryClientProvider client={queryClient}>
