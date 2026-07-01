@@ -25,6 +25,7 @@ import { Route as AuthenticatedAdminRequestsRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminNotifyRouteImport } from './routes/_authenticated/admin.notify'
 import { Route as AuthenticatedAdminManageRouteImport } from './routes/_authenticated/admin.manage'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated/admin.dashboard'
+import { Route as AuthenticatedAdminAnnouncementsRouteImport } from './routes/_authenticated/admin.announcements'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -110,6 +111,12 @@ const AuthenticatedAdminDashboardRoute =
     path: '/admin/dashboard',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminAnnouncementsRoute =
+  AuthenticatedAdminAnnouncementsRouteImport.update({
+    id: '/admin/announcements',
+    path: '/admin/announcements',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
+  '/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/admin/manage': typeof AuthenticatedAdminManageRoute
   '/admin/notify': typeof AuthenticatedAdminNotifyRoute
@@ -136,6 +144,7 @@ export interface FileRoutesByTo {
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
+  '/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/admin/manage': typeof AuthenticatedAdminManageRoute
   '/admin/notify': typeof AuthenticatedAdminNotifyRoute
@@ -155,6 +164,7 @@ export interface FileRoutesById {
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
+  '/_authenticated/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/_authenticated/admin/manage': typeof AuthenticatedAdminManageRoute
   '/_authenticated/admin/notify': typeof AuthenticatedAdminNotifyRoute
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/books/$slug'
+    | '/admin/announcements'
     | '/admin/dashboard'
     | '/admin/manage'
     | '/admin/notify'
@@ -191,6 +202,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/books/$slug'
+    | '/admin/announcements'
     | '/admin/dashboard'
     | '/admin/manage'
     | '/admin/notify'
@@ -209,6 +221,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/books/$slug'
+    | '/_authenticated/admin/announcements'
     | '/_authenticated/admin/dashboard'
     | '/_authenticated/admin/manage'
     | '/_authenticated/admin/notify'
@@ -346,10 +359,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/announcements': {
+      id: '/_authenticated/admin/announcements'
+      path: '/admin/announcements'
+      fullPath: '/admin/announcements'
+      preLoaderRoute: typeof AuthenticatedAdminAnnouncementsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminAnnouncementsRoute: typeof AuthenticatedAdminAnnouncementsRoute
   AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
   AuthenticatedAdminManageRoute: typeof AuthenticatedAdminManageRoute
   AuthenticatedAdminNotifyRoute: typeof AuthenticatedAdminNotifyRoute
@@ -359,6 +380,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminAnnouncementsRoute: AuthenticatedAdminAnnouncementsRoute,
   AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
   AuthenticatedAdminManageRoute: AuthenticatedAdminManageRoute,
   AuthenticatedAdminNotifyRoute: AuthenticatedAdminNotifyRoute,
