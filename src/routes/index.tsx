@@ -126,15 +126,22 @@ function Home() {
 
   return (
     <AppShell>
-      <div className="pt-6 pb-2">
-        <div className="flex items-center gap-3">
-          <img src="/icon-192.png" alt="" width={40} height={40} className="rounded-xl" />
-          <div>
-            <p className="text-xs text-muted-foreground">{t("home.greeting")}</p>
-            <h1 className="text-xl font-bold">{t("app.name")}</h1>
-          </div>
+      <div className="pt-6 pb-2 flex items-center gap-3">
+        <img src="/icon-192.png" alt="" width={40} height={40} className="rounded-xl" />
+        <div className="min-w-0 flex-1">
+          <p className="text-xs text-muted-foreground">{t("home.greeting")}</p>
+          <h1 className="text-xl font-bold truncate">{t("app.name")}</h1>
         </div>
+        <AnnouncementBell />
       </div>
+
+      <section className="mt-5">
+        <div className="flex items-center gap-2 mb-2">
+          <Megaphone className="h-4 w-4 brand-text" />
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Announcements</h2>
+        </div>
+        <AnnouncementModule />
+      </section>
 
       <section className="mt-5">
         <div className="flex items-center gap-2 mb-2">
