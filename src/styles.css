@@ -338,3 +338,22 @@
 }
 
 
+
+/* Announcement bell shake */
+@keyframes bell-shake {
+  0%, 100% { transform: rotate(0deg) translateZ(0); }
+  15% { transform: rotate(14deg) translateZ(0); }
+  30% { transform: rotate(-10deg) translateZ(0); }
+  45% { transform: rotate(8deg) translateZ(0); }
+  60% { transform: rotate(-6deg) translateZ(0); }
+  75% { transform: rotate(4deg) translateZ(0); }
+  90% { transform: rotate(-2deg) translateZ(0); }
+}
+.bell-shake {
+  animation: bell-shake 2.4s ease-in-out infinite;
+  transform-origin: 50% 20%;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bell-shake { animation: none; }
+}
