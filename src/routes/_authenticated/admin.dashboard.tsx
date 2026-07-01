@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../../components/AppShell";
 import { Card, BackButton } from "../../components/ui-bits";
-import { Upload, ListMusic, UserCheck, LogOut, Shield, Database, Bell } from "lucide-react";
+import { Upload, ListMusic, UserCheck, LogOut, Shield, Database, Bell, Megaphone } from "lucide-react";
 import { adminDisplayName } from "@/lib/admin-name";
 import { toast } from "sonner";
 
@@ -66,6 +66,7 @@ function Dashboard() {
           <NavTile to="/admin/manage" icon={<Database className="h-5 w-5" />} title="Manage content" subtitle="Edit or delete songs & book sections" />
           <NavTile to="/admin/today" icon={<ListMusic className="h-5 w-5" />} title="Today's Songs" subtitle="Pick what users see today" />
           <NavTile to="/admin/notify" icon={<Bell className="h-5 w-5" />} title="Send notification" subtitle="Push to all subscribers (OneSignal)" />
+          <NavTile to="/admin/announcements" icon={<Megaphone className="h-5 w-5" />} title="Announcements" subtitle="Post to church members or youth group" />
           <NavTile to="/admin/requests" icon={<UserCheck className="h-5 w-5" />} title="Admin requests" subtitle="Approve or reject" />
         </div>
 

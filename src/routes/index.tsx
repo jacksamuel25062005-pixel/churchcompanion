@@ -6,9 +6,10 @@ import { AppShell } from "../components/AppShell";
 import { Card } from "../components/ui-bits";
 import { OfflineButton } from "../components/OfflineButton";
 import { useT, pickLang } from "../lib/i18n";
-import { Music, BookOpen, Sparkles } from "lucide-react";
+import { Music, BookOpen, Sparkles, Megaphone, CalendarDays } from "lucide-react";
 import { useTodaySnap, saveToday, removeOffline, OFFLINE_KEYS } from "../lib/offline";
 import type { Book, Song } from "../lib/types";
+import { AnnouncementModule, AnnouncementBell } from "../components/AnnouncementModule";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -125,15 +126,22 @@ function Home() {
 
   return (
     <AppShell>
-      <div className="pt-6 pb-2">
-        <div className="flex items-center gap-3">
-          <img src="/icon-192.png" alt="" width={40} height={40} className="rounded-xl" />
-          <div>
-            <p className="text-xs text-muted-foreground">{t("home.greeting")}</p>
-            <h1 className="text-xl font-bold">{t("app.name")}</h1>
-          </div>
+      <div className="pt-6 pb-2 flex items-center gap-3">
+        <img src="/icon-192.png" alt="" width={40} height={40} className="rounded-xl" />
+        <div className="min-w-0 flex-1">
+          <p className="text-xs text-muted-foreground">{t("home.greeting")}</p>
+          <h1 className="text-xl font-bold truncate">{t("app.name")}</h1>
         </div>
+        <AnnouncementBell />
       </div>
+
+      <section className="mt-5">
+        <div className="flex items-center gap-2 mb-2">
+          <Megaphone className="h-4 w-4 brand-text" />
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Announcements</h2>
+        </div>
+        <AnnouncementModule />
+      </section>
 
       <section className="mt-5">
         <div className="flex items-center gap-2 mb-2">
@@ -208,6 +216,21 @@ function Home() {
             </Link>
           ))}
         </div>
+      </section>
+
+      <section className="mt-7">
+        <Link
+          to="/almanac"
+          className="tap-card flex items-center gap-3 rounded-2xl border bg-card p-4 hover:bg-accent"
+        >
+          <span className="grid h-10 w-10 place-items-center rounded-xl brand-bg">
+            <CalendarDays className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">Almanac / पंचांग</span>
+            <span className="block text-xs text-muted-foreground">Daily readings & liturgical calendar</span>
+          </span>
+        </Link>
       </section>
     </AppShell>
   );
