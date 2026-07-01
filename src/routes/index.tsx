@@ -217,6 +217,21 @@ function Home() {
           ))}
         </div>
       </section>
+
+      <section className="mt-7">
+        <Link
+          to="/almanac"
+          className="tap-card flex items-center gap-3 rounded-2xl border bg-card p-4 hover:bg-accent"
+        >
+          <span className="grid h-10 w-10 place-items-center rounded-xl brand-bg">
+            <CalendarDays className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">Almanac / पंचांग</span>
+            <span className="block text-xs text-muted-foreground">Daily readings & liturgical calendar</span>
+          </span>
+        </Link>
+      </section>
     </AppShell>
   );
 }
