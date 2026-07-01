@@ -44,6 +44,81 @@ export type Database = {
         }
         Relationships: []
       }
+      almanac_entries: {
+        Row: {
+          colour: string
+          created_at: string
+          date: string
+          day_name: string
+          evening_readings: string[]
+          id: string
+          is_sunday: boolean
+          morning_readings: string[]
+          theme: string
+          updated_at: string
+        }
+        Insert: {
+          colour?: string
+          created_at?: string
+          date: string
+          day_name?: string
+          evening_readings?: string[]
+          id?: string
+          is_sunday?: boolean
+          morning_readings?: string[]
+          theme?: string
+          updated_at?: string
+        }
+        Update: {
+          colour?: string
+          created_at?: string
+          date?: string
+          day_name?: string
+          evening_readings?: string[]
+          id?: string
+          is_sunday?: boolean
+          morning_readings?: string[]
+          theme?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      announcements: {
+        Row: {
+          audience: string
+          body: string
+          created_at: string
+          created_by: string | null
+          date: string
+          id: string
+          published: boolean
+          topic: string
+          updated_at: string
+        }
+        Insert: {
+          audience: string
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          date: string
+          id?: string
+          published?: boolean
+          topic: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          id?: string
+          published?: boolean
+          topic?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           key: string
