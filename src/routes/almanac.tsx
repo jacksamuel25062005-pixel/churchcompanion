@@ -160,39 +160,35 @@ function YearFolder({
 
   return (
     <>
-      {/* Year folder card */}
-      <div className="mb-5 rounded-3xl border border-white/40 bg-white/50 p-4 backdrop-blur-xl shadow-sm dark:bg-white/5 dark:border-white/10">
-        <div className="flex items-center gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-2xl brand-bg shadow-inner">
-            <FolderOpen className="h-5 w-5" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Year</p>
-            <p className="text-lg font-bold leading-tight">{year}</p>
-          </div>
-          <div className="flex items-center gap-1">
-            <button
-              aria-label="Previous year"
-              onClick={() => onYear(year - 1)}
-              className="grid h-9 w-9 place-items-center rounded-xl hover:bg-accent"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              aria-label="Next year"
-              onClick={() => onYear(year + 1)}
-              className="grid h-9 w-9 place-items-center rounded-xl hover:bg-accent"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
+      {/* Year folder pill */}
+      <div
+        className="mb-4 flex items-center gap-3 rounded-2xl px-4 py-3.5 text-white shadow-md"
+        style={{ background: "linear-gradient(135deg, #6D5EF7, #4A38C9)" }}
+      >
+        <FolderOpen className="h-5 w-5 shrink-0 opacity-90" />
+        <p className="min-w-0 flex-1 text-base font-semibold leading-none">{year}</p>
+        <div className="flex items-center gap-0.5">
+          <button
+            aria-label="Previous year"
+            onClick={() => onYear(year - 1)}
+            className="grid h-8 w-8 place-items-center rounded-lg hover:bg-white/15"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            aria-label="Next year"
+            onClick={() => onYear(year + 1)}
+            className="grid h-8 w-8 place-items-center rounded-lg hover:bg-white/15"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
       {loading ? (
         <p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           {MONTHS_FULL.map((name, i) => {
             const count = (byMonth[i] ?? []).length;
             const isCurrent = year === currentYear && i === currentMonth;
@@ -201,26 +197,21 @@ function YearFolder({
                 key={name}
                 onClick={() => onOpenMonth(i)}
                 className={cn(
-                  "tap-card group relative flex h-24 flex-col justify-between overflow-hidden rounded-2xl border p-3 text-left transition-all",
+                  "tap-card group relative flex items-center gap-2.5 rounded-2xl border px-4 py-3.5 text-left transition-all",
                   "border-white/40 bg-white/60 backdrop-blur-xl shadow-sm hover:shadow-md hover:-translate-y-0.5",
                   "dark:bg-white/5 dark:border-white/10",
                   isCurrent && "ring-2 ring-primary/60",
                 )}
               >
-                <div className="flex items-center gap-2">
-                  <Folder className="h-4 w-4 brand-text" />
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {String(i + 1).padStart(2, "0")}
+                <Folder className="h-4 w-4 shrink-0 brand-text" />
+                <span className="min-w-0 flex-1 truncate text-sm font-semibold">{name}</span>
+                {count > 0 && (
+                  <span className="text-[10px] font-semibold tabular-nums text-muted-foreground">
+                    {count}
                   </span>
-                </div>
-                <div>
-                  <p className="text-base font-semibold leading-tight">{name}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {count > 0 ? `${count} ${count === 1 ? "entry" : "entries"}` : "No entries"}
-                  </p>
-                </div>
+                )}
                 {isCurrent && (
-                  <span className="absolute right-2 top-2 rounded-full brand-bg px-1.5 py-0.5 text-[9px] font-bold uppercase">
+                  <span className="absolute -right-1 -top-1 rounded-full brand-bg px-1.5 py-0.5 text-[9px] font-bold uppercase shadow">
                     Now
                   </span>
                 )}
@@ -232,6 +223,7 @@ function YearFolder({
     </>
   );
 }
+
 
 // ================= Month → Date Grid + Accordion =================
 function MonthView({
