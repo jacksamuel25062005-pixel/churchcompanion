@@ -26,7 +26,7 @@ const MONTHS_FULL = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
-const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
+const WEEKDAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 const WEEKDAYS_FULL = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 const COLOUR_META: Record<AlmanacRow["colour"], { name: string; bg: string; fg: string; ring: string }> = {
@@ -88,7 +88,7 @@ function AlmanacPage() {
 
   return (
     <AppShell
-      title={openMonth != null ? `${MONTHS_FULL[openMonth]} ${year}` : `Almanac · ${year}`}
+      title="Almanac"
       left={
         openMonth != null ? (
           <button onClick={back} className="-ml-2 inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium hover:bg-accent">
@@ -99,7 +99,25 @@ function AlmanacPage() {
         )
       }
     >
-      <div className="pt-4 pb-8 animate-fade-in">
+      <div className="pt-3 pb-8 animate-fade-in">
+        {/* Breadcrumb */}
+        <nav className="mb-3 flex items-center gap-1.5 text-xs">
+          <Link to="/" className="text-muted-foreground hover:text-foreground">Home</Link>
+          <span className="text-muted-foreground/50">/</span>
+          <button
+            onClick={() => { setOpenMonth(null); setOpenDate(null); }}
+            className={cn(openMonth == null ? "font-semibold" : "text-muted-foreground hover:text-foreground")}
+          >
+            Almanac
+          </button>
+          {openMonth != null && (
+            <>
+              <span className="text-muted-foreground/50">/</span>
+              <span className="font-semibold">{year}</span>
+            </>
+          )}
+        </nav>
+
         {openMonth == null ? (
           <YearFolder
             year={year}
@@ -122,6 +140,7 @@ function AlmanacPage() {
   );
 }
 
+
 // ================= Year → Month Folders =================
 function YearFolder({
   year,
@@ -141,39 +160,35 @@ function YearFolder({
 
   return (
     <>
-      {/* Year folder card */}
-      <div className="mb-5 rounded-3xl border border-white/40 bg-white/50 p-4 backdrop-blur-xl shadow-sm dark:bg-white/5 dark:border-white/10">
-        <div className="flex items-center gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-2xl brand-bg shadow-inner">
-            <FolderOpen className="h-5 w-5" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Year</p>
-            <p className="text-lg font-bold leading-tight">{year}</p>
-          </div>
-          <div className="flex items-center gap-1">
-            <button
-              aria-label="Previous year"
-              onClick={() => onYear(year - 1)}
-              className="grid h-9 w-9 place-items-center rounded-xl hover:bg-accent"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              aria-label="Next year"
-              onClick={() => onYear(year + 1)}
-              className="grid h-9 w-9 place-items-center rounded-xl hover:bg-accent"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
+      {/* Year folder pill */}
+      <div
+        className="mb-4 flex items-center gap-3 rounded-2xl px-4 py-3.5 text-white shadow-md"
+        style={{ background: "linear-gradient(135deg, #6D5EF7, #4A38C9)" }}
+      >
+        <FolderOpen className="h-5 w-5 shrink-0 opacity-90" />
+        <p className="min-w-0 flex-1 text-base font-semibold leading-none">{year}</p>
+        <div className="flex items-center gap-0.5">
+          <button
+            aria-label="Previous year"
+            onClick={() => onYear(year - 1)}
+            className="grid h-8 w-8 place-items-center rounded-lg hover:bg-white/15"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            aria-label="Next year"
+            onClick={() => onYear(year + 1)}
+            className="grid h-8 w-8 place-items-center rounded-lg hover:bg-white/15"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
       {loading ? (
         <p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           {MONTHS_FULL.map((name, i) => {
             const count = (byMonth[i] ?? []).length;
             const isCurrent = year === currentYear && i === currentMonth;
@@ -182,26 +197,21 @@ function YearFolder({
                 key={name}
                 onClick={() => onOpenMonth(i)}
                 className={cn(
-                  "tap-card group relative flex h-24 flex-col justify-between overflow-hidden rounded-2xl border p-3 text-left transition-all",
+                  "tap-card group relative flex items-center gap-2.5 rounded-2xl border px-4 py-3.5 text-left transition-all",
                   "border-white/40 bg-white/60 backdrop-blur-xl shadow-sm hover:shadow-md hover:-translate-y-0.5",
                   "dark:bg-white/5 dark:border-white/10",
                   isCurrent && "ring-2 ring-primary/60",
                 )}
               >
-                <div className="flex items-center gap-2">
-                  <Folder className="h-4 w-4 brand-text" />
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {String(i + 1).padStart(2, "0")}
+                <Folder className="h-4 w-4 shrink-0 brand-text" />
+                <span className="min-w-0 flex-1 truncate text-sm font-semibold">{name}</span>
+                {count > 0 && (
+                  <span className="text-[10px] font-semibold tabular-nums text-muted-foreground">
+                    {count}
                   </span>
-                </div>
-                <div>
-                  <p className="text-base font-semibold leading-tight">{name}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {count > 0 ? `${count} ${count === 1 ? "entry" : "entries"}` : "No entries"}
-                  </p>
-                </div>
+                )}
                 {isCurrent && (
-                  <span className="absolute right-2 top-2 rounded-full brand-bg px-1.5 py-0.5 text-[9px] font-bold uppercase">
+                  <span className="absolute -right-1 -top-1 rounded-full brand-bg px-1.5 py-0.5 text-[9px] font-bold uppercase shadow">
                     Now
                   </span>
                 )}
@@ -213,6 +223,7 @@ function YearFolder({
     </>
   );
 }
+
 
 // ================= Month → Date Grid + Accordion =================
 function MonthView({
@@ -242,8 +253,18 @@ function MonthView({
 
   const openRow = openDate ? rows.find((r) => r.date === openDate) ?? null : null;
 
+  const [bmVersion, setBmVersion] = useState(0);
+  const bookmarks = useMemo(() => readBookmarks(), [bmVersion]);
+  // Refresh bookmark markers whenever the open date changes (toggle inside DayDetail)
+  useEffect(() => { setBmVersion((v) => v + 1); }, [openDate]);
+
   if (rows.length === 0) {
-    return <EmptyState title="No entries" hint="Ask an admin to import the almanac for this month." />;
+    return (
+      <>
+        <MonthFolderCard year={year} month={month} />
+        <EmptyState title="No entries" hint="Ask an admin to import the almanac for this month." />
+      </>
+    );
   }
 
   const cells: Array<number | null> = [
@@ -253,6 +274,9 @@ function MonthView({
 
   return (
     <div className="animate-fade-in">
+      {/* Month folder card */}
+      <MonthFolderCard year={year} month={month} />
+
       {/* Weekday labels */}
       <div className="mb-2 grid grid-cols-7 gap-1.5 px-0.5">
         {WEEKDAYS.map((w, i) => (
@@ -268,30 +292,31 @@ function MonthView({
           if (d == null) return <div key={`b-${i}`} className="aspect-square" />;
           const row = byDay[d];
           const dateStr = row?.date;
-          const isOpen = dateStr && openDate === dateStr;
+          const isOpen = !!dateStr && openDate === dateStr;
           const isToday = d === todayNum;
-          const colour = row ? COLOUR_META[row.colour] : null;
+          const isBookmarked = !!dateStr && bookmarks.has(dateStr);
           return (
             <button
               key={d}
               disabled={!row}
               onClick={() => row && onToggleDate(row.date)}
               className={cn(
-                "tap-card relative aspect-square rounded-xl border text-sm font-semibold transition-all",
+                "tap-card relative aspect-square rounded-xl text-sm font-semibold transition-all",
                 "flex flex-col items-center justify-center gap-1",
                 row
-                  ? "border-white/40 bg-white/60 backdrop-blur-xl hover:-translate-y-0.5 hover:shadow-sm dark:bg-white/5 dark:border-white/10"
-                  : "border-transparent bg-transparent text-muted-foreground/30",
-                isOpen && "ring-2 ring-primary shadow-md scale-[1.03]",
+                  ? "border border-white/40 bg-white/60 backdrop-blur-xl hover:-translate-y-0.5 hover:shadow-sm dark:bg-white/5 dark:border-white/10"
+                  : "border border-transparent bg-transparent text-muted-foreground/30",
+                isOpen && "bg-primary text-primary-foreground border-primary shadow-md scale-[1.03]",
                 isToday && !isOpen && "ring-1 ring-primary/60",
               )}
-              style={colour && isOpen ? { boxShadow: `0 0 0 2px ${colour.ring}` } : undefined}
             >
               <span className="tabular-nums">{d}</span>
-              {colour && (
+              {row && (
                 <span
-                  className="h-1.5 w-1.5 rounded-full"
-                  style={{ background: colour.bg, boxShadow: `0 0 0 1px ${colour.ring}` }}
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full",
+                    isBookmarked ? "bg-yellow-400" : isOpen ? "bg-primary-foreground" : "bg-primary/70",
+                  )}
                 />
               )}
             </button>
@@ -299,23 +324,60 @@ function MonthView({
         })}
       </div>
 
-      {/* Accordion detail */}
-      <div
-        className={cn(
-          "grid transition-all duration-300 ease-out",
-          openRow ? "mt-4 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0",
-        )}
-      >
-        <div className="overflow-hidden">
-          {openRow && <DayDetail row={openRow} />}
-        </div>
+      {/* Legend */}
+      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-white/40 bg-white/50 px-3.5 py-2.5 text-[11px] backdrop-blur-xl dark:bg-white/5 dark:border-white/10">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="grid h-3.5 w-3.5 place-items-center rounded-full ring-1 ring-primary/60" />
+          Today
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-3.5 w-3.5 rounded-[5px] bg-primary" />
+          Selected
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-yellow-400" />
+          Bookmarked
+        </span>
       </div>
+
+      {/* Accordion detail or empty hint */}
+      {openRow ? (
+        <div className="mt-4 animate-fade-in">
+          <DayDetail row={openRow} onBookmarkChange={() => setBmVersion((v) => v + 1)} />
+        </div>
+      ) : (
+        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-white/40 bg-white/50 p-4 backdrop-blur-xl dark:bg-white/5 dark:border-white/10">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-muted/50">
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </span>
+          <p className="min-w-0 flex-1 text-sm text-muted-foreground leading-snug">
+            Tap on any date to view <br />the almanac details
+          </p>
+        </div>
+      )}
     </div>
   );
 }
 
+// Purple folder card for the month header (matches year card style)
+function MonthFolderCard({ year, month }: { year: number; month: number }) {
+  return (
+    <div
+      className="mb-4 flex items-center gap-3 rounded-2xl px-4 py-3.5 text-white shadow-md"
+      style={{ background: "linear-gradient(135deg, #6D5EF7, #4A38C9)" }}
+    >
+      <FolderOpen className="h-5 w-5 shrink-0 opacity-90" />
+      <p className="min-w-0 flex-1 text-base font-semibold leading-none">
+        {MONTHS_FULL[month]} {year}
+      </p>
+    </div>
+  );
+}
+
+
+
 // ================= Day Detail =================
-function DayDetail({ row }: { row: AlmanacRow }) {
+function DayDetail({ row, onBookmarkChange }: { row: AlmanacRow; onBookmarkChange?: () => void }) {
   const [bm, setBm] = useState<Set<string>>(() => readBookmarks());
   useEffect(() => { setBm(readBookmarks()); }, [row.date]);
 
@@ -325,7 +387,9 @@ function DayDetail({ row }: { row: AlmanacRow }) {
     if (next.has(row.date)) next.delete(row.date); else next.add(row.date);
     writeBookmarks(next);
     setBm(next);
+    onBookmarkChange?.();
   };
+
 
   const d = new Date(row.date + "T00:00:00");
   const dayNum = String(d.getDate()).padStart(2, "0");
