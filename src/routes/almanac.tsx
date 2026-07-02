@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Folder, FolderOpen, Bookmark, BookmarkCheck, CalendarDays } from "lucide-react";
+import { ChevronLeft, ChevronRight, Folder, FolderOpen, Bookmark, BookmarkCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../components/AppShell";
 import { Card, EmptyState } from "../components/ui-bits";
