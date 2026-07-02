@@ -210,28 +210,29 @@ function Home() {
                 background: `linear-gradient(140deg, ${b.accent_color}, ${shade(b.accent_color, -25)})`,
               }}
             >
-              <BookOpen className="absolute right-3 top-3 h-5 w-5 opacity-50" />
-              <p className="text-[11px] uppercase tracking-wide opacity-80">{b.title_en}</p>
+              <span className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-lg bg-white/20 backdrop-blur-sm">
+                <BookOpen className="h-3.5 w-3.5 opacity-90" />
+              </span>
+              <p className="text-[11px] uppercase tracking-wide font-semibold opacity-90">{b.title_en}</p>
               <p className="font-hi text-base font-semibold leading-tight">{b.title_hi}</p>
             </Link>
           ))}
+
+          {/* Almanac tile — same grid, purple gradient */}
+          <Link
+            to="/almanac"
+            className="tap-card relative overflow-hidden rounded-2xl p-4 min-h-32 flex flex-col justify-end text-white shadow-md"
+            style={{ background: "linear-gradient(140deg, #6D5EF7, #3F2FB8)" }}
+          >
+            <span className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-lg bg-white/20 backdrop-blur-sm">
+              <CalendarDays className="h-3.5 w-3.5 opacity-90" />
+            </span>
+            <p className="text-[11px] uppercase tracking-wide font-semibold opacity-90">Almanac</p>
+            <p className="font-hi text-base font-semibold leading-tight">पंचांग</p>
+          </Link>
         </div>
       </section>
 
-      <section className="mt-7">
-        <Link
-          to="/almanac"
-          className="tap-card flex items-center gap-3 rounded-2xl border bg-card p-4 hover:bg-accent"
-        >
-          <span className="grid h-10 w-10 place-items-center rounded-xl brand-bg">
-            <CalendarDays className="h-5 w-5" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold">Almanac / पंचांग</span>
-            <span className="block text-xs text-muted-foreground">Daily readings & liturgical calendar</span>
-          </span>
-        </Link>
-      </section>
     </AppShell>
   );
 }
