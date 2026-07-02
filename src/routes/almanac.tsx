@@ -374,12 +374,7 @@ function MonthFolderCard({ year, month }: { year: number; month: number }) {
   );
 }
 
-          {openRow && <DayDetail row={openRow} />}
-        </div>
-      </div>
-    </div>
-  );
-}
+
 
 // ================= Day Detail =================
 function DayDetail({ row }: { row: AlmanacRow }) {
