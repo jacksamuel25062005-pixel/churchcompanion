@@ -88,7 +88,7 @@ function AlmanacPage() {
 
   return (
     <AppShell
-      title={openMonth != null ? `${MONTHS_FULL[openMonth]} ${year}` : `Almanac · ${year}`}
+      title="Almanac"
       left={
         openMonth != null ? (
           <button onClick={back} className="-ml-2 inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium hover:bg-accent">
@@ -99,7 +99,25 @@ function AlmanacPage() {
         )
       }
     >
-      <div className="pt-4 pb-8 animate-fade-in">
+      <div className="pt-3 pb-8 animate-fade-in">
+        {/* Breadcrumb */}
+        <nav className="mb-3 flex items-center gap-1.5 text-xs">
+          <Link to="/" className="text-muted-foreground hover:text-foreground">Home</Link>
+          <span className="text-muted-foreground/50">/</span>
+          <button
+            onClick={() => { setOpenMonth(null); setOpenDate(null); }}
+            className={cn(openMonth == null ? "font-semibold" : "text-muted-foreground hover:text-foreground")}
+          >
+            Almanac
+          </button>
+          {openMonth != null && (
+            <>
+              <span className="text-muted-foreground/50">/</span>
+              <span className="font-semibold">{year}</span>
+            </>
+          )}
+        </nav>
+
         {openMonth == null ? (
           <YearFolder
             year={year}
@@ -121,6 +139,7 @@ function AlmanacPage() {
     </AppShell>
   );
 }
+
 
 // ================= Year → Month Folders =================
 function YearFolder({
