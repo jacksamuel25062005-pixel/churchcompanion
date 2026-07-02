@@ -377,7 +377,7 @@ function MonthFolderCard({ year, month }: { year: number; month: number }) {
 
 
 // ================= Day Detail =================
-function DayDetail({ row }: { row: AlmanacRow }) {
+function DayDetail({ row, onBookmarkChange }: { row: AlmanacRow; onBookmarkChange?: () => void }) {
   const [bm, setBm] = useState<Set<string>>(() => readBookmarks());
   useEffect(() => { setBm(readBookmarks()); }, [row.date]);
 
@@ -387,7 +387,9 @@ function DayDetail({ row }: { row: AlmanacRow }) {
     if (next.has(row.date)) next.delete(row.date); else next.add(row.date);
     writeBookmarks(next);
     setBm(next);
+    onBookmarkChange?.();
   };
+
 
   const d = new Date(row.date + "T00:00:00");
   const dayNum = String(d.getDate()).padStart(2, "0");
