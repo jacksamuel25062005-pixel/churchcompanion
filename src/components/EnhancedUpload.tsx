@@ -75,7 +75,7 @@ export function EnhancedUpload({ onExtracted }: { onExtracted?: (text: string) =
     if (inputRef.current) inputRef.current.value = "";
   }, [imgUrl]);
 
-  const acceptAttr = mode === "attach" ? "image/*,application/pdf" : "image/*,application/pdf,.txt,text/plain";
+  const acceptAttr = "image/*,application/pdf";
 
   const handleFile = useCallback(async (f: File, currentMode: Mode) => {
     setError(null); setExtracted(""); setSongs([]); setPdfPages([]); setPageIdx(0);
