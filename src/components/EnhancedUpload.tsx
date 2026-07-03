@@ -95,14 +95,11 @@ export function EnhancedUpload({ onExtracted }: { onExtracted?: (text: string) =
           setPdfPages(pages); setState("attach-view");
         }
       } else {
-        // scan mode
-        if (k === "txt") {
-          const text = await f.text();
-          finishExtraction(text);
-        } else if (k === "pdf") {
+        // scan mode (image OCR or PDF text layer)
+        if (k === "pdf") {
           const text = await extractPdfText(f);
           if (!text.trim()) {
-            setError({ kind: "pdf", message: "PDF has no text layer. Use Attach mode or upload an image to OCR." });
+            setError({ kind: "pdf", message: "PDF has no text layer. Switch to View Document, or upload an image to OCR." });
             setState("error"); return;
           }
           finishExtraction(text);
