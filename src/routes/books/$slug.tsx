@@ -159,3 +159,14 @@ function SectionCard({ section, slug }: { section: BookSection; slug: string }) 
     </details>
   );
 }
+
+function ImageBookBody({ bookId, accent }: { bookId: string; accent: string }) {
+  const pagesQ = useQuery({
+    queryKey: ["book-pages", bookId],
+    queryFn: () => listBookPages(bookId),
+  });
+  if (pagesQ.isLoading) return <p className="text-sm text-muted-foreground">Loading pages…</p>;
+  const pages = (pagesQ.data ?? []) as BookPage[];
+  if (pages.length === 0) return <EmptyState title="No pages yet" hint="Admins can import images or PDFs from the Admin section." />;
+  return <BookPageViewer pages={pages} accentColor={accent} />;
+}

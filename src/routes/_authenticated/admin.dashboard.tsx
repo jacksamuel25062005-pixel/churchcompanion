@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../../components/AppShell";
 import { Card, BackButton } from "../../components/ui-bits";
-import { Upload, ListMusic, UserCheck, LogOut, Shield, Database, Bell, Megaphone } from "lucide-react";
+import { Upload, ListMusic, UserCheck, LogOut, Shield, Database, Bell, Megaphone, BookImage } from "lucide-react";
 import { adminDisplayName } from "@/lib/admin-name";
 import { toast } from "sonner";
 
@@ -63,6 +63,7 @@ function Dashboard() {
 
         <div className="space-y-2">
           <NavTile to="/admin/upload" icon={<Upload className="h-5 w-5" />} title="Upload content" subtitle="PDF, DOCX or TXT → parse → publish" />
+          <NavTile to="/admin/book-import" icon={<BookImage className="h-5 w-5" />} title="Book image import" subtitle="Lord's Supper · Ashaya Rabbani · Prata Sayan" />
           <NavTile to="/admin/manage" icon={<Database className="h-5 w-5" />} title="Manage content" subtitle="Edit or delete songs & book sections" />
           <NavTile to="/admin/today" icon={<ListMusic className="h-5 w-5" />} title="Today's Songs" subtitle="Pick what users see today" />
           <NavTile to="/admin/notify" icon={<Bell className="h-5 w-5" />} title="Send notification" subtitle="Push to all subscribers (OneSignal)" />
