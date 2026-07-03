@@ -75,7 +75,7 @@ export function EnhancedUpload({ onExtracted }: { onExtracted?: (text: string) =
     if (inputRef.current) inputRef.current.value = "";
   }, [imgUrl]);
 
-  const acceptAttr = mode === "attach" ? "image/*,application/pdf" : "image/*,application/pdf,.txt,text/plain";
+  const acceptAttr = "image/*,application/pdf";
 
   const handleFile = useCallback(async (f: File, currentMode: Mode) => {
     setError(null); setExtracted(""); setSongs([]); setPdfPages([]); setPageIdx(0);
@@ -83,10 +83,7 @@ export function EnhancedUpload({ onExtracted }: { onExtracted?: (text: string) =
       setFile(f); setError({ kind: "size", message: "File exceeds 10 MB.", sizeBytes: f.size }); setState("error"); return;
     }
     const k = detectKind(f);
-    if (!k) { setFile(f); setError({ kind: "type", message: "Unsupported file. Allowed: images, PDF, TXT (scan mode only)." }); setState("error"); return; }
-    if (currentMode === "attach" && k === "txt") {
-      setFile(f); setError({ kind: "type", message: "Attach mode supports images and PDFs only." }); setState("error"); return;
-    }
+    if (!k || k === "txt") { setFile(f); setError({ kind: "type", message: "Enhanced upload supports images and PDFs only." }); setState("error"); return; }
     setFile(f); setKind(k); setState("loading");
     try {
       if (currentMode === "attach") {
@@ -98,14 +95,11 @@ export function EnhancedUpload({ onExtracted }: { onExtracted?: (text: string) =
           setPdfPages(pages); setState("attach-view");
         }
       } else {
-        // scan mode
-        if (k === "txt") {
-          const text = await f.text();
-          finishExtraction(text);
-        } else if (k === "pdf") {
+        // scan mode (image OCR or PDF text layer)
+        if (k === "pdf") {
           const text = await extractPdfText(f);
           if (!text.trim()) {
-            setError({ kind: "pdf", message: "PDF has no text layer. Use Attach mode or upload an image to OCR." });
+            setError({ kind: "pdf", message: "PDF has no text layer. Switch to View Document, or upload an image to OCR." });
             setState("error"); return;
           }
           finishExtraction(text);
@@ -143,21 +137,26 @@ export function EnhancedUpload({ onExtracted }: { onExtracted?: (text: string) =
 
   return (
     <div className="space-y-4">
-      {/* Mode picker */}
-      <div className="grid grid-cols-2 gap-2 rounded-2xl bg-secondary/70 p-1 text-sm font-medium">
+      {/* Mode picker — animated segmented control */}
+      <div className="relative grid grid-cols-2 rounded-2xl bg-secondary/70 p-1 text-sm font-medium">
+        <span
+          aria-hidden
+          className="absolute top-1 bottom-1 left-1 w-[calc(50%-0.25rem)] rounded-xl bg-card shadow-sm ring-1 ring-border/60 transition-transform duration-300 ease-out"
+          style={{ transform: mode === "attach" ? "translateX(0%)" : "translateX(100%)" }}
+        />
         <button
           type="button"
           onClick={() => { setMode("attach"); if (state !== "idle") reset(); }}
-          className={`flex items-center justify-center gap-2 rounded-xl py-2 transition ${mode === "attach" ? "bg-card shadow-sm" : "text-muted-foreground"}`}
+          className={`relative z-10 flex items-center justify-center gap-2 rounded-xl py-2 transition-colors ${mode === "attach" ? "text-foreground" : "text-muted-foreground"}`}
         >
-          <ImageIcon className="h-4 w-4" /> Attach (view)
+          <ImageIcon className="h-4 w-4" /> View Document
         </button>
         <button
           type="button"
           onClick={() => { setMode("scan"); if (state !== "idle") reset(); }}
-          className={`flex items-center justify-center gap-2 rounded-xl py-2 transition ${mode === "scan" ? "bg-card shadow-sm" : "text-muted-foreground"}`}
+          className={`relative z-10 flex items-center justify-center gap-2 rounded-xl py-2 transition-colors ${mode === "scan" ? "text-foreground" : "text-muted-foreground"}`}
         >
-          <ScanLine className="h-4 w-4" /> Scan (text)
+          <ScanLine className="h-4 w-4" /> OCR Scan
         </button>
       </div>
 
@@ -167,9 +166,9 @@ export function EnhancedUpload({ onExtracted }: { onExtracted?: (text: string) =
           <div className="rounded-2xl border-2 border-dashed border-border/70 p-7 text-center transition-colors hover:border-foreground/30">
             <FileUp className="mx-auto h-8 w-8 text-muted-foreground" />
             <p className="mt-2 text-sm font-medium">
-              {mode === "attach" ? "Choose an image or PDF to view" : "Choose image (OCR), PDF or TXT"}
+              {mode === "attach" ? "Choose an image or PDF to view" : "Choose an image or PDF to OCR"}
             </p>
-            <p className="text-xs text-muted-foreground">Max 10 MB.</p>
+            <p className="text-xs text-muted-foreground">Images & PDFs only · Max 10 MB.</p>
             <input
               ref={inputRef}
               type="file"
