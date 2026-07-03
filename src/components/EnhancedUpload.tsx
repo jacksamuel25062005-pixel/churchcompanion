@@ -83,10 +83,7 @@ export function EnhancedUpload({ onExtracted }: { onExtracted?: (text: string) =
       setFile(f); setError({ kind: "size", message: "File exceeds 10 MB.", sizeBytes: f.size }); setState("error"); return;
     }
     const k = detectKind(f);
-    if (!k) { setFile(f); setError({ kind: "type", message: "Unsupported file. Allowed: images, PDF, TXT (scan mode only)." }); setState("error"); return; }
-    if (currentMode === "attach" && k === "txt") {
-      setFile(f); setError({ kind: "type", message: "Attach mode supports images and PDFs only." }); setState("error"); return;
-    }
+    if (!k || k === "txt") { setFile(f); setError({ kind: "type", message: "Enhanced upload supports images and PDFs only." }); setState("error"); return; }
     setFile(f); setKind(k); setState("loading");
     try {
       if (currentMode === "attach") {
