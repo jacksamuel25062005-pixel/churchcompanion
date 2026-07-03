@@ -164,6 +164,44 @@ export type Database = {
         }
         Relationships: []
       }
+      book_pages: {
+        Row: {
+          book_id: string
+          created_at: string
+          height: number | null
+          id: string
+          page_number: number
+          storage_path: string
+          width: number | null
+        }
+        Insert: {
+          book_id: string
+          created_at?: string
+          height?: number | null
+          id?: string
+          page_number: number
+          storage_path: string
+          width?: number | null
+        }
+        Update: {
+          book_id?: string
+          created_at?: string
+          height?: number | null
+          id?: string
+          page_number?: number
+          storage_path?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_pages_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       book_sections: {
         Row: {
           body_en: string | null

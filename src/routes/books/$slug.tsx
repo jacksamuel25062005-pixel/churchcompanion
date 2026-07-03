@@ -10,6 +10,8 @@ import { useBrandOverride } from "../../lib/settings";
 import { continueReading } from "../../lib/storage";
 import { useBookSnap, saveBook, removeOffline, OFFLINE_KEYS } from "../../lib/offline";
 import type { Book, BookSection } from "../../lib/types";
+import { isImageBook, listBookPages, type BookPage } from "../../lib/book-pages";
+import { BookPageViewer } from "../../components/BookPageViewer";
 
 export const Route = createFileRoute("/books/$slug")({
   component: BookView,
@@ -113,7 +115,9 @@ function BookView() {
         </div>
 
         <div className="mt-5 space-y-3">
-          {sectionsQ.isLoading && !sectionsQ.data ? (
+          {isImageBook(slug) && bookQ.data ? (
+            <ImageBookBody bookId={bookQ.data.id} accent={bookQ.data.accent_color} />
+          ) : sectionsQ.isLoading && !sectionsQ.data ? (
             <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
           ) : !sectionsQ.data || sectionsQ.data.length === 0 ? (
             <EmptyState title={t("common.empty")} hint="Admins can upload content from the Admin section." />
@@ -154,4 +158,15 @@ function SectionCard({ section, slug }: { section: BookSection; slug: string }) 
       </div>
     </details>
   );
+}
+
+function ImageBookBody({ bookId, accent }: { bookId: string; accent: string }) {
+  const pagesQ = useQuery({
+    queryKey: ["book-pages", bookId],
+    queryFn: () => listBookPages(bookId),
+  });
+  if (pagesQ.isLoading) return <p className="text-sm text-muted-foreground">Loading pages…</p>;
+  const pages = (pagesQ.data ?? []) as BookPage[];
+  if (pages.length === 0) return <EmptyState title="No pages yet" hint="Admins can import images or PDFs from the Admin section." />;
+  return <BookPageViewer pages={pages} accentColor={accent} />;
 }
