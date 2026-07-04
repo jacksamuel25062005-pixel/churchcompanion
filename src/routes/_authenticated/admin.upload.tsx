@@ -391,6 +391,27 @@ function UploadPage() {
             </div>
           </div>
 
+          {canBatch && (
+            <div className="rounded-2xl border border-primary/30 bg-primary/5 p-3 flex items-start gap-3">
+              <Layers className="mt-0.5 h-5 w-5 brand-text shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold">Multiple songs detected</p>
+                <p className="text-xs text-muted-foreground">
+                  Found <b>{parsedSongs.length}</b> songs in the body (Song #01, #02…). Import them all as separate Song Book entries.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={openBatch}
+                className="rounded-xl brand-bg px-3 py-2 text-xs font-semibold"
+              >
+                Batch import
+              </button>
+            </div>
+          )}
+
+
+
           <div className="flex flex-col-reverse gap-2 sm:flex-row">
             <button
               type="button"
