@@ -40,6 +40,13 @@ function UploadPage() {
   const [parseProgress, setParseProgress] = useState(0);
   const [saving, setSaving] = useState(false);
   const [draftSaved, setDraftSaved] = useState<number | null>(null);
+  const [batchOpen, setBatchOpen] = useState(false);
+  const [batchBusy, setBatchBusy] = useState(false);
+  const [batchProgress, setBatchProgress] = useState<{ done: number; total: number } | null>(null);
+  const [batchSummary, setBatchSummary] = useState<ImportSummary | null>(null);
+  const [conflictDefault, setConflictDefault] = useState<ConflictAction>("skip");
+  const [perConflict, setPerConflict] = useState<Record<number, ConflictAction>>({});
+  const [existingByNumber, setExistingByNumber] = useState<Record<number, string>>({});
   const restoredRef = useRef(false);
 
   useEffect(() => {
