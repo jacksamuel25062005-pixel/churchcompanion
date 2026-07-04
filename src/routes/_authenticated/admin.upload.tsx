@@ -5,9 +5,10 @@ import { AppShell } from "../../components/AppShell";
 import { Card } from "../../components/ui-bits";
 import { toast } from "sonner";
 import type { Book } from "../../lib/types";
-import { FileUp, CheckCircle2 } from "lucide-react";
+import { FileUp, CheckCircle2, Layers } from "lucide-react";
 import { useAdminGuard } from "../../lib/use-admin-guard";
 import { EnhancedUpload } from "../../components/EnhancedUpload";
+import { parseSongs, type ConflictAction, type ImportSummary, type ParsedSong } from "../../lib/song-import";
 
 export const Route = createFileRoute("/_authenticated/admin/upload")({
   component: UploadPage,
@@ -39,6 +40,13 @@ function UploadPage() {
   const [parseProgress, setParseProgress] = useState(0);
   const [saving, setSaving] = useState(false);
   const [draftSaved, setDraftSaved] = useState<number | null>(null);
+  const [batchOpen, setBatchOpen] = useState(false);
+  const [batchBusy, setBatchBusy] = useState(false);
+  const [batchProgress, setBatchProgress] = useState<{ done: number; total: number } | null>(null);
+  const [batchSummary, setBatchSummary] = useState<ImportSummary | null>(null);
+  const [conflictDefault, setConflictDefault] = useState<ConflictAction>("skip");
+  const [perConflict, setPerConflict] = useState<Record<number, ConflictAction>>({});
+  const [existingByNumber, setExistingByNumber] = useState<Record<number, string>>({});
   const restoredRef = useRef(false);
 
   useEffect(() => {
@@ -176,6 +184,97 @@ function UploadPage() {
     }
   };
 
+  // ---- Song Import Engine (Song Book only) ----
+  const parsedSongs: ParsedSong[] = kind === "song" ? parseSongs(body) : [];
+  const canBatch = kind === "song" && parsedSongs.length >= 2;
+
+  const openBatch = async () => {
+    setBatchSummary(null);
+    setPerConflict({});
+    setBatchOpen(true);
+    // Check which serial numbers already exist.
+    const nums = Array.from(new Set(parsedSongs.map((s) => s.number)));
+    if (nums.length === 0) return;
+    const { data, error } = await supabase
+      .from("songs")
+      .select("id, number")
+      .in("number", nums)
+      .eq("is_deleted", false);
+    if (error) {
+      toast.error(`Could not check existing numbers: ${error.message}`);
+      return;
+    }
+    const map: Record<number, string> = {};
+    for (const r of (data ?? []) as { id: string; number: number | null }[]) {
+      if (r.number != null) map[r.number] = r.id;
+    }
+    setExistingByNumber(map);
+  };
+
+  const runBatchImport = async () => {
+    setBatchBusy(true);
+    setBatchProgress({ done: 0, total: parsedSongs.length });
+    const summary: ImportSummary = {
+      detected: parsedSongs.length,
+      imported: 0,
+      updated: 0,
+      skipped: 0,
+      failed: 0,
+      errors: [],
+    };
+    for (let i = 0; i < parsedSongs.length; i++) {
+      const s = parsedSongs[i];
+      const existingId = existingByNumber[s.number];
+      const action: ConflictAction = existingId
+        ? (perConflict[s.number] ?? conflictDefault)
+        : "duplicate"; // no conflict → just insert
+      try {
+        if (existingId && action === "skip") {
+          summary.skipped++;
+        } else if (existingId && action === "replace") {
+          const { error } = await supabase
+            .from("songs")
+            .update({
+              title_hi: s.title || "(untitled)",
+              lyrics_hi: s.body,
+            })
+            .eq("id", existingId);
+          if (error) throw error;
+          summary.updated++;
+        } else {
+          // insert (duplicate or fresh)
+          const { error } = await supabase.from("songs").insert({
+            number: s.number,
+            title_hi: s.title || "(untitled)",
+            lyrics_hi: s.body,
+          });
+          if (error) throw error;
+          summary.imported++;
+        }
+      } catch (e: any) {
+        summary.failed++;
+        summary.errors.push({ number: s.number, message: e?.message ?? "Unknown error" });
+      }
+      setBatchProgress({ done: i + 1, total: parsedSongs.length });
+    }
+    setBatchSummary(summary);
+    setBatchBusy(false);
+    toast.success(`Import complete — ${summary.imported} new, ${summary.updated} updated`);
+  };
+
+  const closeBatchAndReset = () => {
+    setBatchOpen(false);
+    if (batchSummary && (batchSummary.imported > 0 || batchSummary.updated > 0)) {
+      setBody(""); setTitleHi(""); setTitleEn(""); setNumber("");
+      try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+      setDraftSaved(null);
+    }
+    setBatchSummary(null);
+    setBatchProgress(null);
+  };
+
+
+
   if (!checked) return null;
   return (
     <AppShell title="Upload content" left={<Link to="/admin/dashboard" className="-ml-2 text-sm font-medium px-2 py-1.5 rounded-lg hover:bg-accent">‹ Back</Link>} hideNav>
@@ -292,6 +391,27 @@ function UploadPage() {
             </div>
           </div>
 
+          {canBatch && (
+            <div className="rounded-2xl border border-primary/30 bg-primary/5 p-3 flex items-start gap-3">
+              <Layers className="mt-0.5 h-5 w-5 brand-text shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold">Multiple songs detected</p>
+                <p className="text-xs text-muted-foreground">
+                  Found <b>{parsedSongs.length}</b> songs in the body (Song #01, #02…). Import them all as separate Song Book entries.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={openBatch}
+                className="rounded-xl brand-bg px-3 py-2 text-xs font-semibold"
+              >
+                Batch import
+              </button>
+            </div>
+          )}
+
+
+
           <div className="flex flex-col-reverse gap-2 sm:flex-row">
             <button
               type="button"
@@ -319,7 +439,134 @@ function UploadPage() {
           </div>
         </Card>
       </div>
+
+      {batchOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4" onClick={() => { if (!batchBusy) closeBatchAndReset(); }}>
+          <div
+            className="w-full max-w-lg max-h-[90vh] overflow-hidden rounded-t-3xl sm:rounded-3xl bg-card shadow-2xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-5 py-4 border-b flex items-center gap-3">
+              <Layers className="h-5 w-5 brand-text" />
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-semibold">Batch import songs</h3>
+                <p className="text-xs text-muted-foreground">{parsedSongs.length} songs detected in the document.</p>
+              </div>
+              <button
+                onClick={() => { if (!batchBusy) closeBatchAndReset(); }}
+                className="text-sm text-muted-foreground hover:text-foreground px-2 py-1 rounded-lg hover:bg-accent"
+                disabled={batchBusy}
+              >Close</button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+              {batchSummary ? (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <SummaryStat label="Detected" value={batchSummary.detected} />
+                    <SummaryStat label="Imported" value={batchSummary.imported} />
+                    <SummaryStat label="Updated" value={batchSummary.updated} />
+                    <SummaryStat label="Skipped" value={batchSummary.skipped} />
+                    <SummaryStat label="Failed" value={batchSummary.failed} tone={batchSummary.failed ? "danger" : undefined} />
+                  </div>
+                  {batchSummary.errors.length > 0 && (
+                    <div className="rounded-xl bg-destructive/10 p-3 text-xs">
+                      <p className="font-semibold mb-1">Errors</p>
+                      <ul className="space-y-0.5 max-h-40 overflow-y-auto">
+                        {batchSummary.errors.map((er, i) => (
+                          <li key={i}>#{er.number}: {er.message}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Default for conflicts</p>
+                    <div className="grid grid-cols-3 gap-1 rounded-2xl bg-secondary/70 p-1 text-xs font-medium">
+                      {(["skip", "replace", "duplicate"] as ConflictAction[]).map((a) => (
+                        <button
+                          key={a}
+                          type="button"
+                          onClick={() => setConflictDefault(a)}
+                          className={`rounded-xl py-2 capitalize transition ${conflictDefault === a ? "bg-card shadow-sm ring-1 ring-border/60 text-foreground" : "text-muted-foreground"}`}
+                          disabled={batchBusy}
+                        >{a}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 max-h-64 overflow-y-auto rounded-xl border">
+                    {parsedSongs.map((s) => {
+                      const conflict = !!existingByNumber[s.number];
+                      const action = perConflict[s.number] ?? conflictDefault;
+                      return (
+                        <div key={`${s.number}-${s.title ?? ""}`} className="flex items-center gap-2 px-3 py-2 border-b last:border-b-0 text-sm">
+                          <span className="w-10 shrink-0 text-xs font-bold tabular-nums text-muted-foreground">#{s.number}</span>
+                          <span className="flex-1 min-w-0 truncate font-hi">{s.title ?? "(untitled)"}</span>
+                          {conflict ? (
+                            <select
+                              value={action}
+                              onChange={(e) => setPerConflict((p) => ({ ...p, [s.number]: e.target.value as ConflictAction }))}
+                              disabled={batchBusy}
+                              className="text-xs rounded-lg border bg-secondary/60 px-2 py-1"
+                            >
+                              <option value="skip">Skip</option>
+                              <option value="replace">Replace</option>
+                              <option value="duplicate">Duplicate</option>
+                            </select>
+                          ) : (
+                            <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">New</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {batchProgress && (
+                    <div className="space-y-1">
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+                        <div className="h-full brand-bg transition-[width] duration-300" style={{ width: `${(batchProgress.done / Math.max(1, batchProgress.total)) * 100}%` }} />
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">Importing {batchProgress.done} / {batchProgress.total}…</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            <div className="px-5 py-3 border-t flex gap-2">
+              {batchSummary ? (
+                <button onClick={closeBatchAndReset} className="flex-1 rounded-2xl brand-bg py-3 text-sm font-semibold">Done</button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => { if (!batchBusy) closeBatchAndReset(); }}
+                    disabled={batchBusy}
+                    className="rounded-2xl border px-5 py-3 text-sm font-semibold hover:bg-accent disabled:opacity-50"
+                  >Cancel</button>
+                  <button
+                    onClick={runBatchImport}
+                    disabled={batchBusy || parsedSongs.length === 0}
+                    className="flex-1 rounded-2xl brand-bg py-3 text-sm font-semibold disabled:opacity-50"
+                  >{batchBusy ? "Importing…" : `Import ${parsedSongs.length} songs`}</button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
+  );
+}
+
+function SummaryStat({ label, value, tone }: { label: string; value: number; tone?: "danger" }) {
+  return (
+    <div className={`rounded-xl border px-3 py-2 ${tone === "danger" ? "border-destructive/40 bg-destructive/5" : ""}`}>
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="text-lg font-bold tabular-nums">{value}</p>
+    </div>
   );
 }
 
