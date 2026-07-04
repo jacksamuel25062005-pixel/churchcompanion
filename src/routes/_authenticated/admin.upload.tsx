@@ -184,6 +184,97 @@ function UploadPage() {
     }
   };
 
+  // ---- Song Import Engine (Song Book only) ----
+  const parsedSongs: ParsedSong[] = kind === "song" ? parseSongs(body) : [];
+  const canBatch = kind === "song" && parsedSongs.length >= 2;
+
+  const openBatch = async () => {
+    setBatchSummary(null);
+    setPerConflict({});
+    setBatchOpen(true);
+    // Check which serial numbers already exist.
+    const nums = Array.from(new Set(parsedSongs.map((s) => s.number)));
+    if (nums.length === 0) return;
+    const { data, error } = await supabase
+      .from("songs")
+      .select("id, number")
+      .in("number", nums)
+      .eq("is_deleted", false);
+    if (error) {
+      toast.error(`Could not check existing numbers: ${error.message}`);
+      return;
+    }
+    const map: Record<number, string> = {};
+    for (const r of (data ?? []) as { id: string; number: number | null }[]) {
+      if (r.number != null) map[r.number] = r.id;
+    }
+    setExistingByNumber(map);
+  };
+
+  const runBatchImport = async () => {
+    setBatchBusy(true);
+    setBatchProgress({ done: 0, total: parsedSongs.length });
+    const summary: ImportSummary = {
+      detected: parsedSongs.length,
+      imported: 0,
+      updated: 0,
+      skipped: 0,
+      failed: 0,
+      errors: [],
+    };
+    for (let i = 0; i < parsedSongs.length; i++) {
+      const s = parsedSongs[i];
+      const existingId = existingByNumber[s.number];
+      const action: ConflictAction = existingId
+        ? (perConflict[s.number] ?? conflictDefault)
+        : "duplicate"; // no conflict → just insert
+      try {
+        if (existingId && action === "skip") {
+          summary.skipped++;
+        } else if (existingId && action === "replace") {
+          const { error } = await supabase
+            .from("songs")
+            .update({
+              title_hi: s.title || "(untitled)",
+              lyrics_hi: s.body,
+            })
+            .eq("id", existingId);
+          if (error) throw error;
+          summary.updated++;
+        } else {
+          // insert (duplicate or fresh)
+          const { error } = await supabase.from("songs").insert({
+            number: s.number,
+            title_hi: s.title || "(untitled)",
+            lyrics_hi: s.body,
+          });
+          if (error) throw error;
+          summary.imported++;
+        }
+      } catch (e: any) {
+        summary.failed++;
+        summary.errors.push({ number: s.number, message: e?.message ?? "Unknown error" });
+      }
+      setBatchProgress({ done: i + 1, total: parsedSongs.length });
+    }
+    setBatchSummary(summary);
+    setBatchBusy(false);
+    toast.success(`Import complete — ${summary.imported} new, ${summary.updated} updated`);
+  };
+
+  const closeBatchAndReset = () => {
+    setBatchOpen(false);
+    if (batchSummary && (batchSummary.imported > 0 || batchSummary.updated > 0)) {
+      setBody(""); setTitleHi(""); setTitleEn(""); setNumber("");
+      try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+      setDraftSaved(null);
+    }
+    setBatchSummary(null);
+    setBatchProgress(null);
+  };
+
+
+
   if (!checked) return null;
   return (
     <AppShell title="Upload content" left={<Link to="/admin/dashboard" className="-ml-2 text-sm font-medium px-2 py-1.5 rounded-lg hover:bg-accent">‹ Back</Link>} hideNav>
