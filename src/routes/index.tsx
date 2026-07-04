@@ -6,7 +6,7 @@ import { AppShell } from "../components/AppShell";
 import { Card } from "../components/ui-bits";
 import { OfflineButton } from "../components/OfflineButton";
 import { useT, pickLang } from "../lib/i18n";
-import { Music, BookOpen, Sparkles, Megaphone, CalendarDays } from "lucide-react";
+import { Music, BookOpen, Sparkles, Megaphone } from "lucide-react";
 import { useTodaySnap, saveToday, removeOffline, OFFLINE_KEYS } from "../lib/offline";
 import type { Book, Song } from "../lib/types";
 import { AnnouncementModule, AnnouncementBell } from "../components/AnnouncementModule";
