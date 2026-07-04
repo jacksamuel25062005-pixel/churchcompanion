@@ -439,7 +439,134 @@ function UploadPage() {
           </div>
         </Card>
       </div>
+
+      {batchOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4" onClick={() => { if (!batchBusy) closeBatchAndReset(); }}>
+          <div
+            className="w-full max-w-lg max-h-[90vh] overflow-hidden rounded-t-3xl sm:rounded-3xl bg-card shadow-2xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-5 py-4 border-b flex items-center gap-3">
+              <Layers className="h-5 w-5 brand-text" />
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-semibold">Batch import songs</h3>
+                <p className="text-xs text-muted-foreground">{parsedSongs.length} songs detected in the document.</p>
+              </div>
+              <button
+                onClick={() => { if (!batchBusy) closeBatchAndReset(); }}
+                className="text-sm text-muted-foreground hover:text-foreground px-2 py-1 rounded-lg hover:bg-accent"
+                disabled={batchBusy}
+              >Close</button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+              {batchSummary ? (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <SummaryStat label="Detected" value={batchSummary.detected} />
+                    <SummaryStat label="Imported" value={batchSummary.imported} />
+                    <SummaryStat label="Updated" value={batchSummary.updated} />
+                    <SummaryStat label="Skipped" value={batchSummary.skipped} />
+                    <SummaryStat label="Failed" value={batchSummary.failed} tone={batchSummary.failed ? "danger" : undefined} />
+                  </div>
+                  {batchSummary.errors.length > 0 && (
+                    <div className="rounded-xl bg-destructive/10 p-3 text-xs">
+                      <p className="font-semibold mb-1">Errors</p>
+                      <ul className="space-y-0.5 max-h-40 overflow-y-auto">
+                        {batchSummary.errors.map((er, i) => (
+                          <li key={i}>#{er.number}: {er.message}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Default for conflicts</p>
+                    <div className="grid grid-cols-3 gap-1 rounded-2xl bg-secondary/70 p-1 text-xs font-medium">
+                      {(["skip", "replace", "duplicate"] as ConflictAction[]).map((a) => (
+                        <button
+                          key={a}
+                          type="button"
+                          onClick={() => setConflictDefault(a)}
+                          className={`rounded-xl py-2 capitalize transition ${conflictDefault === a ? "bg-card shadow-sm ring-1 ring-border/60 text-foreground" : "text-muted-foreground"}`}
+                          disabled={batchBusy}
+                        >{a}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 max-h-64 overflow-y-auto rounded-xl border">
+                    {parsedSongs.map((s) => {
+                      const conflict = !!existingByNumber[s.number];
+                      const action = perConflict[s.number] ?? conflictDefault;
+                      return (
+                        <div key={`${s.number}-${s.title ?? ""}`} className="flex items-center gap-2 px-3 py-2 border-b last:border-b-0 text-sm">
+                          <span className="w-10 shrink-0 text-xs font-bold tabular-nums text-muted-foreground">#{s.number}</span>
+                          <span className="flex-1 min-w-0 truncate font-hi">{s.title ?? "(untitled)"}</span>
+                          {conflict ? (
+                            <select
+                              value={action}
+                              onChange={(e) => setPerConflict((p) => ({ ...p, [s.number]: e.target.value as ConflictAction }))}
+                              disabled={batchBusy}
+                              className="text-xs rounded-lg border bg-secondary/60 px-2 py-1"
+                            >
+                              <option value="skip">Skip</option>
+                              <option value="replace">Replace</option>
+                              <option value="duplicate">Duplicate</option>
+                            </select>
+                          ) : (
+                            <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">New</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {batchProgress && (
+                    <div className="space-y-1">
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+                        <div className="h-full brand-bg transition-[width] duration-300" style={{ width: `${(batchProgress.done / Math.max(1, batchProgress.total)) * 100}%` }} />
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">Importing {batchProgress.done} / {batchProgress.total}…</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            <div className="px-5 py-3 border-t flex gap-2">
+              {batchSummary ? (
+                <button onClick={closeBatchAndReset} className="flex-1 rounded-2xl brand-bg py-3 text-sm font-semibold">Done</button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => { if (!batchBusy) closeBatchAndReset(); }}
+                    disabled={batchBusy}
+                    className="rounded-2xl border px-5 py-3 text-sm font-semibold hover:bg-accent disabled:opacity-50"
+                  >Cancel</button>
+                  <button
+                    onClick={runBatchImport}
+                    disabled={batchBusy || parsedSongs.length === 0}
+                    className="flex-1 rounded-2xl brand-bg py-3 text-sm font-semibold disabled:opacity-50"
+                  >{batchBusy ? "Importing…" : `Import ${parsedSongs.length} songs`}</button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
+  );
+}
+
+function SummaryStat({ label, value, tone }: { label: string; value: number; tone?: "danger" }) {
+  return (
+    <div className={`rounded-xl border px-3 py-2 ${tone === "danger" ? "border-destructive/40 bg-destructive/5" : ""}`}>
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="text-lg font-bold tabular-nums">{value}</p>
+    </div>
   );
 }
 
