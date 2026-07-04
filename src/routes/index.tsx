@@ -218,18 +218,6 @@ function Home() {
             </Link>
           ))}
 
-          {/* Almanac tile — same grid, purple gradient */}
-          <Link
-            to="/almanac"
-            className="tap-card relative overflow-hidden rounded-2xl p-4 min-h-32 flex flex-col justify-end text-white shadow-md"
-            style={{ background: "linear-gradient(140deg, #6D5EF7, #3F2FB8)" }}
-          >
-            <span className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-lg bg-white/20 backdrop-blur-sm">
-              <CalendarDays className="h-3.5 w-3.5 opacity-90" />
-            </span>
-            <p className="text-[11px] uppercase tracking-wide font-semibold opacity-90">Almanac</p>
-            <p className="font-hi text-base font-semibold leading-tight">पंचांग</p>
-          </Link>
         </div>
       </section>
 
