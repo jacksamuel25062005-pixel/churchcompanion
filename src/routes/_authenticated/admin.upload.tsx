@@ -5,9 +5,10 @@ import { AppShell } from "../../components/AppShell";
 import { Card } from "../../components/ui-bits";
 import { toast } from "sonner";
 import type { Book } from "../../lib/types";
-import { FileUp, CheckCircle2 } from "lucide-react";
+import { FileUp, CheckCircle2, Layers } from "lucide-react";
 import { useAdminGuard } from "../../lib/use-admin-guard";
 import { EnhancedUpload } from "../../components/EnhancedUpload";
+import { parseSongs, type ConflictAction, type ImportSummary, type ParsedSong } from "../../lib/song-import";
 
 export const Route = createFileRoute("/_authenticated/admin/upload")({
   component: UploadPage,
