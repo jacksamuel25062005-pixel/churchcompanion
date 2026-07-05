@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
-import { ChevronDown, ShieldCheck, Loader2, CheckCircle2, AlertTriangle, XCircle, FileText } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronDown, ShieldCheck, Loader2, CheckCircle2, AlertTriangle, XCircle, FileText, Play, Eraser, Copy } from "lucide-react";
+import { Textarea } from "../ui/textarea";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "../ui-bits";
 import { Switch } from "../ui/switch";
@@ -128,12 +130,136 @@ export function InAppCodeExecutorSetting() {
             <FileText className="h-4 w-4" /> View Last Report
           </button>
         )}
+
+        <CodeScratchpad enabled={enabled} />
       </Card>
 
       {modalOpen && lastReport && (
         <CodeExecutionReportModal report={lastReport} onClose={() => setModalOpen(false)} />
       )}
     </>
+  );
+}
+
+type ScratchLang = "javascript" | "typescript" | "html" | "css" | "json";
+
+function CodeScratchpad({ enabled }: { enabled: boolean }) {
+  const [lang, setLang] = useState<ScratchLang>("javascript");
+  const [code, setCode] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return window.localStorage.getItem("in_app_code_executor_scratch") ?? "// Write code here…\nconsole.log('hello from scratchpad');";
+  });
+  const [output, setOutput] = useState<string>("");
+  const [running, setRunning] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+
+  useEffect(() => {
+    try { window.localStorage.setItem("in_app_code_executor_scratch", code); } catch { /* ignore */ }
+  }, [code]);
+
+  const clear = () => { setCode(""); setOutput(""); };
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(code); toast.success("Code copied"); }
+    catch { toast.error("Copy failed"); }
+  };
+
+  const run = async () => {
+    setRunning(true);
+    setOutput("");
+    const logs: string[] = [];
+    try {
+      if (lang === "html" || lang === "css") {
+        const html = lang === "html" ? code : `<style>${code}</style><div>Preview</div>`;
+        const iframe = iframeRef.current;
+        if (iframe) iframe.srcdoc = html;
+        logs.push(`[${lang}] rendered in preview below`);
+      } else if (lang === "json") {
+        const parsed = JSON.parse(code);
+        logs.push(JSON.stringify(parsed, null, 2));
+      } else {
+        // js / ts — run TS as JS (strip types minimally is out of scope; treat as JS)
+        const capture = (level: string) => (...args: unknown[]) => {
+          logs.push(`[${level}] ` + args.map((a) => {
+            try { return typeof a === "string" ? a : JSON.stringify(a); } catch { return String(a); }
+          }).join(" "));
+        };
+        const sandboxConsole = {
+          log: capture("log"), info: capture("info"), warn: capture("warn"), error: capture("error"),
+        };
+        // eslint-disable-next-line no-new-func
+        const fn = new Function("console", `"use strict"; return (async () => { ${code}\n })();`);
+        const result = await fn(sandboxConsole);
+        if (result !== undefined) logs.push("=> " + (typeof result === "string" ? result : JSON.stringify(result, null, 2)));
+      }
+    } catch (e: any) {
+      logs.push("Error: " + (e?.message ?? String(e)));
+    } finally {
+      setOutput(logs.join("\n"));
+      setRunning(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2 pt-2 border-t">
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-semibold">Scratchpad</span>
+        <select
+          value={lang}
+          onChange={(e) => setLang(e.target.value as ScratchLang)}
+          className="ml-auto text-xs rounded-md border bg-card px-2 py-1"
+          aria-label="Language"
+        >
+          <option value="javascript">JavaScript</option>
+          <option value="typescript">TypeScript</option>
+          <option value="html">HTML</option>
+          <option value="css">CSS</option>
+          <option value="json">JSON</option>
+        </select>
+      </div>
+      <Textarea
+        value={code}
+        onChange={(e) => setCode(e.target.value)}
+        rows={10}
+        spellCheck={false}
+        className="font-mono text-xs min-h-[200px]"
+        placeholder="Write code here…"
+      />
+      <div className="flex gap-2">
+        <button
+          onClick={run}
+          disabled={running || !enabled}
+          title={!enabled ? "Enable the executor above" : "Run code"}
+          className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl brand-bg py-2 text-sm font-medium disabled:opacity-50"
+        >
+          {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+          {running ? "Running…" : "Run"}
+        </button>
+        <button onClick={copy} className="inline-flex items-center justify-center rounded-xl border bg-card px-3 py-2 text-sm" aria-label="Copy code">
+          <Copy className="h-4 w-4" />
+        </button>
+        <button onClick={clear} className="inline-flex items-center justify-center rounded-xl border bg-card px-3 py-2 text-sm" aria-label="Clear code">
+          <Eraser className="h-4 w-4" />
+        </button>
+      </div>
+      {output && (
+        <pre className="rounded-xl bg-secondary/60 p-3 text-xs font-mono whitespace-pre-wrap max-h-60 overflow-auto">
+{output}
+        </pre>
+      )}
+      {(lang === "html" || lang === "css") && (
+        <iframe
+          ref={iframeRef}
+          title="Preview"
+          className="w-full h-48 rounded-xl border bg-white"
+          sandbox="allow-scripts"
+        />
+      )}
+      {!enabled && (
+        <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+          <AlertTriangle className="h-3 w-3" /> Enable the executor above to run code.
+        </p>
+      )}
+    </div>
   );
 }
 
