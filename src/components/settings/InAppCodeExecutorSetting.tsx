@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
-import { ChevronDown, ShieldCheck, Loader2, CheckCircle2, AlertTriangle, XCircle, FileText } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronDown, ShieldCheck, Loader2, CheckCircle2, AlertTriangle, XCircle, FileText, Play, Eraser, Copy } from "lucide-react";
+import { Textarea } from "../ui/textarea";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "../ui-bits";
 import { Switch } from "../ui/switch";
