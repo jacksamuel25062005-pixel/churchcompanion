@@ -291,6 +291,48 @@ export type Database = {
         }
         Relationships: []
       }
+      code_execution_reports: {
+        Row: {
+          break_risks: Json
+          build_success: boolean | null
+          compatibility_status: string | null
+          created_at: string
+          files_changed: Json
+          id: string
+          performance_notes: Json
+          security_issues: Json
+          session_label: string | null
+          stop_reason: string | null
+          stopped_early: boolean
+        }
+        Insert: {
+          break_risks?: Json
+          build_success?: boolean | null
+          compatibility_status?: string | null
+          created_at?: string
+          files_changed?: Json
+          id?: string
+          performance_notes?: Json
+          security_issues?: Json
+          session_label?: string | null
+          stop_reason?: string | null
+          stopped_early?: boolean
+        }
+        Update: {
+          break_risks?: Json
+          build_success?: boolean | null
+          compatibility_status?: string | null
+          created_at?: string
+          files_changed?: Json
+          id?: string
+          performance_notes?: Json
+          security_issues?: Json
+          session_label?: string | null
+          stop_reason?: string | null
+          stopped_early?: boolean
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
