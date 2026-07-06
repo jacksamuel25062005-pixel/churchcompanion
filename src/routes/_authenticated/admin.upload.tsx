@@ -5,7 +5,7 @@ import { AppShell } from "../../components/AppShell";
 import { Card } from "../../components/ui-bits";
 import { toast } from "sonner";
 import type { Book } from "../../lib/types";
-import { FileUp, CheckCircle2, Layers } from "lucide-react";
+import { CheckCircle2, Layers } from "lucide-react";
 import { useAdminGuard } from "../../lib/use-admin-guard";
 import { EnhancedUpload } from "../../components/EnhancedUpload";
 import { parseSongs, type ConflictAction, type ImportSummary, type ParsedSong } from "../../lib/song-import";
@@ -36,8 +36,6 @@ function UploadPage() {
   const [titleEn, setTitleEn] = useState("");
   const [number, setNumber] = useState<string>("");
   const [body, setBody] = useState("");
-  const [parsing, setParsing] = useState(false);
-  const [parseProgress, setParseProgress] = useState(0);
   const [saving, setSaving] = useState(false);
   const [draftSaved, setDraftSaved] = useState<number | null>(null);
   const [batchOpen, setBatchOpen] = useState(false);
@@ -91,52 +89,6 @@ function UploadPage() {
     return () => clearTimeout(t);
   }, [kind, bookId, titleHi, titleEn, number, body]);
 
-  const onFile = async (file: File) => {
-    setParsing(true);
-    setParseProgress(5);
-    const tid = toast.loading(`Parsing ${file.name}…`);
-    try {
-      const ext = file.name.toLowerCase().split(".").pop();
-      const buf = await file.arrayBuffer();
-      setParseProgress(30);
-      let text = "";
-      if (ext === "txt") {
-        text = new TextDecoder("utf-8").decode(buf);
-      } else if (ext === "docx") {
-        // @ts-expect-error - browser build has no types
-        const mammoth: any = await import("mammoth/mammoth.browser");
-        const result = await mammoth.extractRawText({ arrayBuffer: buf });
-        text = result.value;
-      } else if (ext === "pdf") {
-        const pdfjs: any = await import("pdfjs-dist");
-        const workerMod: any = await import("pdfjs-dist/build/pdf.worker.min.mjs?url");
-        pdfjs.GlobalWorkerOptions.workerSrc = workerMod.default;
-        const pdf = await pdfjs.getDocument({ data: buf }).promise;
-        const parts: string[] = [];
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const tc = await page.getTextContent();
-          parts.push(tc.items.map((it: any) => it.str).join(" "));
-          setParseProgress(30 + Math.round((i / pdf.numPages) * 65));
-        }
-        text = parts.join("\n\n");
-      } else {
-        throw new Error("Unsupported file. Quick Import allows PDF, DOCX or TXT.");
-      }
-      setParseProgress(100);
-      setBody(text.trim());
-      if (!titleHi) {
-        const firstLine = text.trim().split("\n")[0] ?? "";
-        setTitleHi(firstLine.slice(0, 120));
-      }
-      toast.success("Parsed — review and publish", { id: tid });
-    } catch (e: any) {
-      toast.error(e.message ?? "Failed to parse", { id: tid });
-    } finally {
-      setParsing(false);
-      setTimeout(() => setParseProgress(0), 800);
-    }
-  };
 
   const bodyTrim = body.trim();
   const wordCount = bodyTrim ? bodyTrim.split(/\s+/).length : 0;
