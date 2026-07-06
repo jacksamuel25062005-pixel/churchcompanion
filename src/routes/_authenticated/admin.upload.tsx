@@ -284,36 +284,6 @@ function UploadPage() {
           <p className="text-xs text-muted-foreground">Import a file or write directly — review, then publish.</p>
         </div>
 
-        {/* Quick Import — PDF/DOCX/TXT */}
-        <Card className="p-5">
-          <div className="text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Quick Import · PDF · DOCX · TXT
-            </span>
-          </div>
-          <label className="mt-3 block">
-            <div className="rounded-2xl border-2 border-dashed border-border/70 p-6 text-center transition-colors hover:border-foreground/30">
-              <FileUp className="mx-auto h-7 w-7 text-muted-foreground" />
-              <p className="mt-2 text-sm font-medium">Choose PDF, DOCX or TXT</p>
-              <p className="text-xs text-muted-foreground">Text-based documents — parsed straight into the editor.</p>
-              <input
-                type="file"
-                accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); }}
-                disabled={parsing}
-                className="mt-3 mx-auto block text-xs file:mr-3 file:rounded-full file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-xs file:font-medium hover:file:bg-accent disabled:opacity-50"
-              />
-              {parsing && (
-                <div className="mt-3 space-y-1">
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
-                    <div className="h-full bg-foreground/70 transition-[width] duration-300" style={{ width: `${parseProgress}%` }} />
-                  </div>
-                  <p className="text-[11px] text-muted-foreground">Parsing… {parseProgress}%</p>
-                </div>
-              )}
-            </div>
-          </label>
-        </Card>
 
         {/* Enhanced Upload — Image + PDF OCR */}
         <Card className="p-5">
