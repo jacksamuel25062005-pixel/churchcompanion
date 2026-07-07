@@ -53,6 +53,11 @@ export type Database = {
           evening_readings: string[]
           id: string
           is_sunday: boolean
+          ls_gospel: string[]
+          ls_ot: string[]
+          ls_psalm: string[]
+          ls_second: string[]
+          memorial: string | null
           morning_readings: string[]
           theme: string
           updated_at: string
@@ -65,6 +70,11 @@ export type Database = {
           evening_readings?: string[]
           id?: string
           is_sunday?: boolean
+          ls_gospel?: string[]
+          ls_ot?: string[]
+          ls_psalm?: string[]
+          ls_second?: string[]
+          memorial?: string | null
           morning_readings?: string[]
           theme?: string
           updated_at?: string
@@ -77,6 +87,11 @@ export type Database = {
           evening_readings?: string[]
           id?: string
           is_sunday?: boolean
+          ls_gospel?: string[]
+          ls_ot?: string[]
+          ls_psalm?: string[]
+          ls_second?: string[]
+          memorial?: string | null
           morning_readings?: string[]
           theme?: string
           updated_at?: string
