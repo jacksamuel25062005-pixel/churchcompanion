@@ -1,7 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Folder, FolderOpen, Bookmark, BookmarkCheck } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Folder,
+  FolderOpen,
+  Bookmark,
+  BookmarkCheck,
+  CalendarDays,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../components/AppShell";
 import { Card, EmptyState } from "../components/ui-bits";
@@ -12,6 +20,7 @@ export const Route = createFileRoute("/almanac")({
   component: AlmanacPage,
 });
 
+// ================= Types =================
 interface AlmanacRow {
   date: string;
   day_name: string;
@@ -20,6 +29,11 @@ interface AlmanacRow {
   morning_readings: string[];
   evening_readings: string[];
   is_sunday: boolean;
+  memorial: string | null;
+  ls_ot: string[];
+  ls_psalm: string[];
+  ls_second: string[];
+  ls_gospel: string[];
 }
 
 const MONTHS_FULL = [
@@ -36,7 +50,7 @@ const COLOUR_META: Record<AlmanacRow["colour"], { name: string; bg: string; fg: 
   R: { name: "Red", bg: "#C62828", fg: "#FFFFFF", ring: "rgba(198,40,40,0.35)" },
 };
 
-// --- Bookmarks (per-date) ---
+// ================= Bookmarks =================
 const BM_KEY = "cc.almanac.bookmarks";
 function readBookmarks(): Set<string> {
   if (typeof window === "undefined") return new Set();
@@ -46,93 +60,108 @@ function writeBookmarks(s: Set<string>) {
   try { localStorage.setItem(BM_KEY, JSON.stringify([...s])); } catch {}
 }
 
-// --- Reading parser: "OT Genesis / उत्पत्ति 1:1-10" ---
+// ================= Reading parser =================
 function parseReading(raw: string): { testament: "OT" | "NT" | null; body: string } {
   const m = raw.trim().match(/^(OT|NT)\b[\s:.-]*(.*)$/i);
   if (m) return { testament: m[1].toUpperCase() as "OT" | "NT", body: m[2].trim() };
   return { testament: null, body: raw.trim() };
 }
 
+// ================= Root page (view state) =================
+type View =
+  | { kind: "years" }
+  | { kind: "year"; year: number }
+  | { kind: "month"; year: number; month: number }
+  | { kind: "day"; year: number; month: number; date: string };
+
 function AlmanacPage() {
-  const currentYear = new Date().getFullYear();
-  const [year, setYear] = useState(currentYear);
-  const [openMonth, setOpenMonth] = useState<number | null>(null);
-  const [openDate, setOpenDate] = useState<string | null>(null);
-
-  const q = useQuery({
-    queryKey: ["almanac", year],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("almanac_entries")
-        .select("*")
-        .gte("date", `${year}-01-01`)
-        .lte("date", `${year}-12-31`)
-        .order("date");
-      if (error) throw error;
-      return (data ?? []) as AlmanacRow[];
-    },
-  });
-
-  const byMonth = useMemo(() => {
-    const out: Record<number, AlmanacRow[]> = {};
-    for (const r of q.data ?? []) {
-      const m = new Date(r.date + "T00:00:00").getMonth();
-      (out[m] ||= []).push(r);
-    }
-    return out;
-  }, [q.data]);
+  const [view, setView] = useState<View>({ kind: "years" });
 
   const back = () => {
-    if (openMonth != null) { setOpenMonth(null); setOpenDate(null); return; }
+    if (view.kind === "day") setView({ kind: "month", year: view.year, month: view.month });
+    else if (view.kind === "month") setView({ kind: "year", year: view.year });
+    else if (view.kind === "year") setView({ kind: "years" });
   };
 
+  const title =
+    view.kind === "years" ? "Almanac"
+    : view.kind === "year" ? `Almanac ${view.year}`
+    : view.kind === "month" ? `${MONTHS_FULL[view.month]} ${view.year}`
+    : "Day";
+
+  const left =
+    view.kind === "years" ? (
+      <Link to="/" className="-ml-2 rounded-lg px-2 py-1.5 text-sm font-medium hover:bg-accent">‹ Home</Link>
+    ) : (
+      <button onClick={back} className="-ml-2 inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium hover:bg-accent">
+        <ChevronLeft className="h-4 w-4" /> Back
+      </button>
+    );
+
   return (
-    <AppShell
-      title="Almanac"
-      left={
-        openMonth != null ? (
-          <button onClick={back} className="-ml-2 inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium hover:bg-accent">
-            <ChevronLeft className="h-4 w-4" /> Back
-          </button>
-        ) : (
-          <Link to="/" className="-ml-2 rounded-lg px-2 py-1.5 text-sm font-medium hover:bg-accent">‹ Home</Link>
-        )
-      }
-    >
+    <AppShell title={title} left={left}>
       <div className="pt-3 pb-8 animate-fade-in">
         {/* Breadcrumb */}
-        <nav className="mb-3 flex items-center gap-1.5 text-xs">
+        <nav className="mb-3 flex flex-wrap items-center gap-1.5 text-xs">
           <Link to="/" className="text-muted-foreground hover:text-foreground">Home</Link>
           <span className="text-muted-foreground/50">/</span>
           <button
-            onClick={() => { setOpenMonth(null); setOpenDate(null); }}
-            className={cn(openMonth == null ? "font-semibold" : "text-muted-foreground hover:text-foreground")}
+            onClick={() => setView({ kind: "years" })}
+            className={cn(view.kind === "years" ? "font-semibold" : "text-muted-foreground hover:text-foreground")}
           >
             Almanac
           </button>
-          {openMonth != null && (
+          {view.kind !== "years" && (
             <>
               <span className="text-muted-foreground/50">/</span>
-              <span className="font-semibold">{year}</span>
+              <button
+                onClick={() => setView({ kind: "year", year: (view as any).year })}
+                className={cn(view.kind === "year" ? "font-semibold" : "text-muted-foreground hover:text-foreground")}
+              >
+                {(view as any).year}
+              </button>
+            </>
+          )}
+          {(view.kind === "month" || view.kind === "day") && (
+            <>
+              <span className="text-muted-foreground/50">/</span>
+              <button
+                onClick={() => setView({ kind: "month", year: view.year, month: view.month })}
+                className={cn(view.kind === "month" ? "font-semibold" : "text-muted-foreground hover:text-foreground")}
+              >
+                {MONTHS_FULL[view.month]}
+              </button>
+            </>
+          )}
+          {view.kind === "day" && (
+            <>
+              <span className="text-muted-foreground/50">/</span>
+              <span className="font-semibold">{view.date.slice(-2)}</span>
             </>
           )}
         </nav>
 
-        {openMonth == null ? (
-          <YearFolder
-            year={year}
-            onYear={setYear}
-            byMonth={byMonth}
-            loading={q.isLoading}
-            onOpenMonth={(m) => { setOpenMonth(m); setOpenDate(null); }}
+        {view.kind === "years" && (
+          <YearsView onPick={(year) => setView({ kind: "year", year })} />
+        )}
+        {view.kind === "year" && (
+          <YearView
+            year={view.year}
+            onOpenMonth={(month) => setView({ kind: "month", year: view.year, month })}
           />
-        ) : (
+        )}
+        {view.kind === "month" && (
           <MonthView
-            year={year}
-            month={openMonth}
-            rows={byMonth[openMonth] ?? []}
-            openDate={openDate}
-            onToggleDate={(d) => setOpenDate((prev) => (prev === d ? null : d))}
+            year={view.year}
+            month={view.month}
+            onOpenDay={(date) => setView({ kind: "day", year: view.year, month: view.month, date })}
+          />
+        )}
+        {view.kind === "day" && (
+          <DayView
+            date={view.date}
+            year={view.year}
+            month={view.month}
           />
         )}
       </div>
@@ -140,77 +169,137 @@ function AlmanacPage() {
   );
 }
 
-
-// ================= Year → Month Folders =================
-function YearFolder({
-  year,
-  onYear,
-  byMonth,
-  loading,
-  onOpenMonth,
-}: {
-  year: number;
-  onYear: (y: number) => void;
-  byMonth: Record<number, AlmanacRow[]>;
-  loading: boolean;
-  onOpenMonth: (m: number) => void;
-}) {
-  const currentMonth = new Date().getMonth();
+// ================= Years View =================
+function YearsView({ onPick }: { onPick: (year: number) => void }) {
   const currentYear = new Date().getFullYear();
+
+  const q = useQuery({
+    queryKey: ["almanac", "years"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("almanac_entries")
+        .select("date")
+        .order("date", { ascending: false });
+      if (error) throw error;
+      const years = new Set<number>();
+      for (const r of (data ?? []) as { date: string }[]) {
+        years.add(new Date(r.date + "T00:00:00").getFullYear());
+      }
+      years.add(currentYear); // always include current year
+      return [...years].sort((a, b) => b - a);
+    },
+  });
+
+  if (q.isLoading) return <p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>;
+
+  const years = q.data ?? [currentYear];
 
   return (
     <>
-      {/* Year folder pill */}
+      <div
+        className="mb-4 flex items-center gap-3 rounded-2xl px-4 py-3.5 text-white shadow-md"
+        style={{ background: "linear-gradient(135deg, #6D5EF7, #4A38C9)" }}
+      >
+        <CalendarDays className="h-5 w-5 shrink-0 opacity-90" />
+        <p className="min-w-0 flex-1 text-base font-semibold leading-none">Select a Year</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2.5">
+        {years.map((y) => {
+          const isCurrent = y === currentYear;
+          return (
+            <button
+              key={y}
+              onClick={() => onPick(y)}
+              className={cn(
+                "tap-card group relative flex items-center gap-2.5 rounded-2xl border px-4 py-4 text-left transition-all",
+                "border-white/40 bg-white/60 backdrop-blur-xl shadow-sm hover:shadow-md hover:-translate-y-0.5",
+                "dark:bg-white/5 dark:border-white/10",
+                isCurrent && "ring-2 ring-primary/60",
+              )}
+            >
+              <FolderOpen className="h-5 w-5 shrink-0 brand-text" />
+              <div className="min-w-0 flex-1">
+                <p className="text-lg font-bold tabular-nums leading-none">{y}</p>
+                <p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">Almanac</p>
+              </div>
+              {isCurrent && (
+                <span className="absolute -right-1 -top-1 rounded-full brand-bg px-1.5 py-0.5 text-[9px] font-bold uppercase shadow">
+                  Now
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
+// ================= Year → Month Folders =================
+function YearView({ year, onOpenMonth }: { year: number; onOpenMonth: (m: number) => void }) {
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+
+  // Light query: just dates present in this year (used to show counts / enable states)
+  const q = useQuery({
+    queryKey: ["almanac", "year-months", year],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("almanac_entries")
+        .select("date")
+        .gte("date", `${year}-01-01`)
+        .lte("date", `${year}-12-31`);
+      if (error) throw error;
+      const byMonth: Record<number, number> = {};
+      for (const r of (data ?? []) as { date: string }[]) {
+        const m = new Date(r.date + "T00:00:00").getMonth();
+        byMonth[m] = (byMonth[m] ?? 0) + 1;
+      }
+      return byMonth;
+    },
+  });
+
+  const counts = q.data ?? {};
+
+  return (
+    <>
       <div
         className="mb-4 flex items-center gap-3 rounded-2xl px-4 py-3.5 text-white shadow-md"
         style={{ background: "linear-gradient(135deg, #6D5EF7, #4A38C9)" }}
       >
         <FolderOpen className="h-5 w-5 shrink-0 opacity-90" />
         <p className="min-w-0 flex-1 text-base font-semibold leading-none">{year}</p>
-        <div className="flex items-center gap-0.5">
-          <button
-            aria-label="Previous year"
-            onClick={() => onYear(year - 1)}
-            className="grid h-8 w-8 place-items-center rounded-lg hover:bg-white/15"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button
-            aria-label="Next year"
-            onClick={() => onYear(year + 1)}
-            className="grid h-8 w-8 place-items-center rounded-lg hover:bg-white/15"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
+        <p className="text-[11px] uppercase tracking-wider opacity-90">12 Months</p>
       </div>
 
-      {loading ? (
+      {q.isLoading ? (
         <p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>
       ) : (
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-3 gap-2.5">
           {MONTHS_FULL.map((name, i) => {
-            const count = (byMonth[i] ?? []).length;
+            const count = counts[i] ?? 0;
             const isCurrent = year === currentYear && i === currentMonth;
+            const disabled = count === 0;
             return (
               <button
                 key={name}
-                onClick={() => onOpenMonth(i)}
+                onClick={() => !disabled && onOpenMonth(i)}
+                disabled={disabled}
                 className={cn(
-                  "tap-card group relative flex items-center gap-2.5 rounded-2xl border px-4 py-3.5 text-left transition-all",
-                  "border-white/40 bg-white/60 backdrop-blur-xl shadow-sm hover:shadow-md hover:-translate-y-0.5",
-                  "dark:bg-white/5 dark:border-white/10",
-                  isCurrent && "ring-2 ring-primary/60",
+                  "tap-card group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border px-2 py-3 text-center transition-all",
+                  disabled
+                    ? "border-dashed border-muted-foreground/20 bg-transparent text-muted-foreground/40"
+                    : "border-white/40 bg-white/60 backdrop-blur-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 dark:bg-white/5 dark:border-white/10",
+                  isCurrent && !disabled && "ring-2 ring-primary/60",
                 )}
               >
-                <Folder className="h-4 w-4 shrink-0 brand-text" />
-                <span className="min-w-0 flex-1 truncate text-sm font-semibold">{name}</span>
-                {count > 0 && (
-                  <span className="text-[10px] font-semibold tabular-nums text-muted-foreground">
-                    {count}
-                  </span>
-                )}
-                {isCurrent && (
+                <Folder className={cn("h-5 w-5", disabled ? "opacity-40" : "brand-text")} />
+                <span className="text-sm font-semibold leading-none">{name.slice(0, 3)}</span>
+                <span className="text-[10px] tabular-nums text-muted-foreground">
+                  {count > 0 ? `${count} days` : "—"}
+                </span>
+                {isCurrent && !disabled && (
                   <span className="absolute -right-1 -top-1 rounded-full brand-bg px-1.5 py-0.5 text-[9px] font-bold uppercase shadow">
                     Now
                   </span>
@@ -224,23 +313,37 @@ function YearFolder({
   );
 }
 
-
-// ================= Month → Date Grid + Accordion =================
+// ================= Month → Calendar =================
 function MonthView({
   year,
   month,
-  rows,
-  openDate,
-  onToggleDate,
+  onOpenDay,
 }: {
   year: number;
   month: number;
-  rows: AlmanacRow[];
-  openDate: string | null;
-  onToggleDate: (d: string) => void;
+  onOpenDay: (date: string) => void;
 }) {
+  const q = useQuery({
+    queryKey: ["almanac", "month", year, month],
+    queryFn: async () => {
+      const start = `${year}-${String(month + 1).padStart(2, "0")}-01`;
+      const endDate = new Date(year, month + 1, 0).getDate();
+      const end = `${year}-${String(month + 1).padStart(2, "0")}-${String(endDate).padStart(2, "0")}`;
+      const { data, error } = await supabase
+        .from("almanac_entries")
+        .select("*")
+        .gte("date", start)
+        .lte("date", end)
+        .order("date");
+      if (error) throw error;
+      return (data ?? []) as AlmanacRow[];
+    },
+    staleTime: 5 * 60 * 1000, // cache recently opened months
+  });
+
+  const rows = q.data ?? [];
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstWeekday = new Date(year, month, 1).getDay(); // 0=Sun
+  const firstWeekday = new Date(year, month, 1).getDay();
   const byDay = useMemo(() => {
     const out: Record<number, AlmanacRow> = {};
     for (const r of rows) out[new Date(r.date + "T00:00:00").getDate()] = r;
@@ -251,21 +354,8 @@ function MonthView({
   const todayNum =
     today.getFullYear() === year && today.getMonth() === month ? today.getDate() : -1;
 
-  const openRow = openDate ? rows.find((r) => r.date === openDate) ?? null : null;
-
-  const [bmVersion, setBmVersion] = useState(0);
+  const [bmVersion] = useState(0);
   const bookmarks = useMemo(() => readBookmarks(), [bmVersion]);
-  // Refresh bookmark markers whenever the open date changes (toggle inside DayDetail)
-  useEffect(() => { setBmVersion((v) => v + 1); }, [openDate]);
-
-  if (rows.length === 0) {
-    return (
-      <>
-        <MonthFolderCard year={year} month={month} />
-        <EmptyState title="No entries" hint="Ask an admin to import the almanac for this month." />
-      </>
-    );
-  }
 
   const cells: Array<number | null> = [
     ...Array.from({ length: firstWeekday }, () => null),
@@ -274,92 +364,82 @@ function MonthView({
 
   return (
     <div className="animate-fade-in">
-      {/* Month folder card */}
       <MonthFolderCard year={year} month={month} />
 
-      {/* Weekday labels */}
-      <div className="mb-2 grid grid-cols-7 gap-1.5 px-0.5">
-        {WEEKDAYS.map((w, i) => (
-          <div key={i} className="text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {w}
-          </div>
-        ))}
-      </div>
-
-      {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-1.5">
-        {cells.map((d, i) => {
-          if (d == null) return <div key={`b-${i}`} className="aspect-square" />;
-          const row = byDay[d];
-          const dateStr = row?.date;
-          const isOpen = !!dateStr && openDate === dateStr;
-          const isToday = d === todayNum;
-          const isBookmarked = !!dateStr && bookmarks.has(dateStr);
-          return (
-            <button
-              key={d}
-              disabled={!row}
-              onClick={() => row && onToggleDate(row.date)}
-              className={cn(
-                "tap-card relative aspect-square rounded-xl text-sm font-semibold transition-all",
-                "flex flex-col items-center justify-center gap-1",
-                row
-                  ? "border border-white/40 bg-white/60 backdrop-blur-xl hover:-translate-y-0.5 hover:shadow-sm dark:bg-white/5 dark:border-white/10"
-                  : "border border-transparent bg-transparent text-muted-foreground/30",
-                isOpen && "bg-primary text-primary-foreground border-primary shadow-md scale-[1.03]",
-                isToday && !isOpen && "ring-1 ring-primary/60",
-              )}
-            >
-              <span className="tabular-nums">{d}</span>
-              {row && (
-                <span
-                  className={cn(
-                    "h-1.5 w-1.5 rounded-full",
-                    isBookmarked ? "bg-yellow-400" : isOpen ? "bg-primary-foreground" : "bg-primary/70",
-                  )}
-                />
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Legend */}
-      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-white/40 bg-white/50 px-3.5 py-2.5 text-[11px] backdrop-blur-xl dark:bg-white/5 dark:border-white/10">
-        <span className="inline-flex items-center gap-1.5">
-          <span className="grid h-3.5 w-3.5 place-items-center rounded-full ring-1 ring-primary/60" />
-          Today
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-3.5 w-3.5 rounded-[5px] bg-primary" />
-          Selected
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-yellow-400" />
-          Bookmarked
-        </span>
-      </div>
-
-      {/* Accordion detail or empty hint */}
-      {openRow ? (
-        <div className="mt-4 animate-fade-in">
-          <DayDetail row={openRow} onBookmarkChange={() => setBmVersion((v) => v + 1)} />
-        </div>
+      {q.isLoading ? (
+        <p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>
+      ) : rows.length === 0 ? (
+        <EmptyState title="No entries" hint="Ask an admin to import the almanac for this month." />
       ) : (
-        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-white/40 bg-white/50 p-4 backdrop-blur-xl dark:bg-white/5 dark:border-white/10">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-muted/50">
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          </span>
-          <p className="min-w-0 flex-1 text-sm text-muted-foreground leading-snug">
-            Tap on any date to view <br />the almanac details
-          </p>
-        </div>
+        <>
+          {/* Weekday labels */}
+          <div className="mb-2 grid grid-cols-7 gap-1.5 px-0.5">
+            {WEEKDAYS.map((w, i) => (
+              <div key={i} className="text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {w}
+              </div>
+            ))}
+          </div>
+
+          {/* Calendar grid */}
+          <div className="grid grid-cols-7 gap-1.5">
+            {cells.map((d, i) => {
+              if (d == null) return <div key={`b-${i}`} className="aspect-square" />;
+              const row = byDay[d];
+              const dateStr = row?.date;
+              const isToday = d === todayNum;
+              const isBookmarked = !!dateStr && bookmarks.has(dateStr);
+              return (
+                <button
+                  key={d}
+                  disabled={!row}
+                  onClick={() => row && onOpenDay(row.date)}
+                  className={cn(
+                    "tap-card relative aspect-square rounded-xl text-sm font-semibold transition-all",
+                    "flex flex-col items-center justify-center gap-1",
+                    row
+                      ? "border border-white/40 bg-white/60 backdrop-blur-xl hover:-translate-y-0.5 hover:shadow-sm dark:bg-white/5 dark:border-white/10"
+                      : "border border-transparent bg-transparent text-muted-foreground/30",
+                    isToday && "ring-2 ring-primary/70 bg-primary/10",
+                  )}
+                >
+                  <span className="tabular-nums">{d}</span>
+                  {row && (
+                    <span
+                      className={cn(
+                        "h-1.5 w-1.5 rounded-full",
+                        isBookmarked ? "bg-yellow-400" : "bg-primary/70",
+                      )}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Legend */}
+          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-white/40 bg-white/50 px-3.5 py-2.5 text-[11px] backdrop-blur-xl dark:bg-white/5 dark:border-white/10">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-3.5 w-3.5 rounded-[5px] bg-primary/20 ring-2 ring-primary/70" />
+              Today
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-primary/70" />
+              Has entry
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-yellow-400" />
+              Bookmarked
+            </span>
+          </div>
+
+          <p className="mt-3 text-center text-xs text-muted-foreground">Tap a date to open its almanac.</p>
+        </>
       )}
     </div>
   );
 }
 
-// Purple folder card for the month header (matches year card style)
 function MonthFolderCard({ year, month }: { year: number; month: number }) {
   return (
     <div
@@ -374,10 +454,28 @@ function MonthFolderCard({ year, month }: { year: number; month: number }) {
   );
 }
 
+// ================= Day View (full screen) =================
+function DayView({ date, year, month }: { date: string; year: number; month: number }) {
+  const q = useQuery({
+    queryKey: ["almanac", "day", date],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("almanac_entries")
+        .select("*")
+        .eq("date", date)
+        .maybeSingle();
+      if (error) throw error;
+      return data as AlmanacRow | null;
+    },
+  });
 
+  if (q.isLoading) return <p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>;
+  if (!q.data) return <EmptyState title="No entry" hint="This date has no almanac entry." />;
 
-// ================= Day Detail =================
-function DayDetail({ row, onBookmarkChange }: { row: AlmanacRow; onBookmarkChange?: () => void }) {
+  return <DayDetail row={q.data} monthCtx={{ year, month }} />;
+}
+
+function DayDetail({ row, monthCtx }: { row: AlmanacRow; monthCtx: { year: number; month: number } }) {
   const [bm, setBm] = useState<Set<string>>(() => readBookmarks());
   useEffect(() => { setBm(readBookmarks()); }, [row.date]);
 
@@ -387,9 +485,7 @@ function DayDetail({ row, onBookmarkChange }: { row: AlmanacRow; onBookmarkChang
     if (next.has(row.date)) next.delete(row.date); else next.add(row.date);
     writeBookmarks(next);
     setBm(next);
-    onBookmarkChange?.();
   };
-
 
   const d = new Date(row.date + "T00:00:00");
   const dayNum = String(d.getDate()).padStart(2, "0");
@@ -397,71 +493,85 @@ function DayDetail({ row, onBookmarkChange }: { row: AlmanacRow; onBookmarkChang
   const dayName = row.day_name || WEEKDAYS_FULL[d.getDay()];
   const colour = COLOUR_META[row.colour];
 
-  const combined = row.is_sunday || (row.morning_readings?.length && !row.evening_readings?.length);
-  const hasLordsSupper = row.is_sunday && (row.evening_readings?.length ?? 0) > 0;
-  // Per spec: on Sunday, morning+evening merged into one worship, and L.S. separate if present.
-  // We approximate: if is_sunday, treat morning_readings = "Morning / Evening Worship",
-  // evening_readings = "Lord's Supper" (only when present).
+  const hasLordsSupper =
+    (row.ls_ot?.length ?? 0) > 0 ||
+    (row.ls_psalm?.length ?? 0) > 0 ||
+    (row.ls_second?.length ?? 0) > 0 ||
+    (row.ls_gospel?.length ?? 0) > 0;
+
+  // Fallback: on Sunday when structured LS fields empty, older data may store LS in evening_readings.
+  const legacyLordsSupper =
+    !hasLordsSupper && row.is_sunday && (row.evening_readings?.length ?? 0) > 0;
 
   return (
-    <Card className="mt-1 overflow-hidden rounded-2xl border-white/40 bg-white/60 p-0 backdrop-blur-xl dark:bg-white/5 dark:border-white/10 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-start gap-3 border-b border-white/30 p-5 dark:border-white/10">
-        <div className="min-w-0 flex-1">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{dayName}</p>
-          <h2 className="mt-0.5 text-3xl font-bold leading-tight tracking-tight">
-            {dayNum} {monthName} {d.getFullYear()}
-          </h2>
-        </div>
-        <button
-          onClick={toggleBookmark}
-          aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
-          className="grid h-10 w-10 place-items-center rounded-xl border border-white/40 bg-white/50 backdrop-blur hover:bg-accent dark:bg-white/5 dark:border-white/10"
-        >
-          {isBookmarked ? (
-            <BookmarkCheck className="h-4 w-4 brand-text" />
-          ) : (
-            <Bookmark className="h-4 w-4 text-muted-foreground" />
-          )}
-        </button>
-      </div>
+    <div className="animate-fade-in">
+      {/* Reference to month/year for context in URL-less nav */}
+      <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+        {MONTHS_FULL[monthCtx.month]} {monthCtx.year}
+      </p>
 
-      {/* Meta rows */}
-      <div className="space-y-3 p-5">
-        <MetaRow label="Day" value={dayName} />
-        <MetaRow label="Theme" value={row.theme || "No theme"} />
-        <div className="flex items-center gap-3">
-          <span className="w-20 shrink-0 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Colour
-          </span>
-          <span
-            className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold"
-            style={{ background: colour.bg, color: colour.fg, boxShadow: `inset 0 0 0 1px ${colour.ring}` }}
+      <Card className="overflow-hidden rounded-2xl border-white/40 bg-white/60 p-0 backdrop-blur-xl dark:bg-white/5 dark:border-white/10">
+        {/* Header */}
+        <div className="flex items-start gap-3 border-b border-white/30 p-5 dark:border-white/10">
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{dayName}</p>
+            <h2 className="mt-0.5 text-3xl font-bold leading-tight tracking-tight">
+              {dayNum} {monthName} {d.getFullYear()}
+            </h2>
+          </div>
+          <button
+            onClick={toggleBookmark}
+            aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
+            className="grid h-10 w-10 place-items-center rounded-xl border border-white/40 bg-white/50 backdrop-blur hover:bg-accent dark:bg-white/5 dark:border-white/10"
           >
-            <span className="h-1.5 w-1.5 rounded-full" style={{ background: colour.fg, opacity: 0.85 }} />
-            {colour.name}
-          </span>
+            {isBookmarked ? (
+              <BookmarkCheck className="h-4 w-4 brand-text" />
+            ) : (
+              <Bookmark className="h-4 w-4 text-muted-foreground" />
+            )}
+          </button>
         </div>
 
-        {/* Worship sections */}
-        {combined ? (
-          <>
-            <WorshipCard
-              title={row.is_sunday ? "Morning / Evening Worship" : "Worship"}
-              readings={row.morning_readings ?? []}
-            />
-            {hasLordsSupper && (
-              <WorshipCard title="Lord's Supper" readings={row.evening_readings ?? []} />
-            )}
-          </>
-        ) : (
-          <>
-            <WorshipCard title="Morning Worship" hint="सुबह" readings={row.morning_readings ?? []} />
-            <WorshipCard title="Evening Worship" hint="शाम" readings={row.evening_readings ?? []} />
-          </>
-        )}
-      </div>
-    </Card>
+        {/* Meta rows */}
+        <div className="space-y-3 p-5">
+          <MetaRow label="Day" value={dayName} />
+          <MetaRow label="Theme" value={row.theme || "—"} />
+          {row.memorial && <MetaRow label="Memorial" value={row.memorial} />}
+          <div className="flex items-center gap-3">
+            <span className="w-20 shrink-0 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Colour
+            </span>
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold"
+              style={{ background: colour.bg, color: colour.fg, boxShadow: `inset 0 0 0 1px ${colour.ring}` }}
+            >
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: colour.fg, opacity: 0.85 }} />
+              {colour.name}
+            </span>
+          </div>
+
+          {/* Worship sections */}
+          <WorshipCard title="Morning Worship" hint="सुबह" readings={row.morning_readings ?? []} />
+          <WorshipCard title="Evening Worship" hint="शाम" readings={row.evening_readings ?? []} />
+
+          {/* Lord's Supper */}
+          {hasLordsSupper && (
+            <div className="rounded-2xl border border-white/40 bg-white/60 p-4 backdrop-blur dark:bg-white/5 dark:border-white/10">
+              <p className="mb-3 text-sm font-semibold">Lord's Supper</p>
+              <div className="space-y-3">
+                <NamedReading label="Old Testament" readings={row.ls_ot} />
+                <NamedReading label="Psalm" readings={row.ls_psalm} />
+                <NamedReading label="Second Reading" readings={row.ls_second} />
+                <NamedReading label="Gospel" readings={row.ls_gospel} />
+              </div>
+            </div>
+          )}
+          {legacyLordsSupper && (
+            <WorshipCard title="Lord's Supper" readings={row.evening_readings ?? []} />
+          )}
+        </div>
+      </Card>
+    </div>
   );
 }
 
@@ -504,6 +614,22 @@ function WorshipCard({ title, hint, readings }: { title: string; hint?: string; 
           );
         })}
       </ol>
+    </div>
+  );
+}
+
+function NamedReading({ label, readings }: { label: string; readings: string[] }) {
+  if (!readings || readings.length === 0) return null;
+  return (
+    <div className="flex items-start gap-3">
+      <span className="w-24 shrink-0 pt-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </span>
+      <div className="min-w-0 flex-1 space-y-1">
+        {readings.map((r, i) => (
+          <p key={i} className="text-sm font-medium leading-snug">{r}</p>
+        ))}
+      </div>
     </div>
   );
 }
