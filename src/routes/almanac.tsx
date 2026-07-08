@@ -280,26 +280,23 @@ function YearView({ year, onOpenMonth }: { year: number; onOpenMonth: (m: number
           {MONTHS_FULL.map((name, i) => {
             const count = counts[i] ?? 0;
             const isCurrent = year === currentYear && i === currentMonth;
-            const disabled = count === 0;
+            const disabled = false;
             return (
               <button
                 key={name}
-                onClick={() => !disabled && onOpenMonth(i)}
-                disabled={disabled}
+                onClick={() => onOpenMonth(i)}
                 className={cn(
                   "tap-card group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border px-2 py-3 text-center transition-all",
-                  disabled
-                    ? "border-dashed border-muted-foreground/20 bg-transparent text-muted-foreground/40"
-                    : "border-white/40 bg-white/60 backdrop-blur-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 dark:bg-white/5 dark:border-white/10",
-                  isCurrent && !disabled && "ring-2 ring-primary/60",
+                  "border-white/40 bg-white/60 backdrop-blur-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 dark:bg-white/5 dark:border-white/10",
+                  isCurrent && "ring-2 ring-primary/60",
                 )}
               >
-                <Folder className={cn("h-5 w-5", disabled ? "opacity-40" : "brand-text")} />
+                <Folder className={cn("h-5 w-5", "brand-text")} />
                 <span className="text-sm font-semibold leading-none">{name.slice(0, 3)}</span>
                 <span className="text-[10px] tabular-nums text-muted-foreground">
                   {count > 0 ? `${count} days` : "—"}
                 </span>
-                {isCurrent && !disabled && (
+                {isCurrent && (
                   <span className="absolute -right-1 -top-1 rounded-full brand-bg px-1.5 py-0.5 text-[9px] font-bold uppercase shadow">
                     Now
                   </span>
@@ -368,8 +365,6 @@ function MonthView({
 
       {q.isLoading ? (
         <p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>
-      ) : rows.length === 0 ? (
-        <EmptyState title="No entries" hint="Ask an admin to import the almanac for this month." />
       ) : (
         <>
           {/* Weekday labels */}
@@ -399,7 +394,7 @@ function MonthView({
                     "flex flex-col items-center justify-center gap-1",
                     row
                       ? "border border-white/40 bg-white/60 backdrop-blur-xl hover:-translate-y-0.5 hover:shadow-sm dark:bg-white/5 dark:border-white/10"
-                      : "border border-transparent bg-transparent text-muted-foreground/30",
+                      : "border border-dashed border-muted-foreground/20 bg-transparent text-muted-foreground/40",
                     isToday && "ring-2 ring-primary/70 bg-primary/10",
                   )}
                 >
@@ -433,7 +428,13 @@ function MonthView({
             </span>
           </div>
 
-          <p className="mt-3 text-center text-xs text-muted-foreground">Tap a date to open its almanac.</p>
+          {rows.length === 0 ? (
+            <p className="mt-3 text-center text-xs text-muted-foreground">
+              No entries yet for this month. Ask an admin to import the almanac.
+            </p>
+          ) : (
+            <p className="mt-3 text-center text-xs text-muted-foreground">Tap a date to open its almanac.</p>
+          )}
         </>
       )}
     </div>
