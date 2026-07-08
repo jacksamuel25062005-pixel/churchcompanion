@@ -61,7 +61,7 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
           style={{ bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
         >
           <div className="glass rounded-[28px] w-full max-w-screen-sm">
-            <ul className="grid grid-cols-4 px-1.5 py-1.5">
+            <ul className="grid grid-cols-5 px-1.5 py-1.5">
 
               {items.map((it) => {
                 const Active = it.match(pathname);
