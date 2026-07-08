@@ -368,8 +368,6 @@ function MonthView({
 
       {q.isLoading ? (
         <p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>
-      ) : rows.length === 0 ? (
-        <EmptyState title="No entries" hint="Ask an admin to import the almanac for this month." />
       ) : (
         <>
           {/* Weekday labels */}
@@ -399,7 +397,7 @@ function MonthView({
                     "flex flex-col items-center justify-center gap-1",
                     row
                       ? "border border-white/40 bg-white/60 backdrop-blur-xl hover:-translate-y-0.5 hover:shadow-sm dark:bg-white/5 dark:border-white/10"
-                      : "border border-transparent bg-transparent text-muted-foreground/30",
+                      : "border border-dashed border-muted-foreground/20 bg-transparent text-muted-foreground/40",
                     isToday && "ring-2 ring-primary/70 bg-primary/10",
                   )}
                 >
@@ -433,7 +431,13 @@ function MonthView({
             </span>
           </div>
 
-          <p className="mt-3 text-center text-xs text-muted-foreground">Tap a date to open its almanac.</p>
+          {rows.length === 0 ? (
+            <p className="mt-3 text-center text-xs text-muted-foreground">
+              No entries yet for this month. Ask an admin to import the almanac.
+            </p>
+          ) : (
+            <p className="mt-3 text-center text-xs text-muted-foreground">Tap a date to open its almanac.</p>
+          )}
         </>
       )}
     </div>
