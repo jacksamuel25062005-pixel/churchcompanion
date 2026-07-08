@@ -8,6 +8,7 @@ const dict: Dict = {
   "nav.search": { en: "Search", hi: "खोज" },
   "nav.bookmarks": { en: "Bookmarks", hi: "बुकमार्क" },
   "nav.settings": { en: "Settings", hi: "सेटिंग्स" },
+  "nav.almanac": { en: "Almanac", hi: "पंचांग" },
   "nav.admin": { en: "Admin", hi: "एडमिन" },
   "home.today": { en: "Today's Songs", hi: "आज के गीत" },
   "home.no_today": { en: "No songs selected today", hi: "आज कोई गीत चयनित नहीं" },

@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Search, Bookmark, Settings as SettingsIcon } from "lucide-react";
+import { Home, Search, Bookmark, Settings as SettingsIcon, CalendarDays } from "lucide-react";
 import type { ReactNode } from "react";
 import { useT } from "../lib/i18n";
 
@@ -18,6 +18,7 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
   const items = [
     { to: "/", label: t("nav.home"), icon: Home, match: (p: string) => p === "/" },
     { to: "/search", label: t("nav.search"), icon: Search, match: (p: string) => p.startsWith("/search") },
+    { to: "/almanac", label: t("nav.almanac"), icon: CalendarDays, match: (p: string) => p.startsWith("/almanac") },
     { to: "/bookmarks", label: t("nav.bookmarks"), icon: Bookmark, match: (p: string) => p.startsWith("/bookmarks") },
     { to: "/settings", label: t("nav.settings"), icon: SettingsIcon, match: (p: string) => p.startsWith("/settings") },
   ] as const;
@@ -60,7 +61,7 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
           style={{ bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
         >
           <div className="glass rounded-[28px] w-full max-w-screen-sm">
-            <ul className="grid grid-cols-4 px-1.5 py-1.5">
+            <ul className="grid grid-cols-5 px-1.5 py-1.5">
 
               {items.map((it) => {
                 const Active = it.match(pathname);
