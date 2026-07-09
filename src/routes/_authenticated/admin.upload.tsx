@@ -255,6 +255,65 @@ function UploadPage() {
     setBatchProgress(null);
   };
 
+  // ── Almanac Import Engine ─────────────────────────────────────────
+  const runAlmanacImport = async () => {
+    const text = almanacText.trim();
+    if (!text) { toast.error("Extract or paste text first"); return; }
+    setAlmanacBusy(true);
+    setAlmanacSummary(null);
+    setAlmanacStage("extracting");
+    try {
+      const result = await extractAlmanac({ data: { text } });
+      if (!result.entries.length) throw new Error("AI could not find any dated entries");
+      setAlmanacStage("merging");
+
+      // Which dates already exist?
+      const dates = result.entries.map((e) => e.date);
+      const { data: existing, error: exErr } = await supabase
+        .from("almanac_entries")
+        .select("date")
+        .in("date", dates);
+      if (exErr) throw exErr;
+      const existingSet = new Set((existing ?? []).map((r: { date: string }) => r.date));
+
+      let added = 0, updated = 0, failed = 0;
+      const errors: string[] = [];
+      for (const e of result.entries) {
+        const row: AlmanacEntryDraft & { is_sunday: boolean } = {
+          ...e,
+          is_sunday: e.is_sunday ?? (e.day_name?.toLowerCase() === "sunday"),
+        };
+        const { error } = await supabase
+          .from("almanac_entries")
+          .upsert(row, { onConflict: "date" });
+        if (error) { failed++; errors.push(`${e.date}: ${error.message}`); continue; }
+        if (existingSet.has(e.date)) updated++; else added++;
+      }
+
+      setAlmanacSummary({
+        year: result.year,
+        month: result.month,
+        month_name: result.month_name,
+        added, updated, failed, errors,
+      });
+      setAlmanacStage("done");
+      toast.success(`Almanac import complete — ${added} added, ${updated} updated`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Almanac import failed");
+      setAlmanacStage("idle");
+    } finally {
+      setAlmanacBusy(false);
+    }
+  };
+
+  const resetAlmanac = () => {
+    setAlmanacText("");
+    setAlmanacSummary(null);
+    setAlmanacStage("idle");
+  };
+
+
+
 
 
   if (!checked) return null;
