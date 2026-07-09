@@ -326,6 +326,50 @@ function UploadPage() {
         </div>
 
 
+        {/* Destination selector */}
+        <Card className="p-4">
+          <p className="text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+            Destination library
+          </p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {DESTINATIONS.map((d) => {
+              const active = destination === d.id;
+              return (
+                <button
+                  key={d.id}
+                  type="button"
+                  onClick={() => setDestination(d.id)}
+                  className={`rounded-xl border px-3 py-2 text-xs font-semibold transition ${
+                    active
+                      ? "border-primary bg-primary/10 text-foreground ring-1 ring-primary/30"
+                      : "border-border/60 bg-secondary/40 text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  {d.id === "almanac" && <CalendarDays className="inline h-3.5 w-3.5 -mt-0.5 mr-1" />}
+                  {d.label}
+                </button>
+              );
+            })}
+          </div>
+          {destination === "almanac" && (
+            <p className="mt-2 text-center text-[11px] text-muted-foreground">
+              Almanac Import Engine will parse OCR/PDF text into structured calendar entries.
+            </p>
+          )}
+        </Card>
+
+        {destination === "almanac" ? (
+          <AlmanacPanel
+            almanacText={almanacText}
+            setAlmanacText={setAlmanacText}
+            busy={almanacBusy}
+            stage={almanacStage}
+            summary={almanacSummary}
+            onRun={runAlmanacImport}
+            onReset={resetAlmanac}
+          />
+        ) : (
+          <>
         {/* Enhanced Upload — Image + PDF OCR */}
         <Card className="p-5">
           <div className="text-center">
@@ -338,6 +382,7 @@ function UploadPage() {
             <EnhancedUpload onExtracted={(t) => { setBody(t); if (!titleHi) setTitleHi(t.split("\n")[0]?.slice(0, 120) ?? ""); toast.success("Text extracted into editor"); }} />
           </div>
         </Card>
+
 
         <Card className="p-5 space-y-4">
           {/* Kind segmented control */}
