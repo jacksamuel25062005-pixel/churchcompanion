@@ -1,18 +1,40 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../../components/AppShell";
 import { Card } from "../../components/ui-bits";
 import { toast } from "sonner";
 import type { Book } from "../../lib/types";
-import { CheckCircle2, Layers } from "lucide-react";
+import { CheckCircle2, Layers, CalendarDays, Loader2 } from "lucide-react";
 import { useAdminGuard } from "../../lib/use-admin-guard";
 import { EnhancedUpload } from "../../components/EnhancedUpload";
 import { parseSongs, type ConflictAction, type ImportSummary, type ParsedSong } from "../../lib/song-import";
+import { extractAlmanacFromText, type AlmanacEntryDraft } from "../../lib/almanac-import.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/upload")({
   component: UploadPage,
 });
+
+type Destination = "song-book" | "lords-supper" | "ashaya-rabbani" | "prata-sayan" | "almanac";
+
+const DESTINATIONS: { id: Destination; label: string }[] = [
+  { id: "song-book", label: "Song Book" },
+  { id: "lords-supper", label: "Lord's Supper" },
+  { id: "ashaya-rabbani", label: "Ashaya Rabbani" },
+  { id: "prata-sayan", label: "Prata Kaal & Sayan Kalin" },
+  { id: "almanac", label: "Almanac" },
+];
+
+type AlmanacImportSummary = {
+  year: number;
+  month: number;
+  month_name: string;
+  added: number;
+  updated: number;
+  failed: number;
+  errors: string[];
+};
 
 type Kind = "song" | "section";
 
@@ -29,6 +51,7 @@ interface Draft {
 
 function UploadPage() {
   const { checked } = useAdminGuard();
+  const [destination, setDestination] = useState<Destination>("song-book");
   const [books, setBooks] = useState<Book[]>([]);
   const [bookId, setBookId] = useState<string>("");
   const [kind, setKind] = useState<Kind>("song");
@@ -46,6 +69,13 @@ function UploadPage() {
   const [perConflict, setPerConflict] = useState<Record<number, ConflictAction>>({});
   const [existingByNumber, setExistingByNumber] = useState<Record<number, string>>({});
   const restoredRef = useRef(false);
+
+  // ── Almanac Import Engine state ───────────────────────────────────
+  const [almanacText, setAlmanacText] = useState("");
+  const [almanacBusy, setAlmanacBusy] = useState(false);
+  const [almanacStage, setAlmanacStage] = useState<"idle" | "extracting" | "merging" | "done">("idle");
+  const [almanacSummary, setAlmanacSummary] = useState<AlmanacImportSummary | null>(null);
+  const extractAlmanac = useServerFn(extractAlmanacFromText);
 
   useEffect(() => {
     (async () => {
@@ -225,6 +255,65 @@ function UploadPage() {
     setBatchProgress(null);
   };
 
+  // ── Almanac Import Engine ─────────────────────────────────────────
+  const runAlmanacImport = async () => {
+    const text = almanacText.trim();
+    if (!text) { toast.error("Extract or paste text first"); return; }
+    setAlmanacBusy(true);
+    setAlmanacSummary(null);
+    setAlmanacStage("extracting");
+    try {
+      const result = await extractAlmanac({ data: { text } });
+      if (!result.entries.length) throw new Error("AI could not find any dated entries");
+      setAlmanacStage("merging");
+
+      // Which dates already exist?
+      const dates = result.entries.map((e) => e.date);
+      const { data: existing, error: exErr } = await supabase
+        .from("almanac_entries")
+        .select("date")
+        .in("date", dates);
+      if (exErr) throw exErr;
+      const existingSet = new Set((existing ?? []).map((r: { date: string }) => r.date));
+
+      let added = 0, updated = 0, failed = 0;
+      const errors: string[] = [];
+      for (const e of result.entries) {
+        const row: AlmanacEntryDraft & { is_sunday: boolean } = {
+          ...e,
+          is_sunday: e.is_sunday ?? (e.day_name?.toLowerCase() === "sunday"),
+        };
+        const { error } = await supabase
+          .from("almanac_entries")
+          .upsert(row, { onConflict: "date" });
+        if (error) { failed++; errors.push(`${e.date}: ${error.message}`); continue; }
+        if (existingSet.has(e.date)) updated++; else added++;
+      }
+
+      setAlmanacSummary({
+        year: result.year,
+        month: result.month,
+        month_name: result.month_name,
+        added, updated, failed, errors,
+      });
+      setAlmanacStage("done");
+      toast.success(`Almanac import complete — ${added} added, ${updated} updated`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Almanac import failed");
+      setAlmanacStage("idle");
+    } finally {
+      setAlmanacBusy(false);
+    }
+  };
+
+  const resetAlmanac = () => {
+    setAlmanacText("");
+    setAlmanacSummary(null);
+    setAlmanacStage("idle");
+  };
+
+
+
 
 
   if (!checked) return null;
@@ -237,6 +326,50 @@ function UploadPage() {
         </div>
 
 
+        {/* Destination selector */}
+        <Card className="p-4">
+          <p className="text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+            Destination library
+          </p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {DESTINATIONS.map((d) => {
+              const active = destination === d.id;
+              return (
+                <button
+                  key={d.id}
+                  type="button"
+                  onClick={() => setDestination(d.id)}
+                  className={`rounded-xl border px-3 py-2 text-xs font-semibold transition ${
+                    active
+                      ? "border-primary bg-primary/10 text-foreground ring-1 ring-primary/30"
+                      : "border-border/60 bg-secondary/40 text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  {d.id === "almanac" && <CalendarDays className="inline h-3.5 w-3.5 -mt-0.5 mr-1" />}
+                  {d.label}
+                </button>
+              );
+            })}
+          </div>
+          {destination === "almanac" && (
+            <p className="mt-2 text-center text-[11px] text-muted-foreground">
+              Almanac Import Engine will parse OCR/PDF text into structured calendar entries.
+            </p>
+          )}
+        </Card>
+
+        {destination === "almanac" ? (
+          <AlmanacPanel
+            almanacText={almanacText}
+            setAlmanacText={setAlmanacText}
+            busy={almanacBusy}
+            stage={almanacStage}
+            summary={almanacSummary}
+            onRun={runAlmanacImport}
+            onReset={resetAlmanac}
+          />
+        ) : (
+          <>
         {/* Enhanced Upload — Image + PDF OCR */}
         <Card className="p-5">
           <div className="text-center">
@@ -249,6 +382,7 @@ function UploadPage() {
             <EnhancedUpload onExtracted={(t) => { setBody(t); if (!titleHi) setTitleHi(t.split("\n")[0]?.slice(0, 120) ?? ""); toast.success("Text extracted into editor"); }} />
           </div>
         </Card>
+
 
         <Card className="p-5 space-y-4">
           {/* Kind segmented control */}
@@ -360,6 +494,8 @@ function UploadPage() {
             </button>
           </div>
         </Card>
+          </>
+        )}
       </div>
 
       {batchOpen && (
@@ -502,3 +638,99 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </label>
   );
 }
+
+function AlmanacPanel({
+  almanacText, setAlmanacText, busy, stage, summary, onRun, onReset,
+}: {
+  almanacText: string;
+  setAlmanacText: (v: string) => void;
+  busy: boolean;
+  stage: "idle" | "extracting" | "merging" | "done";
+  summary: AlmanacImportSummary | null;
+  onRun: () => void;
+  onReset: () => void;
+}) {
+  return (
+    <>
+      <Card className="p-5">
+        <div className="text-center">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider brand-text">
+            <CalendarDays className="h-3 w-3" /> Almanac Import · Extract Source
+          </span>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            Upload the monthly calendar PDF or image. OCR / PDF text is fed to the Almanac AI engine.
+          </p>
+        </div>
+        <div className="mt-3">
+          <EnhancedUpload onExtracted={(t) => { setAlmanacText(t); toast.success("Text captured for Almanac"); }} />
+        </div>
+      </Card>
+
+      <Card className="p-5 space-y-3">
+        <Field label="Source text (editable)">
+          <textarea
+            value={almanacText}
+            onChange={(e) => setAlmanacText(e.target.value)}
+            rows={10}
+            className={`${inputCls} leading-relaxed text-left`}
+            placeholder="Extracted / pasted almanac source text will appear here…"
+            disabled={busy}
+          />
+        </Field>
+
+        {busy && (
+          <div className="rounded-2xl border border-primary/30 bg-primary/5 p-3 flex items-center gap-3">
+            <Loader2 className="h-5 w-5 brand-text animate-spin shrink-0" />
+            <div className="flex-1 min-w-0 text-sm">
+              <p className="font-semibold">Importing Almanac…</p>
+              <p className="text-xs text-muted-foreground">
+                {stage === "extracting" ? "Running AI extraction (Liturgical Calendar Master Prompt)…" : "Merging entries into the Almanac database…"}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {summary && stage === "done" && (
+          <div className="rounded-2xl border border-emerald-300/50 bg-emerald-50/60 p-4 space-y-3">
+            <p className="text-sm font-semibold text-emerald-900">
+              Import complete — {summary.month_name} {summary.year}
+            </p>
+            <div className="grid grid-cols-3 gap-2 text-sm">
+              <SummaryStat label="Days added" value={summary.added} />
+              <SummaryStat label="Days updated" value={summary.updated} />
+              <SummaryStat label="Failed" value={summary.failed} tone={summary.failed ? "danger" : undefined} />
+            </div>
+            {summary.errors.length > 0 && (
+              <div className="rounded-xl bg-destructive/10 p-3 text-xs">
+                <p className="font-semibold mb-1">Errors</p>
+                <ul className="space-y-0.5 max-h-40 overflow-y-auto">
+                  {summary.errors.map((er, i) => <li key={i}>{er}</li>)}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="flex flex-col-reverse gap-2 sm:flex-row">
+          <button
+            type="button"
+            onClick={onReset}
+            disabled={busy}
+            className="rounded-2xl border px-5 py-3 text-sm font-semibold hover:bg-accent disabled:opacity-50"
+          >
+            {stage === "done" ? "Start over" : "Clear"}
+          </button>
+          <button
+            type="button"
+            onClick={onRun}
+            disabled={busy || !almanacText.trim() || stage === "done"}
+            className="flex-1 rounded-2xl brand-bg py-3 text-sm font-semibold tracking-wide disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {busy ? "Importing Almanac…" : stage === "done" ? "Imported" : "Run Almanac Import"}
+          </button>
+        </div>
+      </Card>
+    </>
+  );
+}
+
