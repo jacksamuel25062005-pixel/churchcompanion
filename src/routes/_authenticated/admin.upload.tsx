@@ -1,18 +1,40 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../../components/AppShell";
 import { Card } from "../../components/ui-bits";
 import { toast } from "sonner";
 import type { Book } from "../../lib/types";
-import { CheckCircle2, Layers } from "lucide-react";
+import { CheckCircle2, Layers, CalendarDays, Loader2 } from "lucide-react";
 import { useAdminGuard } from "../../lib/use-admin-guard";
 import { EnhancedUpload } from "../../components/EnhancedUpload";
 import { parseSongs, type ConflictAction, type ImportSummary, type ParsedSong } from "../../lib/song-import";
+import { extractAlmanacFromText, type AlmanacEntryDraft } from "../../lib/almanac-import.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/upload")({
   component: UploadPage,
 });
+
+type Destination = "song-book" | "lords-supper" | "ashaya-rabbani" | "prata-sayan" | "almanac";
+
+const DESTINATIONS: { id: Destination; label: string }[] = [
+  { id: "song-book", label: "Song Book" },
+  { id: "lords-supper", label: "Lord's Supper" },
+  { id: "ashaya-rabbani", label: "Ashaya Rabbani" },
+  { id: "prata-sayan", label: "Prata Kaal & Sayan Kalin" },
+  { id: "almanac", label: "Almanac" },
+];
+
+type AlmanacImportSummary = {
+  year: number;
+  month: number;
+  month_name: string;
+  added: number;
+  updated: number;
+  failed: number;
+  errors: string[];
+};
 
 type Kind = "song" | "section";
 
