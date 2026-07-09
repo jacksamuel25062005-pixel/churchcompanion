@@ -51,6 +51,7 @@ interface Draft {
 
 function UploadPage() {
   const { checked } = useAdminGuard();
+  const [destination, setDestination] = useState<Destination>("song-book");
   const [books, setBooks] = useState<Book[]>([]);
   const [bookId, setBookId] = useState<string>("");
   const [kind, setKind] = useState<Kind>("song");
@@ -68,6 +69,13 @@ function UploadPage() {
   const [perConflict, setPerConflict] = useState<Record<number, ConflictAction>>({});
   const [existingByNumber, setExistingByNumber] = useState<Record<number, string>>({});
   const restoredRef = useRef(false);
+
+  // ── Almanac Import Engine state ───────────────────────────────────
+  const [almanacText, setAlmanacText] = useState("");
+  const [almanacBusy, setAlmanacBusy] = useState(false);
+  const [almanacStage, setAlmanacStage] = useState<"idle" | "extracting" | "merging" | "done">("idle");
+  const [almanacSummary, setAlmanacSummary] = useState<AlmanacImportSummary | null>(null);
+  const extractAlmanac = useServerFn(extractAlmanacFromText);
 
   useEffect(() => {
     (async () => {
