@@ -638,3 +638,99 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </label>
   );
 }
+
+function AlmanacPanel({
+  almanacText, setAlmanacText, busy, stage, summary, onRun, onReset,
+}: {
+  almanacText: string;
+  setAlmanacText: (v: string) => void;
+  busy: boolean;
+  stage: "idle" | "extracting" | "merging" | "done";
+  summary: AlmanacImportSummary | null;
+  onRun: () => void;
+  onReset: () => void;
+}) {
+  return (
+    <>
+      <Card className="p-5">
+        <div className="text-center">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider brand-text">
+            <CalendarDays className="h-3 w-3" /> Almanac Import · Extract Source
+          </span>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            Upload the monthly calendar PDF or image. OCR / PDF text is fed to the Almanac AI engine.
+          </p>
+        </div>
+        <div className="mt-3">
+          <EnhancedUpload onExtracted={(t) => { setAlmanacText(t); toast.success("Text captured for Almanac"); }} />
+        </div>
+      </Card>
+
+      <Card className="p-5 space-y-3">
+        <Field label="Source text (editable)">
+          <textarea
+            value={almanacText}
+            onChange={(e) => setAlmanacText(e.target.value)}
+            rows={10}
+            className={`${inputCls} leading-relaxed text-left`}
+            placeholder="Extracted / pasted almanac source text will appear here…"
+            disabled={busy}
+          />
+        </Field>
+
+        {busy && (
+          <div className="rounded-2xl border border-primary/30 bg-primary/5 p-3 flex items-center gap-3">
+            <Loader2 className="h-5 w-5 brand-text animate-spin shrink-0" />
+            <div className="flex-1 min-w-0 text-sm">
+              <p className="font-semibold">Importing Almanac…</p>
+              <p className="text-xs text-muted-foreground">
+                {stage === "extracting" ? "Running AI extraction (Liturgical Calendar Master Prompt)…" : "Merging entries into the Almanac database…"}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {summary && stage === "done" && (
+          <div className="rounded-2xl border border-emerald-300/50 bg-emerald-50/60 p-4 space-y-3">
+            <p className="text-sm font-semibold text-emerald-900">
+              Import complete — {summary.month_name} {summary.year}
+            </p>
+            <div className="grid grid-cols-3 gap-2 text-sm">
+              <SummaryStat label="Days added" value={summary.added} />
+              <SummaryStat label="Days updated" value={summary.updated} />
+              <SummaryStat label="Failed" value={summary.failed} tone={summary.failed ? "danger" : undefined} />
+            </div>
+            {summary.errors.length > 0 && (
+              <div className="rounded-xl bg-destructive/10 p-3 text-xs">
+                <p className="font-semibold mb-1">Errors</p>
+                <ul className="space-y-0.5 max-h-40 overflow-y-auto">
+                  {summary.errors.map((er, i) => <li key={i}>{er}</li>)}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="flex flex-col-reverse gap-2 sm:flex-row">
+          <button
+            type="button"
+            onClick={onReset}
+            disabled={busy}
+            className="rounded-2xl border px-5 py-3 text-sm font-semibold hover:bg-accent disabled:opacity-50"
+          >
+            {stage === "done" ? "Start over" : "Clear"}
+          </button>
+          <button
+            type="button"
+            onClick={onRun}
+            disabled={busy || !almanacText.trim() || stage === "done"}
+            className="flex-1 rounded-2xl brand-bg py-3 text-sm font-semibold tracking-wide disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {busy ? "Importing Almanac…" : stage === "done" ? "Imported" : "Run Almanac Import"}
+          </button>
+        </div>
+      </Card>
+    </>
+  );
+}
+
