@@ -494,6 +494,8 @@ function UploadPage() {
             </button>
           </div>
         </Card>
+          </>
+        )}
       </div>
 
       {batchOpen && (
