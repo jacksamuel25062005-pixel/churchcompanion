@@ -462,7 +462,7 @@ function MonthFolderCard({ year, month }: { year: number; month: number }) {
 }
 
 // ================= Day View (full screen) =================
-function DayView({ date, year, month }: { date: string; year: number; month: number }) {
+function DayView({ date, year, month, onDeleted }: { date: string; year: number; month: number; onDeleted: () => void }) {
   const q = useQuery({
     queryKey: ["almanac", "day", date],
     queryFn: async () => {
@@ -479,10 +479,32 @@ function DayView({ date, year, month }: { date: string; year: number; month: num
   if (q.isLoading) return <p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>;
   if (!q.data) return <EmptyState title="No entry" hint="This date has no almanac entry." />;
 
-  return <DayDetail row={q.data} monthCtx={{ year, month }} />;
+  return <DayDetail row={q.data} monthCtx={{ year, month }} onDeleted={onDeleted} />;
 }
 
-function DayDetail({ row, monthCtx }: { row: AlmanacRow; monthCtx: { year: number; month: number } }) {
+// ------------ admin detection (no redirect) ------------
+function useIsAdmin() {
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", u.user.id);
+      if (cancelled) return;
+      const rs = (roles ?? []).map((r) => r.role);
+      setIsAdmin(rs.includes("admin") || rs.includes("super_admin"));
+    })();
+    return () => { cancelled = true; };
+  }, []);
+  return isAdmin;
+}
+
+function DayDetail({ row, monthCtx, onDeleted }: { row: AlmanacRow; monthCtx: { year: number; month: number }; onDeleted: () => void }) {
+  const qc = useQueryClient();
+  const isAdmin = useIsAdmin();
+  const [editing, setEditing] = useState(false);
+
   const [bm, setBm] = useState<Set<string>>(() => readBookmarks());
   useEffect(() => { setBm(readBookmarks()); }, [row.date]);
 
@@ -506,19 +528,41 @@ function DayDetail({ row, monthCtx }: { row: AlmanacRow; monthCtx: { year: numbe
     (row.ls_second?.length ?? 0) > 0 ||
     (row.ls_gospel?.length ?? 0) > 0;
 
+  // Special day = Sunday OR anything that has a Lord's Supper set defined.
+  const isSpecialDay = row.is_sunday || hasLordsSupper;
+
   // Fallback: on Sunday when structured LS fields empty, older data may store LS in evening_readings.
   const legacyLordsSupper =
     !hasLordsSupper && row.is_sunday && (row.evening_readings?.length ?? 0) > 0;
 
+  const onDelete = async () => {
+    if (!confirm(`Delete almanac entry for ${row.date}? This cannot be undone.`)) return;
+    const { error } = await supabase.from("almanac_entries").delete().eq("date", row.date);
+    if (error) { alert(error.message); return; }
+    await qc.invalidateQueries({ queryKey: ["almanac"] });
+    onDeleted();
+  };
+
+  if (editing) {
+    return (
+      <EditDay
+        row={row}
+        onCancel={() => setEditing(false)}
+        onSaved={async () => {
+          setEditing(false);
+          await qc.invalidateQueries({ queryKey: ["almanac"] });
+        }}
+      />
+    );
+  }
+
   return (
     <div className="animate-fade-in">
-      {/* Reference to month/year for context in URL-less nav */}
       <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
         {MONTHS_FULL[monthCtx.month]} {monthCtx.year}
       </p>
 
       <Card className="overflow-hidden rounded-2xl border-white/40 bg-white/60 p-0 backdrop-blur-xl dark:bg-white/5 dark:border-white/10">
-        {/* Header */}
         <div className="flex items-start gap-3 border-b border-white/30 p-5 dark:border-white/10">
           <div className="min-w-0 flex-1">
             <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{dayName}</p>
@@ -539,7 +583,6 @@ function DayDetail({ row, monthCtx }: { row: AlmanacRow; monthCtx: { year: numbe
           </button>
         </div>
 
-        {/* Meta rows */}
         <div className="space-y-3 p-5">
           <MetaRow label="Day" value={dayName} />
           <MetaRow label="Theme" value={row.theme || "—"} />
@@ -557,11 +600,18 @@ function DayDetail({ row, monthCtx }: { row: AlmanacRow; monthCtx: { year: numbe
             </span>
           </div>
 
-          {/* Worship sections */}
-          <WorshipCard title="Morning Worship" hint="सुबह" readings={row.morning_readings ?? []} />
-          <WorshipCard title="Evening Worship" hint="शाम" readings={row.evening_readings ?? []} />
+          {isSpecialDay ? (
+            <CombinedWorshipCard
+              morning={row.morning_readings ?? []}
+              evening={row.evening_readings ?? []}
+            />
+          ) : (
+            <>
+              <WorshipCard title="Morning Worship" hint="सुबह" readings={row.morning_readings ?? []} />
+              <WorshipCard title="Evening Worship" hint="शाम" readings={row.evening_readings ?? []} />
+            </>
+          )}
 
-          {/* Lord's Supper */}
           {hasLordsSupper && (
             <div className="rounded-2xl border border-white/40 bg-white/60 p-4 backdrop-blur dark:bg-white/5 dark:border-white/10">
               <p className="mb-3 text-sm font-semibold">Lord's Supper</p>
@@ -576,8 +626,65 @@ function DayDetail({ row, monthCtx }: { row: AlmanacRow; monthCtx: { year: numbe
           {legacyLordsSupper && (
             <WorshipCard title="Lord's Supper" readings={row.evening_readings ?? []} />
           )}
+
+          {isAdmin && (
+            <div className="mt-2 flex gap-2 pt-2">
+              <button
+                onClick={() => setEditing(true)}
+                className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/40 bg-white/60 px-3 py-2 text-sm font-semibold backdrop-blur hover:bg-accent dark:bg-white/5 dark:border-white/10"
+              >
+                <Pencil className="h-4 w-4" /> Edit
+              </button>
+              <button
+                onClick={onDelete}
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-red-300/60 bg-red-500/10 px-3 py-2 text-sm font-semibold text-red-600 backdrop-blur hover:bg-red-500/20 dark:border-red-500/30"
+              >
+                <Trash2 className="h-4 w-4" /> Delete
+              </button>
+            </div>
+          )}
         </div>
       </Card>
+    </div>
+  );
+}
+
+function CombinedWorshipCard({ morning, evening }: { morning: string[]; evening: string[] }) {
+  const seen = new Set<string>();
+  const combined: string[] = [];
+  for (const r of [...morning, ...evening]) {
+    const k = r.trim();
+    if (!k || seen.has(k)) continue;
+    seen.add(k);
+    combined.push(k);
+  }
+  if (combined.length === 0) return null;
+  return (
+    <div className="rounded-2xl border border-white/40 bg-white/60 p-4 backdrop-blur dark:bg-white/5 dark:border-white/10">
+      <div className="mb-3 flex items-baseline justify-between">
+        <p className="text-sm font-semibold">Morning / Evening Worship</p>
+        <p className="font-hi text-xs text-muted-foreground">सुबह / शाम</p>
+      </div>
+      <ol className="space-y-2">
+        {combined.map((raw, i) => {
+          const { testament, body } = parseReading(raw);
+          return (
+            <li key={i} className="flex items-start gap-2.5 text-sm">
+              <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full brand-bg text-[10px] font-bold tabular-nums">
+                {i + 1}
+              </span>
+              <div className="min-w-0 flex-1 leading-snug">
+                {testament && (
+                  <span className="mr-1.5 rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-extrabold tracking-wider text-primary">
+                    {testament}
+                  </span>
+                )}
+                <span className="font-medium">{body}</span>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 }
@@ -640,3 +747,136 @@ function NamedReading({ label, readings }: { label: string; readings: string[] }
     </div>
   );
 }
+
+// ================= Edit Day (admin) =================
+function EditDay({ row, onCancel, onSaved }: { row: AlmanacRow; onCancel: () => void; onSaved: () => void }) {
+  const toText = (arr?: string[] | null) => (arr ?? []).join("\n");
+  const fromText = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
+
+  const [theme, setTheme] = useState(row.theme ?? "");
+  const [memorial, setMemorial] = useState(row.memorial ?? "");
+  const [colour, setColour] = useState<AlmanacRow["colour"]>(row.colour ?? "G");
+  const [isSunday, setIsSunday] = useState(!!row.is_sunday);
+  const [morning, setMorning] = useState(toText(row.morning_readings));
+  const [evening, setEvening] = useState(toText(row.evening_readings));
+  const [lsOt, setLsOt] = useState(toText(row.ls_ot));
+  const [lsPs, setLsPs] = useState(toText(row.ls_psalm));
+  const [lsSecond, setLsSecond] = useState(toText(row.ls_second));
+  const [lsGospel, setLsGospel] = useState(toText(row.ls_gospel));
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const save = async () => {
+    setSaving(true); setErr(null);
+    const { error } = await supabase
+      .from("almanac_entries")
+      .update({
+        theme: theme.trim() || "No theme",
+        memorial: memorial.trim() || null,
+        colour,
+        is_sunday: isSunday,
+        morning_readings: fromText(morning),
+        evening_readings: fromText(evening),
+        ls_ot: fromText(lsOt),
+        ls_psalm: fromText(lsPs),
+        ls_second: fromText(lsSecond),
+        ls_gospel: fromText(lsGospel),
+      })
+      .eq("date", row.date);
+    setSaving(false);
+    if (error) { setErr(error.message); return; }
+    onSaved();
+  };
+
+  const inputCls = "w-full rounded-xl border border-white/40 bg-white/70 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40 dark:bg-white/5 dark:border-white/10";
+  const areaCls = inputCls + " min-h-[80px] font-mono text-xs leading-relaxed";
+
+  return (
+    <Card className="overflow-hidden rounded-2xl border-white/40 bg-white/60 p-5 backdrop-blur-xl dark:bg-white/5 dark:border-white/10">
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Editing</p>
+          <h2 className="text-lg font-bold">{row.date}</h2>
+        </div>
+        <button
+          onClick={onCancel}
+          className="grid h-9 w-9 place-items-center rounded-xl border border-white/40 bg-white/50 backdrop-blur hover:bg-accent dark:bg-white/5 dark:border-white/10"
+          aria-label="Cancel"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="space-y-3">
+        <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Theme
+          <input className={"mt-1 " + inputCls} value={theme} onChange={(e) => setTheme(e.target.value)} />
+        </label>
+        <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Memorial
+          <input className={"mt-1 " + inputCls} value={memorial} onChange={(e) => setMemorial(e.target.value)} placeholder="Optional" />
+        </label>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Colour</span>
+          {(["W","G","V","R"] as const).map((c) => (
+            <button
+              key={c}
+              onClick={() => setColour(c)}
+              className={cn(
+                "rounded-full px-3 py-1 text-[11px] font-bold",
+                colour === c ? "ring-2 ring-primary" : "opacity-70",
+              )}
+              style={{ background: COLOUR_META[c].bg, color: COLOUR_META[c].fg }}
+            >{COLOUR_META[c].name}</button>
+          ))}
+        </div>
+
+        <label className="inline-flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={isSunday} onChange={(e) => setIsSunday(e.target.checked)} />
+          Mark as Sunday / special day
+        </label>
+
+        <p className="pt-2 text-[11px] text-muted-foreground">One reading per line. Prefix with <code>OT:</code> or <code>NT:</code> when relevant.</p>
+
+        <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Morning Worship
+          <textarea className={"mt-1 " + areaCls} value={morning} onChange={(e) => setMorning(e.target.value)} />
+        </label>
+        <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Evening Worship
+          <textarea className={"mt-1 " + areaCls} value={evening} onChange={(e) => setEvening(e.target.value)} />
+        </label>
+
+        <p className="pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Lord's Supper</p>
+        <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Old Testament
+          <textarea className={"mt-1 " + areaCls} value={lsOt} onChange={(e) => setLsOt(e.target.value)} />
+        </label>
+        <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Psalm
+          <textarea className={"mt-1 " + areaCls} value={lsPs} onChange={(e) => setLsPs(e.target.value)} />
+        </label>
+        <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Second Reading
+          <textarea className={"mt-1 " + areaCls} value={lsSecond} onChange={(e) => setLsSecond(e.target.value)} />
+        </label>
+        <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Gospel
+          <textarea className={"mt-1 " + areaCls} value={lsGospel} onChange={(e) => setLsGospel(e.target.value)} />
+        </label>
+
+        {err && <p className="text-sm text-red-600">{err}</p>}
+
+        <div className="flex gap-2 pt-2">
+          <button
+            onClick={save}
+            disabled={saving}
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl brand-bg px-3 py-2.5 text-sm font-semibold text-white shadow disabled:opacity-60"
+          >
+            <Save className="h-4 w-4" /> {saving ? "Saving…" : "Save changes"}
+          </button>
+          <button
+            onClick={onCancel}
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/40 bg-white/60 px-3 py-2.5 text-sm font-semibold backdrop-blur hover:bg-accent dark:bg-white/5 dark:border-white/10"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
