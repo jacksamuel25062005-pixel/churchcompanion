@@ -166,8 +166,10 @@ function AlmanacPage() {
             date={view.date}
             year={view.year}
             month={view.month}
+            onDeleted={() => setView({ kind: "month", year: view.year, month: view.month })}
           />
         )}
+
       </div>
     </AppShell>
   );
