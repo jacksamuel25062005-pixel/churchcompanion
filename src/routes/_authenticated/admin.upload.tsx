@@ -10,7 +10,7 @@ import { CheckCircle2, Layers, CalendarDays, Loader2 } from "lucide-react";
 import { useAdminGuard } from "../../lib/use-admin-guard";
 import { EnhancedUpload } from "../../components/EnhancedUpload";
 import { parseSongs, type ConflictAction, type ImportSummary, type ParsedSong } from "../../lib/song-import";
-import { extractAlmanacFromText, type AlmanacEntryDraft } from "../../lib/almanac-import.functions";
+import { extractAlmanacFromText } from "../../lib/almanac-import.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/upload")({
   component: UploadPage,
