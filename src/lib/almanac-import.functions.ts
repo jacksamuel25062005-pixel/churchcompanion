@@ -120,15 +120,7 @@ export const extractAlmanacFromText = createServerFn({ method: "POST" })
     const raw = json?.choices?.[0]?.message?.content;
     if (typeof raw !== "string") throw new Error("AI returned no content");
 
-    let parsed: any;
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      // strip code fences if any
-      const stripped = raw.replace(/^```json\s*|\s*```$/g, "").trim();
-      parsed = JSON.parse(stripped);
-    }
-
+    const parsed = extractJsonFromResponse(raw) as any;
     if (!parsed || typeof parsed !== "object") throw new Error("Invalid AI output");
     const year = Number(parsed.year);
     const month = Number(parsed.month);
@@ -140,7 +132,7 @@ export const extractAlmanacFromText = createServerFn({ method: "POST" })
       date: String(e.date ?? "").slice(0, 10),
       day_name: String(e.day_name ?? ""),
       theme: String(e.theme ?? "No theme"),
-      colour: String(e.colour ?? "White"),
+      colour: normaliseColour(e.colour),
       morning_readings: Array.isArray(e.morning_readings) ? e.morning_readings.map(String) : [],
       evening_readings: Array.isArray(e.evening_readings) ? e.evening_readings.map(String) : [],
       ls_ot: Array.isArray(e.ls_ot) ? e.ls_ot.map(String) : [],
@@ -148,7 +140,7 @@ export const extractAlmanacFromText = createServerFn({ method: "POST" })
       ls_second: Array.isArray(e.ls_second) ? e.ls_second.map(String) : [],
       ls_gospel: Array.isArray(e.ls_gospel) ? e.ls_gospel.map(String) : [],
       memorial: e.memorial == null ? null : String(e.memorial),
-      is_sunday: Boolean(e.is_sunday),
+      is_sunday: Boolean(e.is_sunday) || /^sunday$/i.test(String(e.day_name ?? "")),
     })).filter((e: AlmanacEntryDraft) => /^\d{4}-\d{2}-\d{2}$/.test(e.date));
 
     return {
@@ -158,3 +150,36 @@ export const extractAlmanacFromText = createServerFn({ method: "POST" })
       entries: cleaned,
     };
   });
+
+// ── Helpers ────────────────────────────────────────────────────────
+// DB CHECK constraint requires single letters W/G/V/R — map any variant safely.
+function normaliseColour(input: unknown): "W" | "G" | "V" | "R" {
+  const s = String(input ?? "").trim().toLowerCase();
+  if (!s) return "G";
+  if (s.startsWith("w")) return "W";
+  if (s.startsWith("g")) return "G";
+  if (s.startsWith("v") || s.startsWith("p")) return "V"; // violet / purple
+  if (s.startsWith("r")) return "R";
+  return "G";
+}
+
+// Robust JSON extractor — tolerates markdown fences, prose, and common malformations.
+function extractJsonFromResponse(response: string): unknown {
+  let cleaned = response.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+  const jsonStart = cleaned.search(/[\{\[]/);
+  if (jsonStart === -1) throw new Error("No JSON found in AI response");
+  const closer = cleaned[jsonStart] === "[" ? "]" : "}";
+  const jsonEnd = cleaned.lastIndexOf(closer);
+  if (jsonEnd === -1 || jsonEnd < jsonStart) throw new Error("Truncated JSON in AI response");
+  cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    const repaired = cleaned
+      .replace(/,\s*}/g, "}")
+      .replace(/,\s*]/g, "]")
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\x00-\x1F\x7F]/g, " ");
+    return JSON.parse(repaired);
+  }
+}
