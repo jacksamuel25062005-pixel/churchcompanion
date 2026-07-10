@@ -276,18 +276,29 @@ function UploadPage() {
       if (exErr) throw exErr;
       const existingSet = new Set((existing ?? []).map((r: { date: string }) => r.date));
 
+      const rows = result.entries.map((e) => ({
+        ...e,
+        is_sunday: e.is_sunday ?? (e.day_name?.toLowerCase() === "sunday"),
+      }));
+
+      // Single batched upsert — orders of magnitude faster than per-row calls.
+      const { error: upErr } = await supabase
+        .from("almanac_entries")
+        .upsert(rows, { onConflict: "date" });
+
       let added = 0, updated = 0, failed = 0;
       const errors: string[] = [];
-      for (const e of result.entries) {
-        const row: AlmanacEntryDraft & { is_sunday: boolean } = {
-          ...e,
-          is_sunday: e.is_sunday ?? (e.day_name?.toLowerCase() === "sunday"),
-        };
-        const { error } = await supabase
-          .from("almanac_entries")
-          .upsert(row, { onConflict: "date" });
-        if (error) { failed++; errors.push(`${e.date}: ${error.message}`); continue; }
-        if (existingSet.has(e.date)) updated++; else added++;
+      if (upErr) {
+        // Fall back to per-row so we can report which dates failed.
+        for (const row of rows) {
+          const { error } = await supabase.from("almanac_entries").upsert(row, { onConflict: "date" });
+          if (error) { failed++; errors.push(`${row.date}: ${error.message}`); continue; }
+          if (existingSet.has(row.date)) updated++; else added++;
+        }
+      } else {
+        for (const row of rows) {
+          if (existingSet.has(row.date)) updated++; else added++;
+        }
       }
 
       setAlmanacSummary({
@@ -297,7 +308,7 @@ function UploadPage() {
         added, updated, failed, errors,
       });
       setAlmanacStage("done");
-      toast.success(`Almanac import complete — ${added} added, ${updated} updated`);
+      toast.success(`Almanac import complete — ${added} added, ${updated} updated${failed ? `, ${failed} failed` : ""}`);
     } catch (e: any) {
       toast.error(e?.message ?? "Almanac import failed");
       setAlmanacStage("idle");
