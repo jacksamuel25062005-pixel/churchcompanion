@@ -10,7 +10,7 @@ import { useT } from "../lib/i18n";
 import { ACCENT_PRESETS, useSettings, type FontSize, type ThemeMode, type Language } from "../lib/settings";
 import { getPushPermission, promptForPush, setPushOptIn, getPushOptedIn } from "../lib/onesignal";
 import { downloadEntireApp, removeAllOffline, useOfflineIndex, formatBytes, type FullDownloadProgress } from "../lib/offline";
-import { DeveloperControlsSection } from "../components/settings/InAppCodeExecutorSetting";
+
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Settings — Church Companion" }] }),
@@ -95,7 +95,7 @@ function SettingsPage() {
 
         <OfflineSection />
 
-        <DeveloperControlsSection />
+
 
 
 
