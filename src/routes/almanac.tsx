@@ -234,7 +234,7 @@ function YearsView({ onPick }: { onPick: (year: number) => void }) {
                 <p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">Almanac</p>
               </div>
               {isCurrent && (
-                <span className="absolute -right-1 -top-1 rounded-full brand-bg px-1.5 py-0.5 text-[9px] font-bold uppercase shadow">
+                <span className="absolute -right-1 -top-1 rounded-full gold-bg px-1.5 py-0.5 text-[9px] font-bold uppercase elev-1">
                   Now
                 </span>
               )}
