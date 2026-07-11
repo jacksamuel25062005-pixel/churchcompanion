@@ -10,6 +10,7 @@ import { Music, BookOpen, Sparkles, Megaphone } from "lucide-react";
 import { useTodaySnap, saveToday, removeOffline, OFFLINE_KEYS } from "../lib/offline";
 import type { Book, Song } from "../lib/types";
 import { AnnouncementModule, AnnouncementBell } from "../components/AnnouncementModule";
+import { StainedGlass } from "../components/StainedGlass";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -126,19 +127,24 @@ function Home() {
 
   return (
     <AppShell>
-      <div className="pt-6 pb-2 flex items-center gap-3">
-        <img src="/icon-192.png" alt="" width={40} height={40} className="rounded-xl" />
-        <div className="min-w-0 flex-1">
-          <p className="text-xs text-muted-foreground">{t("home.greeting")}</p>
-          <h1 className="text-xl font-bold truncate">{t("app.name")}</h1>
+      <section className="relative mt-4 overflow-hidden rounded-[24px] elev-1"
+        style={{ background: "linear-gradient(150deg, color-mix(in oklab, var(--lit-purple) 14%, var(--card)) 0%, color-mix(in oklab, var(--lit-gold) 10%, var(--card)) 100%)" }}
+      >
+        <StainedGlass variant="hero" />
+        <div className="relative flex items-center gap-3 px-4 py-5">
+          <img src="/icon-192.png" alt="" width={44} height={44} className="rounded-2xl elev-1 lit-ring-gold" />
+          <div className="min-w-0 flex-1">
+            <p className="text-[12px] font-medium text-muted-foreground">{t("home.greeting")}</p>
+            <h1 className="font-display text-[22px] font-bold leading-tight truncate">{t("app.name")}</h1>
+          </div>
+          <AnnouncementBell />
         </div>
-        <AnnouncementBell />
-      </div>
+      </section>
 
       <section className="mt-5">
         <div className="flex items-center gap-2 mb-2">
           <Megaphone className="h-4 w-4 brand-text" />
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Announcements</h2>
+          <h2 className="text-[12px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Announcements</h2>
         </div>
         <AnnouncementModule />
       </section>
