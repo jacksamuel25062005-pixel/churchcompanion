@@ -149,10 +149,10 @@ function Home() {
         <AnnouncementModule />
       </section>
 
-      <section className="mt-5">
+      <section className="mt-7">
         <div className="flex items-center gap-2 mb-2">
-          <Sparkles className="h-4 w-4 brand-text" />
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+          <Sparkles className="h-4 w-4 gold-highlight" />
+          <h2 className="text-[12px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           {t("home.today")}
           </h2>
           <div className="ml-auto">
@@ -204,7 +204,7 @@ function Home() {
       <section className="mt-7">
         <div className="flex items-center gap-2 mb-2">
           <BookOpen className="h-4 w-4 brand-text" />
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("home.books")}</h2>
+          <h2 className="text-[12px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("home.books")}</h2>
         </div>
         <div className="grid grid-cols-2 gap-3">
           {(booksQ.data ?? []).map((b) => (
