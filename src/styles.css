@@ -376,3 +376,33 @@
 @media (prefers-reduced-motion: reduce) {
   .bell-shake { animation: none; }
 }
+
+/* ─── Church theme — headings, arch motif, gold highlight ─── */
+h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0.012em; }
+:lang(hi) h1, :lang(hi) h2, :lang(hi) h3, .font-hi { font-family: var(--font-display-hi); }
+
+@utility gold-highlight {
+  color: var(--gold);
+}
+@utility gold-bg {
+  background: linear-gradient(140deg, var(--gold), var(--gold-soft));
+  color: #2c1a0e;
+}
+@utility elev-1 { box-shadow: var(--elev-1); }
+@utility elev-2 { box-shadow: var(--elev-2); }
+
+/* Arch motif — subtle rounded-arch top on cards/headers */
+@utility arch-top {
+  position: relative;
+  border-top-left-radius: 9999px;
+  border-top-right-radius: 9999px;
+  overflow: hidden;
+}
+@utility arch-mask {
+  -webkit-mask-image: radial-gradient(120% 80% at 50% 100%, black 55%, transparent 60%);
+          mask-image: radial-gradient(120% 80% at 50% 100%, black 55%, transparent 60%);
+}
+
+/* Liturgical accent helpers */
+@utility lit-ring-purple { box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--lit-purple) 40%, transparent); }
+@utility lit-ring-gold   { box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--lit-gold)   50%, transparent); }
