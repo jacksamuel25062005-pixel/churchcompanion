@@ -16,6 +16,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../components/AppShell";
 import { Card, EmptyState } from "../components/ui-bits";
+import { StainedGlass } from "../components/StainedGlass";
 import { cn } from "@/lib/utils";
 
 
@@ -203,11 +204,14 @@ function YearsView({ onPick }: { onPick: (year: number) => void }) {
   return (
     <>
       <div
-        className="mb-4 flex items-center gap-3 rounded-2xl px-4 py-3.5 text-white shadow-md"
-        style={{ background: "linear-gradient(135deg, #6D5EF7, #4A38C9)" }}
+        className="relative mb-4 overflow-hidden rounded-[24px] px-4 py-4 text-white elev-1"
+        style={{ background: "linear-gradient(135deg, var(--lit-purple), #4A2560)" }}
       >
-        <CalendarDays className="h-5 w-5 shrink-0 opacity-90" />
-        <p className="min-w-0 flex-1 text-base font-semibold leading-none">Select a Year</p>
+        <StainedGlass variant="corner" />
+        <div className="relative flex items-center gap-3">
+          <CalendarDays className="h-5 w-5 shrink-0 opacity-90" />
+          <p className="min-w-0 flex-1 font-display text-base font-semibold leading-none">Select a Year</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-2.5">
@@ -230,7 +234,7 @@ function YearsView({ onPick }: { onPick: (year: number) => void }) {
                 <p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">Almanac</p>
               </div>
               {isCurrent && (
-                <span className="absolute -right-1 -top-1 rounded-full brand-bg px-1.5 py-0.5 text-[9px] font-bold uppercase shadow">
+                <span className="absolute -right-1 -top-1 rounded-full gold-bg px-1.5 py-0.5 text-[9px] font-bold uppercase elev-1">
                   Now
                 </span>
               )}
