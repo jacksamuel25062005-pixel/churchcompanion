@@ -31,7 +31,7 @@ function AdminGate() {
         const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", data.user.id);
         const isAdmin = (roles ?? []).some((r) => r.role === "admin" || r.role === "super_admin");
         if (isAdmin) {
-          navigate({ to: "/admin/dashboard" });
+          navigate({ to: "/admin/dashboard", replace: true });
           return;
         }
         setUser({ id: data.user.id, email: data.user.email });
@@ -124,7 +124,7 @@ function LoginForm({ role }: { role: "super" | "admin" }) {
           return;
         }
         toast.success("Signed in");
-        navigate({ to: "/admin/dashboard" });
+        navigate({ to: "/admin/dashboard", replace: true });
       }
     } catch (err: any) {
       toast.error(err.message ?? "Failed");

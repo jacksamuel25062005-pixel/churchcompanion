@@ -21,14 +21,14 @@ function Dashboard() {
   useEffect(() => {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
-      if (!u.user) { navigate({ to: "/admin" }); return; }
+      if (!u.user) { navigate({ to: "/admin", replace: true }); return; }
       setEmail(u.user.email ?? "");
       const [{ data: roles }, { data: profile }] = await Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", u.user.id),
         supabase.from("profiles").select("display_name, email").eq("id", u.user.id).maybeSingle(),
       ]);
       const r = (roles ?? []).map((x) => x.role);
-      if (!r.includes("admin") && !r.includes("super_admin")) { navigate({ to: "/admin" }); return; }
+      if (!r.includes("admin") && !r.includes("super_admin")) { navigate({ to: "/admin", replace: true }); return; }
       setRole(r.includes("super_admin") ? "super_admin" : "admin");
       setDisplayName(profile?.display_name ?? "");
 
@@ -41,7 +41,7 @@ function Dashboard() {
     })();
   }, [navigate]);
 
-  const signOut = async () => { await supabase.auth.signOut(); navigate({ to: "/admin" }); toast.success("Signed out"); };
+  const signOut = async () => { await supabase.auth.signOut(); navigate({ to: "/admin", replace: true }); toast.success("Signed out"); };
 
   return (
     <AppShell title="Admin" left={<BackButton to="/" />} hideNav>

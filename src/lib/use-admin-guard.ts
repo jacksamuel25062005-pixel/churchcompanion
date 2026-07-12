@@ -12,13 +12,13 @@ export function useAdminGuard() {
     let cancelled = false;
     (async () => {
       const { data: u } = await supabase.auth.getUser();
-      if (!u.user) { if (!cancelled) navigate({ to: "/admin" }); return; }
+      if (!u.user) { if (!cancelled) navigate({ to: "/admin", replace: true }); return; }
       const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", u.user.id);
       const r = (roles ?? []).map((x) => x.role);
       if (cancelled) return;
       if (r.includes("super_admin")) setRole("super_admin");
       else if (r.includes("admin")) setRole("admin");
-      else { navigate({ to: "/admin" }); return; }
+      else { navigate({ to: "/admin", replace: true }); return; }
       setChecked(true);
     })();
     return () => { cancelled = true; };
