@@ -79,10 +79,18 @@ export interface UploadRow {
   updated_at: number;
 }
 
+
 export interface MetaRow {
   key: string;
   value: unknown;
   updated_at: number;
+}
+
+export interface CachedImageRow {
+  url: string;      // primary key — normalized URL (no query for signed URLs)
+  cached_at: number;
+  size: number;     // bytes; 0 if unknown
+  source?: string;  // 'book-pages' | 'storage' | 'remote' | ...
 }
 
 export class ChurchDB extends Dexie {
@@ -94,6 +102,7 @@ export class ChurchDB extends Dexie {
   outbox!: EntityTable<OutboxRow, "id">;
   uploads!: EntityTable<UploadRow, "id">;
   meta!: EntityTable<MetaRow, "key">;
+  cached_images!: EntityTable<CachedImageRow, "url">;
 
   constructor() {
     super("church-companion");
@@ -106,6 +115,9 @@ export class ChurchDB extends Dexie {
       outbox: "id, status, next_attempt_at, created_at, table",
       uploads: "id, status, created_at, updated_at",
       meta: "key",
+    });
+    this.version(2).stores({
+      cached_images: "url, cached_at, source",
     });
   }
 }
