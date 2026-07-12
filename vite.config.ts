@@ -14,11 +14,30 @@ export default defineConfig({
         devOptions: { enabled: false },
         manifest: false,
         workbox: {
-          globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
+          globPatterns: [
+            "**/*.{js,css,html,ico,png,jpg,jpeg,webp,avif,svg,gif,woff,woff2,ttf,otf,json,webmanifest,txt}",
+          ],
           navigateFallback: "/",
           navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//],
           cleanupOutdatedCaches: true,
+          maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
           runtimeCaching: [
+            // ANY image (book scans, almanac icons, storage covers, remote imgs)
+            // — CacheFirst with long expiration and LRU eviction under quota.
+            {
+              urlPattern: ({ request }) => request.destination === "image",
+              handler: "CacheFirst",
+              options: {
+                cacheName: "cc-images-v1",
+                expiration: {
+                  maxEntries: 5000,
+                  maxAgeSeconds: 60 * 60 * 24 * 365,
+                  purgeOnQuotaError: true,
+                },
+                cacheableResponse: { statuses: [0, 200] },
+                matchOptions: { ignoreVary: true },
+              },
+            },
             // App-shell HTML: NetworkFirst with a fast fallback
             {
               urlPattern: ({ request }) => request.mode === "navigate",
