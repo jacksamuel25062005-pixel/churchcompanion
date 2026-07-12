@@ -41,7 +41,7 @@ function Dashboard() {
     })();
   }, [navigate]);
 
-  const signOut = async () => { await supabase.auth.signOut(); navigate({ to: "/admin" }); toast.success("Signed out"); };
+  const signOut = async () => { await supabase.auth.signOut(); navigate({ to: "/admin", replace: true }); toast.success("Signed out"); };
 
   return (
     <AppShell title="Admin" left={<BackButton to="/" />} hideNav>
