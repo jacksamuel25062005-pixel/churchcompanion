@@ -124,7 +124,7 @@ function LoginForm({ role }: { role: "super" | "admin" }) {
           return;
         }
         toast.success("Signed in");
-        navigate({ to: "/admin/dashboard" });
+        navigate({ to: "/admin/dashboard", replace: true });
       }
     } catch (err: any) {
       toast.error(err.message ?? "Failed");
