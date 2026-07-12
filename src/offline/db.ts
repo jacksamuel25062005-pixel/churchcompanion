@@ -79,11 +79,6 @@ export interface UploadRow {
   updated_at: number;
 }
 
-export interface MetaRow {
-  key: string;
-  value: unknown;
-  updated_at: number;
-}
 
 export interface MetaRow {
   key: string;
