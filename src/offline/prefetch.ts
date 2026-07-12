@@ -82,18 +82,16 @@ async function collectBookPageUrls(): Promise<Array<{ url: string; source: strin
     const paths = (data as Array<{ storage_path: string }>).map((r) => r.storage_path);
     if (!paths.length) return [];
 
-    // Filter out paths we've already cached
+    // Filter out paths we've already cached (single scan → Set)
     const db = getDB();
-    const uncached: string[] = [];
-    for (const p of paths) {
-      // Signed URLs share the storage object path. We store the normalized
-      // origin+pathname; storage object pathnames end with the path itself.
-      const cached = await db.cached_images
-        .where("url").startsWith("")
-        .filter((r) => r.url.endsWith(`/${p}`) || r.url.endsWith(p))
-        .first();
-      if (!cached) uncached.push(p);
-    }
+    const cachedRows = await db.cached_images.toArray();
+    const cachedSet = new Set(cachedRows.map((r) => r.url));
+    const uncached = paths.filter((p) => {
+      // We can't know the signed URL prefix without signing; skip only if
+      // an existing cache entry ends with this path.
+      for (const u of cachedSet) if (u.endsWith(p)) return false;
+      return true;
+    });
     if (!uncached.length) return [];
 
     // Sign in chunks of 100
