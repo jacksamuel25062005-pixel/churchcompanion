@@ -17,6 +17,8 @@ export function initOffline(): void {
     logDiag("log", `offline: trigger sync (${why})`);
     void runSync();
     void processQueue();
+    // Kick a background image prefetch on major triggers (throttled inside)
+    void prefetchAllImages();
   };
 
   // Online / focus
@@ -30,12 +32,20 @@ export function initOffline(): void {
   void refreshPendingCount();
   void runSync();
   void processQueue();
+  // Defer image prefetch until the app is interactive
+  if ("requestIdleCallback" in window) {
+    (window as unknown as { requestIdleCallback: (cb: () => void) => void })
+      .requestIdleCallback(() => void prefetchAllImages());
+  } else {
+    setTimeout(() => void prefetchAllImages(), 2000);
+  }
 
   // Periodic 5-minute heartbeat (cheap; pull is delta-based)
   setInterval(() => {
     if (!navigator.onLine) return;
     if (document.visibilityState !== "visible") return;
     void runSync();
+    void prefetchAllImages();
   }, 5 * 60_000);
 }
 
