@@ -21,7 +21,7 @@ function Dashboard() {
   useEffect(() => {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
-      if (!u.user) { navigate({ to: "/admin" }); return; }
+      if (!u.user) { navigate({ to: "/admin", replace: true }); return; }
       setEmail(u.user.email ?? "");
       const [{ data: roles }, { data: profile }] = await Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", u.user.id),
