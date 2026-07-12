@@ -59,3 +59,4 @@ export {
   processQueue,
 } from "./uploads/queue";
 export { getDB, metaGet, metaSet, META_KEYS } from "./db";
+export { prefetchAllImages, getCachedImageStats, isColdCacheEmpty } from "./prefetch";
