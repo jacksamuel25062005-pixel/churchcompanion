@@ -5,6 +5,7 @@
 import { log as logDiag } from "../lib/diagnostics";
 import { refreshPendingCount, runSync } from "./sync/engine";
 import { processQueue } from "./uploads/queue";
+import { prefetchAllImages } from "./prefetch";
 
 let initialized = false;
 
