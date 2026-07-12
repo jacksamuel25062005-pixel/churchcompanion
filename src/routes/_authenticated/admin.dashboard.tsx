@@ -28,7 +28,7 @@ function Dashboard() {
         supabase.from("profiles").select("display_name, email").eq("id", u.user.id).maybeSingle(),
       ]);
       const r = (roles ?? []).map((x) => x.role);
-      if (!r.includes("admin") && !r.includes("super_admin")) { navigate({ to: "/admin" }); return; }
+      if (!r.includes("admin") && !r.includes("super_admin")) { navigate({ to: "/admin", replace: true }); return; }
       setRole(r.includes("super_admin") ? "super_admin" : "admin");
       setDisplayName(profile?.display_name ?? "");
 
