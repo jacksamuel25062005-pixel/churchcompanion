@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      about_church_entries: {
+        Row: {
+          body_en: string
+          body_hi: string | null
+          created_at: string
+          created_by: string | null
+          display_order: number
+          id: string
+          is_published: boolean
+          photo_urls: string[]
+          title_en: string
+          title_hi: string | null
+          updated_at: string
+        }
+        Insert: {
+          body_en: string
+          body_hi?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_order?: number
+          id?: string
+          is_published?: boolean
+          photo_urls?: string[]
+          title_en: string
+          title_hi?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body_en?: string
+          body_hi?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_order?: number
+          id?: string
+          is_published?: boolean
+          photo_urls?: string[]
+          title_en?: string
+          title_hi?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       admin_requests: {
         Row: {
           created_at: string
@@ -288,6 +330,48 @@ export type Database = {
         }
         Relationships: []
       }
+      church_timeline_articles: {
+        Row: {
+          article_date: string
+          body_en: string
+          body_hi: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_published: boolean
+          photo_urls: string[]
+          title_en: string
+          title_hi: string | null
+          updated_at: string
+        }
+        Insert: {
+          article_date: string
+          body_en: string
+          body_hi?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_published?: boolean
+          photo_urls?: string[]
+          title_en: string
+          title_hi?: string | null
+          updated_at?: string
+        }
+        Update: {
+          article_date?: string
+          body_en?: string
+          body_hi?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_published?: boolean
+          photo_urls?: string[]
+          title_en?: string
+          title_hi?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -350,6 +434,70 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      timeline_article_comments: {
+        Row: {
+          article_id: string
+          comment_text: string
+          commenter_name: string
+          created_at: string
+          id: string
+          is_hidden: boolean
+        }
+        Insert: {
+          article_id: string
+          comment_text: string
+          commenter_name: string
+          created_at?: string
+          id?: string
+          is_hidden?: boolean
+        }
+        Update: {
+          article_id?: string
+          comment_text?: string
+          commenter_name?: string
+          created_at?: string
+          id?: string
+          is_hidden?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timeline_article_comments_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "church_timeline_articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      timeline_article_likes: {
+        Row: {
+          article_id: string
+          created_at: string
+          id: string
+          liker_client_id: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          id?: string
+          liker_client_id: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          id?: string
+          liker_client_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timeline_article_likes_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "church_timeline_articles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       today_song_items: {
         Row: {

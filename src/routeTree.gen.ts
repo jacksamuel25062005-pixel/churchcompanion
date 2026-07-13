@@ -17,9 +17,14 @@ import { Route as AlmanacRouteImport } from './routes/almanac'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutIndexRouteImport } from './routes/about/index'
 import { Route as BooksSlugRouteImport } from './routes/books/$slug'
 import { Route as BooksSongBookIndexRouteImport } from './routes/books/song-book.index'
+import { Route as AboutTimelineIndexRouteImport } from './routes/about/timeline.index'
+import { Route as AboutChurchIndexRouteImport } from './routes/about/church.index'
 import { Route as BooksSongBookIdRouteImport } from './routes/books/song-book.$id'
+import { Route as AboutTimelineIdRouteImport } from './routes/about/timeline.$id'
+import { Route as AboutChurchIdRouteImport } from './routes/about/church.$id'
 import { Route as AuthenticatedAdminUploadRouteImport } from './routes/_authenticated/admin.upload'
 import { Route as AuthenticatedAdminTodayRouteImport } from './routes/_authenticated/admin.today'
 import { Route as AuthenticatedAdminRequestsRouteImport } from './routes/_authenticated/admin.requests'
@@ -68,6 +73,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AboutIndexRoute = AboutIndexRouteImport.update({
+  id: '/about/',
+  path: '/about/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BooksSlugRoute = BooksSlugRouteImport.update({
   id: '/books/$slug',
   path: '/books/$slug',
@@ -78,9 +88,29 @@ const BooksSongBookIndexRoute = BooksSongBookIndexRouteImport.update({
   path: '/books/song-book/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AboutTimelineIndexRoute = AboutTimelineIndexRouteImport.update({
+  id: '/about/timeline/',
+  path: '/about/timeline/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutChurchIndexRoute = AboutChurchIndexRouteImport.update({
+  id: '/about/church/',
+  path: '/about/church/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BooksSongBookIdRoute = BooksSongBookIdRouteImport.update({
   id: '/books/song-book/$id',
   path: '/books/song-book/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutTimelineIdRoute = AboutTimelineIdRouteImport.update({
+  id: '/about/timeline/$id',
+  path: '/about/timeline/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutChurchIdRoute = AboutChurchIdRouteImport.update({
+  id: '/about/church/$id',
+  path: '/about/church/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminUploadRoute =
@@ -140,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
+  '/about/': typeof AboutIndexRoute
   '/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/admin/book-import': typeof AuthenticatedAdminBookImportRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
@@ -148,7 +179,11 @@ export interface FileRoutesByFullPath {
   '/admin/requests': typeof AuthenticatedAdminRequestsRoute
   '/admin/today': typeof AuthenticatedAdminTodayRoute
   '/admin/upload': typeof AuthenticatedAdminUploadRoute
+  '/about/church/$id': typeof AboutChurchIdRoute
+  '/about/timeline/$id': typeof AboutTimelineIdRoute
   '/books/song-book/$id': typeof BooksSongBookIdRoute
+  '/about/church/': typeof AboutChurchIndexRoute
+  '/about/timeline/': typeof AboutTimelineIndexRoute
   '/books/song-book/': typeof BooksSongBookIndexRoute
 }
 export interface FileRoutesByTo {
@@ -160,6 +195,7 @@ export interface FileRoutesByTo {
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
+  '/about': typeof AboutIndexRoute
   '/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/admin/book-import': typeof AuthenticatedAdminBookImportRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
@@ -168,7 +204,11 @@ export interface FileRoutesByTo {
   '/admin/requests': typeof AuthenticatedAdminRequestsRoute
   '/admin/today': typeof AuthenticatedAdminTodayRoute
   '/admin/upload': typeof AuthenticatedAdminUploadRoute
+  '/about/church/$id': typeof AboutChurchIdRoute
+  '/about/timeline/$id': typeof AboutTimelineIdRoute
   '/books/song-book/$id': typeof BooksSongBookIdRoute
+  '/about/church': typeof AboutChurchIndexRoute
+  '/about/timeline': typeof AboutTimelineIndexRoute
   '/books/song-book': typeof BooksSongBookIndexRoute
 }
 export interface FileRoutesById {
@@ -182,6 +222,7 @@ export interface FileRoutesById {
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
+  '/about/': typeof AboutIndexRoute
   '/_authenticated/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/_authenticated/admin/book-import': typeof AuthenticatedAdminBookImportRoute
   '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
@@ -190,7 +231,11 @@ export interface FileRoutesById {
   '/_authenticated/admin/requests': typeof AuthenticatedAdminRequestsRoute
   '/_authenticated/admin/today': typeof AuthenticatedAdminTodayRoute
   '/_authenticated/admin/upload': typeof AuthenticatedAdminUploadRoute
+  '/about/church/$id': typeof AboutChurchIdRoute
+  '/about/timeline/$id': typeof AboutTimelineIdRoute
   '/books/song-book/$id': typeof BooksSongBookIdRoute
+  '/about/church/': typeof AboutChurchIndexRoute
+  '/about/timeline/': typeof AboutTimelineIndexRoute
   '/books/song-book/': typeof BooksSongBookIndexRoute
 }
 export interface FileRouteTypes {
@@ -204,6 +249,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/books/$slug'
+    | '/about/'
     | '/admin/announcements'
     | '/admin/book-import'
     | '/admin/dashboard'
@@ -212,7 +258,11 @@ export interface FileRouteTypes {
     | '/admin/requests'
     | '/admin/today'
     | '/admin/upload'
+    | '/about/church/$id'
+    | '/about/timeline/$id'
     | '/books/song-book/$id'
+    | '/about/church/'
+    | '/about/timeline/'
     | '/books/song-book/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -224,6 +274,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/books/$slug'
+    | '/about'
     | '/admin/announcements'
     | '/admin/book-import'
     | '/admin/dashboard'
@@ -232,7 +283,11 @@ export interface FileRouteTypes {
     | '/admin/requests'
     | '/admin/today'
     | '/admin/upload'
+    | '/about/church/$id'
+    | '/about/timeline/$id'
     | '/books/song-book/$id'
+    | '/about/church'
+    | '/about/timeline'
     | '/books/song-book'
   id:
     | '__root__'
@@ -245,6 +300,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/books/$slug'
+    | '/about/'
     | '/_authenticated/admin/announcements'
     | '/_authenticated/admin/book-import'
     | '/_authenticated/admin/dashboard'
@@ -253,7 +309,11 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/requests'
     | '/_authenticated/admin/today'
     | '/_authenticated/admin/upload'
+    | '/about/church/$id'
+    | '/about/timeline/$id'
     | '/books/song-book/$id'
+    | '/about/church/'
+    | '/about/timeline/'
     | '/books/song-book/'
   fileRoutesById: FileRoutesById
 }
@@ -267,7 +327,12 @@ export interface RootRouteChildren {
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
   BooksSlugRoute: typeof BooksSlugRoute
+  AboutIndexRoute: typeof AboutIndexRoute
+  AboutChurchIdRoute: typeof AboutChurchIdRoute
+  AboutTimelineIdRoute: typeof AboutTimelineIdRoute
   BooksSongBookIdRoute: typeof BooksSongBookIdRoute
+  AboutChurchIndexRoute: typeof AboutChurchIndexRoute
+  AboutTimelineIndexRoute: typeof AboutTimelineIndexRoute
   BooksSongBookIndexRoute: typeof BooksSongBookIndexRoute
 }
 
@@ -329,6 +394,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about/': {
+      id: '/about/'
+      path: '/about'
+      fullPath: '/about/'
+      preLoaderRoute: typeof AboutIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/books/$slug': {
       id: '/books/$slug'
       path: '/books/$slug'
@@ -343,11 +415,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BooksSongBookIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about/timeline/': {
+      id: '/about/timeline/'
+      path: '/about/timeline'
+      fullPath: '/about/timeline/'
+      preLoaderRoute: typeof AboutTimelineIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about/church/': {
+      id: '/about/church/'
+      path: '/about/church'
+      fullPath: '/about/church/'
+      preLoaderRoute: typeof AboutChurchIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/books/song-book/$id': {
       id: '/books/song-book/$id'
       path: '/books/song-book/$id'
       fullPath: '/books/song-book/$id'
       preLoaderRoute: typeof BooksSongBookIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about/timeline/$id': {
+      id: '/about/timeline/$id'
+      path: '/about/timeline/$id'
+      fullPath: '/about/timeline/$id'
+      preLoaderRoute: typeof AboutTimelineIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about/church/$id': {
+      id: '/about/church/$id'
+      path: '/about/church/$id'
+      fullPath: '/about/church/$id'
+      preLoaderRoute: typeof AboutChurchIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/upload': {
@@ -444,7 +544,12 @@ const rootRouteChildren: RootRouteChildren = {
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
   BooksSlugRoute: BooksSlugRoute,
+  AboutIndexRoute: AboutIndexRoute,
+  AboutChurchIdRoute: AboutChurchIdRoute,
+  AboutTimelineIdRoute: AboutTimelineIdRoute,
   BooksSongBookIdRoute: BooksSongBookIdRoute,
+  AboutChurchIndexRoute: AboutChurchIndexRoute,
+  AboutTimelineIndexRoute: AboutTimelineIndexRoute,
   BooksSongBookIndexRoute: BooksSongBookIndexRoute,
 }
 export const routeTree = rootRouteImport
