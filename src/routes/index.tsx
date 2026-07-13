@@ -207,7 +207,7 @@ function Home() {
           <h2 className="text-[12px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("home.books")}</h2>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          {(booksQ.data ?? []).map((b) => (
+          {(booksQ.data ?? []).filter((b) => b.slug !== "almanac").map((b) => (
             <Link
               key={b.id}
               to={`/books/${b.slug}` as any}
