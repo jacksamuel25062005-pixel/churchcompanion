@@ -224,6 +224,19 @@ function Home() {
             </Link>
           ))}
 
+          <Link
+            to="/about"
+            className="tap-card relative overflow-hidden rounded-2xl p-4 min-h-32 flex flex-col justify-end text-white shadow-md"
+            style={{ background: "linear-gradient(140deg, #7C3AED, #4C1D95)" }}
+          >
+            <span className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-lg bg-white/20 backdrop-blur-sm">
+              <BookOpen className="h-3.5 w-3.5 opacity-90" />
+            </span>
+            <p className="text-[11px] uppercase tracking-wide font-semibold opacity-90">About</p>
+            <p className="font-hi text-base font-semibold leading-tight">कलीसिया के बारे में</p>
+          </Link>
+
+
         </div>
       </section>
 
