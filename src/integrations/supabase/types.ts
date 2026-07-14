@@ -613,6 +613,10 @@ export type Database = {
       }
       server_now: { Args: never; Returns: string }
       sync_pull: { Args: { since?: string }; Returns: Json }
+      unlike_timeline_article: {
+        Args: { p_article_id: string; p_client_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       admin_request_status: "pending" | "approved" | "rejected"
