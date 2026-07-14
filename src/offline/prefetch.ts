@@ -46,25 +46,37 @@ async function markCached(url: string, size: number, source: string) {
   } catch { /* ignore */ }
 }
 
-async function fetchOne(url: string, source: string): Promise<void> {
+async function fetchOne(url: string, source: string, blobKey?: string): Promise<void> {
   try {
     const res = await fetch(url, { cache: "no-store", credentials: "omit", mode: "cors" });
     if (!res.ok && res.type !== "opaque") return;
-    const buf = await res.clone().arrayBuffer().catch(() => null);
-    await markCached(url, buf?.byteLength ?? 0, source);
+    const blob = await res.clone().blob().catch(() => null);
+    if (blob && blobKey) {
+      try {
+        await getDB().image_blobs.put({
+          key: blobKey,
+          blob,
+          mime: blob.type || "image/jpeg",
+          size: blob.size,
+          cached_at: Date.now(),
+          source,
+        });
+      } catch { /* quota */ }
+    }
+    await markCached(url, blob?.size ?? 0, source);
   } catch {
     /* offline or CORS — skip */
   }
 }
 
-async function runBatches(jobs: Array<{ url: string; source: string }>) {
+async function runBatches(jobs: Array<{ url: string; source: string; blobKey?: string }>) {
   let i = 0;
   const workers: Promise<void>[] = [];
   const next = async () => {
     while (i < jobs.length) {
       const idx = i++;
       const j = jobs[idx];
-      await fetchOne(j.url, j.source);
+      await fetchOne(j.url, j.source, j.blobKey);
     }
   };
   for (let w = 0; w < CONCURRENCY; w++) workers.push(next());
@@ -73,7 +85,7 @@ async function runBatches(jobs: Array<{ url: string; source: string }>) {
   await new Promise((r) => setTimeout(r, BATCH_DELAY_MS));
 }
 
-async function collectBookPageUrls(): Promise<Array<{ url: string; source: string }>> {
+async function collectBookPageUrls(): Promise<Array<{ url: string; source: string; blobKey?: string }>> {
   try {
     const { data, error } = await supabase
       .from("book_pages" as never)
@@ -82,27 +94,24 @@ async function collectBookPageUrls(): Promise<Array<{ url: string; source: strin
     const paths = (data as Array<{ storage_path: string }>).map((r) => r.storage_path);
     if (!paths.length) return [];
 
-    // Filter out paths we've already cached (single scan → Set)
+    // Skip paths we already have blobs for
     const db = getDB();
-    const cachedRows = await db.cached_images.toArray();
-    const cachedSet = new Set(cachedRows.map((r) => r.url));
-    const uncached = paths.filter((p) => {
-      // We can't know the signed URL prefix without signing; skip only if
-      // an existing cache entry ends with this path.
-      for (const u of cachedSet) if (u.endsWith(p)) return false;
-      return true;
-    });
+    const existingKeys = new Set<string>();
+    await db.image_blobs.each((r) => { existingKeys.add(r.key); });
+    const uncached = paths.filter((p) => !existingKeys.has(p));
     if (!uncached.length) return [];
 
     // Sign in chunks of 100
-    const jobs: Array<{ url: string; source: string }> = [];
+    const jobs: Array<{ url: string; source: string; blobKey?: string }> = [];
     for (let i = 0; i < uncached.length; i += 100) {
       const chunk = uncached.slice(i, i + 100);
       const { data: signed } = await supabase.storage
         .from("book-pages")
         .createSignedUrls(chunk, SIGN_TTL_SECONDS);
       for (const item of signed ?? []) {
-        if (item?.signedUrl) jobs.push({ url: item.signedUrl, source: "book-pages" });
+        if (item?.signedUrl && item.path) {
+          jobs.push({ url: item.signedUrl, source: "book-pages", blobKey: item.path });
+        }
       }
     }
     return jobs;
@@ -111,7 +120,7 @@ async function collectBookPageUrls(): Promise<Array<{ url: string; source: strin
   }
 }
 
-async function collectAboutMediaUrls(): Promise<Array<{ url: string; source: string }>> {
+async function collectAboutMediaUrls(): Promise<Array<{ url: string; source: string; blobKey?: string }>> {
   try {
     const [church, timeline] = await Promise.all([
       supabase.from("about_church_entries" as never).select("photo_urls,is_published"),
@@ -128,22 +137,21 @@ async function collectAboutMediaUrls(): Promise<Array<{ url: string; source: str
     if (!paths.size) return [];
 
     const db = getDB();
-    const cachedRows = await db.cached_images.toArray();
-    const cachedSet = new Set(cachedRows.map((r) => r.url));
-    const uncached = [...paths].filter((p) => {
-      for (const u of cachedSet) if (u.endsWith(p)) return false;
-      return true;
-    });
+    const existingKeys = new Set<string>();
+    await db.image_blobs.each((r) => { existingKeys.add(r.key); });
+    const uncached = [...paths].filter((p) => !existingKeys.has(p));
     if (!uncached.length) return [];
 
-    const jobs: Array<{ url: string; source: string }> = [];
+    const jobs: Array<{ url: string; source: string; blobKey?: string }> = [];
     for (let i = 0; i < uncached.length; i += 100) {
       const chunk = uncached.slice(i, i + 100);
       const { data: signed } = await supabase.storage
         .from("about-media")
         .createSignedUrls(chunk, SIGN_TTL_SECONDS);
       for (const item of signed ?? []) {
-        if (item?.signedUrl) jobs.push({ url: item.signedUrl, source: "about-media" });
+        if (item?.signedUrl && item.path) {
+          jobs.push({ url: item.signedUrl, source: "about-media", blobKey: item.path });
+        }
       }
     }
     return jobs;
