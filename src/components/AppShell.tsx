@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Search, Bookmark, Settings as SettingsIcon, CalendarDays } from "lucide-react";
 import type { ReactNode } from "react";
 import { useT } from "../lib/i18n";
+import { BookSwitcher } from "./BookSwitcher";
 
 interface Props {
   children: ReactNode;
@@ -55,6 +56,7 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
         {children}
       </main>
 
+      {!hideNav && <BookSwitcher />}
       {!hideNav && (
         <nav
           className="fixed inset-x-0 z-40 flex justify-center px-3 safe-bottom"
