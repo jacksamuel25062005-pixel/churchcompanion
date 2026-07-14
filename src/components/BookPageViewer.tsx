@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Maximize2, X, ZoomIn, ZoomOut } from "lucide-react";
 import type { BookPage } from "@/lib/book-pages";
 import { signPageUrls } from "@/lib/book-pages";
+import { getCachedBlobUrl, cacheImageBlob } from "@/lib/image-cache";
 
 interface Props {
   pages: BookPage[];
@@ -16,16 +17,49 @@ export function BookPageViewer({ pages, accentColor = "#6366f1" }: Props) {
   const [zoom, setZoom] = useState(1);
   const total = pages.length;
 
+  // Prime from cache immediately (no network) — sign only what's missing.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const paths = pages.map((p) => p.storage_path);
       if (paths.length === 0) return;
+
+      // 1) Serve cached blobs instantly
+      const cachedEntries = await Promise.all(
+        paths.map(async (p) => [p, await getCachedBlobUrl(p)] as const),
+      );
+      if (cancelled) return;
+      const initial: Record<string, string> = {};
+      const missing: string[] = [];
+      for (const [p, u] of cachedEntries) {
+        if (u) initial[p] = u;
+        else missing.push(p);
+      }
+      if (Object.keys(initial).length) setUrls((prev) => ({ ...prev, ...initial }));
+
+      // 2) Sign missing paths, then fetch+cache blobs and swap URLs
+      if (missing.length === 0) return;
       try {
-        const map = await signPageUrls(paths, 60 * 60);
-        if (!cancelled) setUrls(map);
+        const signed = await signPageUrls(missing, 60 * 60);
+        if (cancelled) return;
+        // Show signed URLs immediately so user isn't blocked
+        setUrls((prev) => ({ ...prev, ...signed }));
+        // Cache blobs in the background (parallel, small concurrency)
+        const jobs = Object.entries(signed);
+        const CONC = 4;
+        let i = 0;
+        const worker = async () => {
+          while (i < jobs.length) {
+            const [path, url] = jobs[i++];
+            const blobUrl = await cacheImageBlob(path, url, "book-pages");
+            if (!cancelled && blobUrl) {
+              setUrls((prev) => ({ ...prev, [path]: blobUrl }));
+            }
+          }
+        };
+        await Promise.all(Array.from({ length: CONC }, worker));
       } catch {
-        /* signing failed silently — viewer will show error state */
+        /* signing failed silently */
       }
     })();
     return () => { cancelled = true; };
