@@ -111,6 +111,47 @@ async function collectBookPageUrls(): Promise<Array<{ url: string; source: strin
   }
 }
 
+async function collectAboutMediaUrls(): Promise<Array<{ url: string; source: string }>> {
+  try {
+    const [church, timeline] = await Promise.all([
+      supabase.from("about_church_entries" as never).select("photo_urls,is_published"),
+      supabase.from("church_timeline_articles" as never).select("photo_urls,is_published"),
+    ]);
+    const paths = new Set<string>();
+    const push = (rows: any) => {
+      for (const r of rows ?? []) {
+        if (!r?.is_published) continue;
+        for (const p of r.photo_urls ?? []) if (p) paths.add(p);
+      }
+    };
+    push(church.data); push(timeline.data);
+    if (!paths.size) return [];
+
+    const db = getDB();
+    const cachedRows = await db.cached_images.toArray();
+    const cachedSet = new Set(cachedRows.map((r) => r.url));
+    const uncached = [...paths].filter((p) => {
+      for (const u of cachedSet) if (u.endsWith(p)) return false;
+      return true;
+    });
+    if (!uncached.length) return [];
+
+    const jobs: Array<{ url: string; source: string }> = [];
+    for (let i = 0; i < uncached.length; i += 100) {
+      const chunk = uncached.slice(i, i + 100);
+      const { data: signed } = await supabase.storage
+        .from("about-media")
+        .createSignedUrls(chunk, SIGN_TTL_SECONDS);
+      for (const item of signed ?? []) {
+        if (item?.signedUrl) jobs.push({ url: item.signedUrl, source: "about-media" });
+      }
+    }
+    return jobs;
+  } catch {
+    return [];
+  }
+}
+
 export async function prefetchAllImages(): Promise<void> {
   if (typeof window === "undefined") return;
   if (running) return;
@@ -119,7 +160,11 @@ export async function prefetchAllImages(): Promise<void> {
   if (Date.now() - lastRunAt < 60_000) return;
   running = true;
   try {
-    const jobs = await collectBookPageUrls();
+    const [books, about] = await Promise.all([
+      collectBookPageUrls(),
+      collectAboutMediaUrls(),
+    ]);
+    const jobs = [...books, ...about];
     // Chunk work into rolling batches
     while (jobs.length) {
       const slice = jobs.splice(0, CONCURRENCY * 4);
@@ -130,6 +175,7 @@ export async function prefetchAllImages(): Promise<void> {
     running = false;
   }
 }
+
 
 export async function getCachedImageStats(): Promise<{ count: number; bytes: number }> {
   try {
