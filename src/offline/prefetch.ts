@@ -46,25 +46,37 @@ async function markCached(url: string, size: number, source: string) {
   } catch { /* ignore */ }
 }
 
-async function fetchOne(url: string, source: string): Promise<void> {
+async function fetchOne(url: string, source: string, blobKey?: string): Promise<void> {
   try {
     const res = await fetch(url, { cache: "no-store", credentials: "omit", mode: "cors" });
     if (!res.ok && res.type !== "opaque") return;
-    const buf = await res.clone().arrayBuffer().catch(() => null);
-    await markCached(url, buf?.byteLength ?? 0, source);
+    const blob = await res.clone().blob().catch(() => null);
+    if (blob && blobKey) {
+      try {
+        await getDB().image_blobs.put({
+          key: blobKey,
+          blob,
+          mime: blob.type || "image/jpeg",
+          size: blob.size,
+          cached_at: Date.now(),
+          source,
+        });
+      } catch { /* quota */ }
+    }
+    await markCached(url, blob?.size ?? 0, source);
   } catch {
     /* offline or CORS — skip */
   }
 }
 
-async function runBatches(jobs: Array<{ url: string; source: string }>) {
+async function runBatches(jobs: Array<{ url: string; source: string; blobKey?: string }>) {
   let i = 0;
   const workers: Promise<void>[] = [];
   const next = async () => {
     while (i < jobs.length) {
       const idx = i++;
       const j = jobs[idx];
-      await fetchOne(j.url, j.source);
+      await fetchOne(j.url, j.source, j.blobKey);
     }
   };
   for (let w = 0; w < CONCURRENCY; w++) workers.push(next());
@@ -73,7 +85,7 @@ async function runBatches(jobs: Array<{ url: string; source: string }>) {
   await new Promise((r) => setTimeout(r, BATCH_DELAY_MS));
 }
 
-async function collectBookPageUrls(): Promise<Array<{ url: string; source: string }>> {
+async function collectBookPageUrls(): Promise<Array<{ url: string; source: string; blobKey?: string }>> {
   try {
     const { data, error } = await supabase
       .from("book_pages" as never)
