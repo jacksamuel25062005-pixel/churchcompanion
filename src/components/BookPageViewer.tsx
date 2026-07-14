@@ -1,5 +1,5 @@
 // Digital book viewer — pages as images with pinch/zoom, fullscreen, keyboard nav.
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Maximize2, X, ZoomIn, ZoomOut } from "lucide-react";
 import type { BookPage } from "@/lib/book-pages";
 import { signPageUrls } from "@/lib/book-pages";
