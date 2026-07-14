@@ -59,7 +59,7 @@ function TimelineDetail() {
   const toggleLike = async () => {
     if (!likesQ.data) return;
     if (likesQ.data.liked) {
-      await supabase.from("timeline_article_likes").delete().eq("article_id", id).eq("liker_client_id", clientId);
+      await supabase.rpc("unlike_timeline_article", { p_article_id: id, p_client_id: clientId });
     } else {
       await supabase.from("timeline_article_likes").insert({ article_id: id, liker_client_id: clientId });
     }
