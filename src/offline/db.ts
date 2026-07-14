@@ -93,6 +93,15 @@ export interface CachedImageRow {
   source?: string;  // 'book-pages' | 'storage' | 'remote' | ...
 }
 
+export interface ImageBlobRow {
+  key: string;      // stable key: storage_path or normalized URL
+  blob: Blob;
+  mime: string;
+  size: number;
+  cached_at: number;
+  source?: string;
+}
+
 export class ChurchDB extends Dexie {
   books!: EntityTable<BookRow, "id">;
   songs!: EntityTable<SongRow, "id">;
