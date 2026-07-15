@@ -93,6 +93,16 @@ export interface CachedImageRow {
   source?: string;  // 'book-pages' | 'storage' | 'remote' | ...
 }
 
+export interface ImageBlobRow {
+  key: string;      // `${bucket}/${path}`
+  bucket: string;
+  path: string;
+  blob: Blob;
+  size: number;
+  mime: string;
+  cached_at: number;
+}
+
 export class ChurchDB extends Dexie {
   books!: EntityTable<BookRow, "id">;
   songs!: EntityTable<SongRow, "id">;
@@ -103,6 +113,7 @@ export class ChurchDB extends Dexie {
   uploads!: EntityTable<UploadRow, "id">;
   meta!: EntityTable<MetaRow, "key">;
   cached_images!: EntityTable<CachedImageRow, "url">;
+  image_blobs!: EntityTable<ImageBlobRow, "key">;
 
   constructor() {
     super("church-companion");
@@ -118,6 +129,9 @@ export class ChurchDB extends Dexie {
     });
     this.version(2).stores({
       cached_images: "url, cached_at, source",
+    });
+    this.version(3).stores({
+      image_blobs: "key, bucket, cached_at",
     });
   }
 }
