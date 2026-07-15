@@ -16,16 +16,11 @@ export async function uploadAboutMedia(folder: string, file: File): Promise<stri
 }
 
 /** Batch-sign storage paths and return a { path: signedUrl } map. */
-export async function signAboutMedia(paths: string[], expiresIn = 60 * 60 * 24 * 7): Promise<Record<string, string>> {
-  const out: Record<string, string> = {};
-  const unique = Array.from(new Set(paths.filter(Boolean)));
-  for (let i = 0; i < unique.length; i += 100) {
-    const chunk = unique.slice(i, i + 100);
-    const { data, error } = await supabase.storage.from(BUCKET).createSignedUrls(chunk, expiresIn);
-    if (error) throw error;
-    (data ?? []).forEach((row) => { if (row.signedUrl && row.path) out[row.path] = row.signedUrl; });
-  }
-  return out;
+/** Batch-sign storage paths and return a { path: url } map, backed by a persistent blob cache. */
+export async function signAboutMedia(paths: string[], _expiresIn = 60 * 60 * 24 * 7): Promise<Record<string, string>> {
+  if (!paths.length) return {};
+  const { resolveCachedImageUrls } = await import("@/offline/image-blobs");
+  return resolveCachedImageUrls(BUCKET, paths);
 }
 
 export async function removeAboutMedia(paths: string[]) {
