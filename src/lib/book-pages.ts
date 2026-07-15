@@ -40,19 +40,11 @@ export async function nextPageNumber(bookId: string): Promise<number> {
   return (rows[0]?.page_number ?? 0) + 1;
 }
 
-export async function signPageUrls(paths: string[], expiresIn = 3600): Promise<Record<string, string>> {
+export async function signPageUrls(paths: string[], _expiresIn = 3600): Promise<Record<string, string>> {
   if (paths.length === 0) return {};
-  const map: Record<string, string> = {};
-  // batch in chunks of 100
-  for (let i = 0; i < paths.length; i += 100) {
-    const chunk = paths.slice(i, i + 100);
-    const { data, error } = await supabase.storage.from("book-pages").createSignedUrls(chunk, expiresIn);
-    if (error) throw error;
-    for (const item of data ?? []) {
-      if (item.path && item.signedUrl) map[item.path] = item.signedUrl;
-    }
-  }
-  return map;
+  // Serve from the offline blob cache; falls back to sign+fetch and persists.
+  const { resolveCachedImageUrls } = await import("@/offline/image-blobs");
+  return resolveCachedImageUrls("book-pages", paths);
 }
 
 export async function uploadPageImage(
