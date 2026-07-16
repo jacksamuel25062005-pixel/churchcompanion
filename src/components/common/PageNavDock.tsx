@@ -24,11 +24,11 @@ export function PageNavDock({
   return (
     <div
       className={cn(
-        "fixed left-1/2 z-40 -translate-x-1/2",
+        "fixed left-1/2 z-50 -translate-x-1/2",
         "transition-[bottom] duration-[250ms] ease-out",
         className
       )}
-      style={{ bottom: isFullscreen ? 0 : 76 }}
+      style={{ bottom: isFullscreen ? "calc(env(safe-area-inset-bottom) + 0.5rem)" : 88 }}
       role="navigation"
       aria-label="Page navigation"
     >
