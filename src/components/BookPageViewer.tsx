@@ -75,14 +75,16 @@ export function BookPageViewer({ pages, accentColor = "#6366f1" }: Props) {
 
   return (
     <>
-      <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
-        <div className="relative bg-black/5" style={{ minHeight: 320 }}>
+      <div className="rounded-2xl border border-border/60 bg-card overflow-hidden mb-40">
+        <div
+          className="relative bg-black/5 overflow-auto"
+          style={{ maxHeight: "70vh", touchAction: "pinch-zoom" }}
+        >
           {currentUrl ? (
             <img
               src={currentUrl}
               alt={`Page ${current!.page_number}`}
               className="w-full h-auto select-none block"
-              style={{ touchAction: "pinch-zoom" }}
               draggable={false}
             />
           ) : (
@@ -112,6 +114,7 @@ export function BookPageViewer({ pages, accentColor = "#6366f1" }: Props) {
           />
         </div>
       </div>
+
 
       {/* Hidden preloaders */}
       <div className="hidden">
@@ -145,12 +148,15 @@ export function BookPageViewer({ pages, accentColor = "#6366f1" }: Props) {
               </button>
             </div>
           </div>
-          <div className="flex-1 overflow-auto grid place-items-center touch-manipulation pb-20">
+          <div
+            className="flex-1 overflow-auto grid place-items-start justify-center pb-28"
+            style={{ touchAction: "pinch-zoom" }}
+          >
             <img
               src={currentUrl}
               alt={`Page ${current!.page_number}`}
-              className="max-w-none select-none transition-transform duration-150"
-              style={{ transform: `scale(${zoom})`, touchAction: "pinch-zoom", transformOrigin: "center center", maxWidth: zoom === 1 ? "100%" : "none", maxHeight: zoom === 1 ? "100%" : "none" }}
+              className="select-none block transition-transform duration-150"
+              style={{ transform: `scale(${zoom})`, transformOrigin: "top center", width: "100%", maxWidth: "100vw" }}
               draggable={false}
             />
           </div>
