@@ -36,8 +36,7 @@ export function PageNavDock({
         className={cn(
           "flex items-center gap-1 bg-white/95 backdrop-blur-xl",
           "border border-black/5 shadow-[0_8px_28px_rgba(0,0,0,0.12)]",
-          "h-[60px] px-2",
-          isFullscreen ? "rounded-none w-screen justify-around" : "rounded-full"
+          "h-[60px] px-2 rounded-full"
         )}
       >
         {/* Previous */}
