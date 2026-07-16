@@ -24,19 +24,22 @@ export function PageNavDock({
   return (
     <div
       className={cn(
-        "fixed left-1/2 z-50 -translate-x-1/2",
+        "fixed inset-x-0 z-50 flex justify-center px-3 safe-bottom pointer-events-none",
         "transition-[bottom] duration-[250ms] ease-out",
         className
       )}
-      style={{ bottom: isFullscreen ? "calc(env(safe-area-inset-bottom) + 0.5rem)" : 88 }}
+      style={{
+        bottom: isFullscreen
+          ? "calc(env(safe-area-inset-bottom) + 0.75rem)"
+          : "calc(env(safe-area-inset-bottom) + 5.5rem)",
+      }}
       role="navigation"
       aria-label="Page navigation"
     >
       <div
         className={cn(
-          "flex items-center gap-1 bg-white/95 backdrop-blur-xl",
-          "border border-black/5 shadow-[0_8px_28px_rgba(0,0,0,0.12)]",
-          "h-[60px] px-2 rounded-full"
+          "glass rounded-full pointer-events-auto",
+          "flex items-center gap-1 h-[60px] px-2 shadow-[0_8px_28px_rgba(0,0,0,0.12)]"
         )}
       >
         {/* Previous */}
