@@ -406,3 +406,6 @@ h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0
 /* Liturgical accent helpers */
 @utility lit-ring-purple { box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--lit-purple) 40%, transparent); }
 @utility lit-ring-gold   { box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--lit-gold)   50%, transparent); }
+
+/* Hide bottom dock during fullscreen readers */
+body.dock-hidden [data-app-nav] { transform: translateY(200%); }

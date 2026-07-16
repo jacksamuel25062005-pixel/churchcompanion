@@ -24,11 +24,11 @@ export function PageNavDock({
   return (
     <div
       className={cn(
-        "fixed left-1/2 z-40 -translate-x-1/2",
+        "fixed left-1/2 z-50 -translate-x-1/2",
         "transition-[bottom] duration-[250ms] ease-out",
         className
       )}
-      style={{ bottom: isFullscreen ? 0 : 76 }}
+      style={{ bottom: isFullscreen ? "calc(env(safe-area-inset-bottom) + 0.5rem)" : 88 }}
       role="navigation"
       aria-label="Page navigation"
     >
@@ -36,8 +36,7 @@ export function PageNavDock({
         className={cn(
           "flex items-center gap-1 bg-white/95 backdrop-blur-xl",
           "border border-black/5 shadow-[0_8px_28px_rgba(0,0,0,0.12)]",
-          "h-[60px] px-2",
-          isFullscreen ? "rounded-none w-screen justify-around" : "rounded-full"
+          "h-[60px] px-2 rounded-full"
         )}
       >
         {/* Previous */}
