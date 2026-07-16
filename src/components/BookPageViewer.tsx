@@ -75,14 +75,16 @@ export function BookPageViewer({ pages, accentColor = "#6366f1" }: Props) {
 
   return (
     <>
-      <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
-        <div className="relative bg-black/5" style={{ minHeight: 320 }}>
+      <div className="rounded-2xl border border-border/60 bg-card overflow-hidden mb-40">
+        <div
+          className="relative bg-black/5 overflow-auto"
+          style={{ maxHeight: "70vh", touchAction: "pinch-zoom" }}
+        >
           {currentUrl ? (
             <img
               src={currentUrl}
               alt={`Page ${current!.page_number}`}
               className="w-full h-auto select-none block"
-              style={{ touchAction: "pinch-zoom" }}
               draggable={false}
             />
           ) : (
@@ -112,6 +114,7 @@ export function BookPageViewer({ pages, accentColor = "#6366f1" }: Props) {
           />
         </div>
       </div>
+
 
       {/* Hidden preloaders */}
       <div className="hidden">
