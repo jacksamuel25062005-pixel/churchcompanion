@@ -148,12 +148,15 @@ export function BookPageViewer({ pages, accentColor = "#6366f1" }: Props) {
               </button>
             </div>
           </div>
-          <div className="flex-1 overflow-auto grid place-items-center touch-manipulation pb-20">
+          <div
+            className="flex-1 overflow-auto grid place-items-start justify-center pb-28"
+            style={{ touchAction: "pinch-zoom" }}
+          >
             <img
               src={currentUrl}
               alt={`Page ${current!.page_number}`}
-              className="max-w-none select-none transition-transform duration-150"
-              style={{ transform: `scale(${zoom})`, touchAction: "pinch-zoom", transformOrigin: "center center", maxWidth: zoom === 1 ? "100%" : "none", maxHeight: zoom === 1 ? "100%" : "none" }}
+              className="select-none block transition-transform duration-150"
+              style={{ transform: `scale(${zoom})`, transformOrigin: "top center", width: "100%", maxWidth: "100vw" }}
               draggable={false}
             />
           </div>
