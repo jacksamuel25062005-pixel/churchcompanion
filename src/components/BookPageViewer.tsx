@@ -1,8 +1,9 @@
 // Digital book viewer — pages as images with pinch/zoom, fullscreen, keyboard nav.
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Maximize2, X, ZoomIn, ZoomOut } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Maximize2, X, ZoomIn, ZoomOut } from "lucide-react";
 import type { BookPage } from "@/lib/book-pages";
 import { signPageUrls } from "@/lib/book-pages";
+import PageNavDock from "@/components/common/PageNavDock";
 
 interface Props {
   pages: BookPage[];
@@ -34,7 +35,6 @@ export function BookPageViewer({ pages, accentColor = "#6366f1" }: Props) {
   const current = pages[idx];
   const currentUrl = current ? urls[current.storage_path] : undefined;
 
-  // Preload neighbors
   const preload = useMemo(() => {
     const list: string[] = [];
     for (let d = 1; d <= 2; d++) {
@@ -48,6 +48,14 @@ export function BookPageViewer({ pages, accentColor = "#6366f1" }: Props) {
     setIdx((i) => Math.max(0, Math.min(total - 1, i + delta)));
     setZoom(1);
   };
+
+  // Hide bottom app dock while fullscreen
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (fullscreen) document.body.classList.add("dock-hidden");
+    else document.body.classList.remove("dock-hidden");
+    return () => { document.body.classList.remove("dock-hidden"); };
+  }, [fullscreen]);
 
   useEffect(() => {
     if (!fullscreen) return;
@@ -88,27 +96,11 @@ export function BookPageViewer({ pages, accentColor = "#6366f1" }: Props) {
             <Maximize2 className="h-4 w-4" />
           </button>
         </div>
-        <div className="flex items-center justify-between gap-2 p-3">
-          <button
-            onClick={() => go(-1)}
-            disabled={idx === 0}
-            className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold disabled:opacity-40"
-          >
-            <ChevronLeft className="h-3.5 w-3.5" /> Prev
-          </button>
-          <div className="text-xs font-medium tabular-nums" style={{ color: accentColor }}>
+        {/* Page jump slider */}
+        <div className="p-3">
+          <div className="mb-2 text-center text-xs font-medium tabular-nums" style={{ color: accentColor }}>
             Page {idx + 1} <span className="text-muted-foreground">/ {total}</span>
           </div>
-          <button
-            onClick={() => go(1)}
-            disabled={idx >= total - 1}
-            className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold disabled:opacity-40"
-          >
-            Next <ChevronRight className="h-3.5 w-3.5" />
-          </button>
-        </div>
-        {/* Page jump */}
-        <div className="border-t p-3">
           <input
             type="range"
             min={1}
@@ -128,8 +120,17 @@ export function BookPageViewer({ pages, accentColor = "#6366f1" }: Props) {
         ))}
       </div>
 
+      {/* Floating page navigation dock — sits above app bottom nav, docks to bottom in fullscreen */}
+      <PageNavDock
+        currentPage={idx + 1}
+        totalPages={total}
+        onPrev={() => go(-1)}
+        onNext={() => go(1)}
+        isFullscreen={fullscreen}
+      />
+
       {fullscreen && currentUrl && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-black">
+        <div className="fixed inset-0 z-40 flex flex-col bg-black">
           <div className="flex items-center justify-between p-3 text-white">
             <button onClick={() => setFullscreen(false)} className="rounded-full bg-white/10 p-2 hover:bg-white/20" aria-label="Close">
               <X className="h-5 w-5" />
@@ -144,7 +145,7 @@ export function BookPageViewer({ pages, accentColor = "#6366f1" }: Props) {
               </button>
             </div>
           </div>
-          <div className="flex-1 overflow-auto grid place-items-center touch-manipulation">
+          <div className="flex-1 overflow-auto grid place-items-center touch-manipulation pb-20">
             <img
               src={currentUrl}
               alt={`Page ${current!.page_number}`}
@@ -152,14 +153,6 @@ export function BookPageViewer({ pages, accentColor = "#6366f1" }: Props) {
               style={{ transform: `scale(${zoom})`, touchAction: "pinch-zoom", transformOrigin: "center center", maxWidth: zoom === 1 ? "100%" : "none", maxHeight: zoom === 1 ? "100%" : "none" }}
               draggable={false}
             />
-          </div>
-          <div className="flex items-center justify-between p-4 text-white">
-            <button onClick={() => go(-1)} disabled={idx === 0} className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold disabled:opacity-30">
-              <ChevronLeft className="inline h-4 w-4" /> Prev
-            </button>
-            <button onClick={() => go(1)} disabled={idx >= total - 1} className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold disabled:opacity-30">
-              Next <ChevronRight className="inline h-4 w-4" />
-            </button>
           </div>
         </div>
       )}
