@@ -57,7 +57,8 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
 
       {!hideNav && (
         <nav
-          className="fixed inset-x-0 z-40 flex justify-center px-3 safe-bottom"
+          data-app-nav
+          className="fixed inset-x-0 z-40 flex justify-center px-3 safe-bottom transition-transform duration-[250ms] ease-out"
           style={{ bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
         >
           <div className="glass rounded-[28px] w-full max-w-screen-sm">
