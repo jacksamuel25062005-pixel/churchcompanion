@@ -24,11 +24,11 @@ export function PageNavDock({
   return (
     <div
       className={cn(
-        "fixed inset-x-0 z-50 flex justify-center px-3 safe-bottom pointer-events-none",
+        "fixed inset-x-0 z-50 flex justify-center px-3 pointer-events-none",
         className
       )}
       style={{
-        bottom: "calc(env(safe-area-inset-bottom) + 5.5rem)",
+        bottom: "calc(env(safe-area-inset-bottom) + 4.75rem)",
       }}
       role="navigation"
       aria-label="Page navigation"
