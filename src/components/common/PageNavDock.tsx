@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,14 +23,24 @@ export function PageNavDock({
   const prevDisabled = currentPage <= 1;
   const nextDisabled = currentPage >= totalPages;
 
-  return (
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
+  const node = (
     <div
       className={cn(
-        "fixed inset-x-0 z-50 flex justify-center px-3 safe-bottom pointer-events-none",
+        "fixed inset-x-0 z-[60] flex justify-center px-3 pointer-events-none",
         className
       )}
       style={{
-        bottom: "calc(env(safe-area-inset-bottom) + 5.5rem)",
+        // Sits 16px above the home bottom dock; in fullscreen home dock is hidden so 16px above safe area.
+        bottom: isFullscreen
+          ? "calc(env(safe-area-inset-bottom) + 16px)"
+          : "calc(env(safe-area-inset-bottom) + 6.5rem)",
+        // Neutralize any inherited transforms/filters from ancestors (portal already escapes DOM tree)
+        transform: "none",
+        margin: 0,
+        padding: "0 12px",
       }}
       role="navigation"
       aria-label="Page navigation"
@@ -39,7 +51,6 @@ export function PageNavDock({
           "flex items-center gap-1 h-[60px] px-2 shadow-[0_8px_28px_rgba(0,0,0,0.12)]"
         )}
       >
-        {/* Previous */}
         <button
           type="button"
           onClick={onPrev}
@@ -62,7 +73,6 @@ export function PageNavDock({
           </div>
         </button>
 
-        {/* Center indicator */}
         <div className="flex items-center gap-1.5 px-3 mx-1 h-10 rounded-full bg-neutral-100/80">
           <FileText className="h-4 w-4 text-neutral-600" strokeWidth={2} />
           <span className="text-sm font-semibold tabular-nums text-neutral-800">
@@ -70,7 +80,6 @@ export function PageNavDock({
           </span>
         </div>
 
-        {/* Next */}
         <button
           type="button"
           onClick={onNext}
@@ -95,6 +104,9 @@ export function PageNavDock({
       </div>
     </div>
   );
+
+  if (!mounted || typeof document === "undefined") return null;
+  return createPortal(node, document.body);
 }
 
 export default PageNavDock;

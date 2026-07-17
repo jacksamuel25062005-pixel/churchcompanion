@@ -1,5 +1,5 @@
 // Digital book viewer — pages as images with pinch/zoom, fullscreen, keyboard nav.
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Maximize2, X, ZoomIn, ZoomOut } from "lucide-react";
 import type { BookPage } from "@/lib/book-pages";
 import { signPageUrls } from "@/lib/book-pages";
@@ -49,6 +49,25 @@ export function BookPageViewer({ pages, accentColor = "#6366f1" }: Props) {
     setZoom(1);
   };
 
+  // Swipe support (single-touch only, ignore pinch)
+  const touchRef = useRef<{ x: number; y: number; t: number } | null>(null);
+  const onTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) { touchRef.current = null; return; }
+    const t = e.touches[0];
+    touchRef.current = { x: t.clientX, y: t.clientY, t: Date.now() };
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const start = touchRef.current;
+    touchRef.current = null;
+    if (!start || zoom !== 1) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5 && Date.now() - start.t < 600) {
+      if (dx < 0) go(1); else go(-1);
+    }
+  };
+
   // Hide bottom app dock while fullscreen
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -79,6 +98,8 @@ export function BookPageViewer({ pages, accentColor = "#6366f1" }: Props) {
         <div
           className="relative bg-black/5 overflow-auto"
           style={{ maxHeight: "calc(100vh - 280px)", touchAction: "pinch-zoom" }}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
         >
           {currentUrl ? (
             <img
@@ -151,6 +172,8 @@ export function BookPageViewer({ pages, accentColor = "#6366f1" }: Props) {
           <div
             className="flex-1 overflow-auto grid place-items-start justify-center pb-28"
             style={{ touchAction: "pinch-zoom" }}
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
           >
             <img
               src={currentUrl}
