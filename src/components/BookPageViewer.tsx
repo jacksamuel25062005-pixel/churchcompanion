@@ -98,6 +98,8 @@ export function BookPageViewer({ pages, accentColor = "#6366f1" }: Props) {
         <div
           className="relative bg-black/5 overflow-auto"
           style={{ maxHeight: "calc(100vh - 280px)", touchAction: "pinch-zoom" }}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
         >
           {currentUrl ? (
             <img
