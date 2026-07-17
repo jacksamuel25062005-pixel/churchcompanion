@@ -75,10 +75,10 @@ export function BookPageViewer({ pages, accentColor = "#6366f1" }: Props) {
 
   return (
     <>
-      <div className="rounded-2xl border border-border/60 bg-card overflow-hidden mb-40">
+      <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
         <div
           className="relative bg-black/5 overflow-auto"
-          style={{ maxHeight: "70vh", touchAction: "pinch-zoom" }}
+          style={{ maxHeight: "calc(100vh - 280px)", touchAction: "pinch-zoom" }}
         >
           {currentUrl ? (
             <img
