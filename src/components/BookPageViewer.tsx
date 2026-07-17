@@ -172,6 +172,8 @@ export function BookPageViewer({ pages, accentColor = "#6366f1" }: Props) {
           <div
             className="flex-1 overflow-auto grid place-items-start justify-center pb-28"
             style={{ touchAction: "pinch-zoom" }}
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
           >
             <img
               src={currentUrl}
