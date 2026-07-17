@@ -25,13 +25,10 @@ export function PageNavDock({
     <div
       className={cn(
         "fixed inset-x-0 z-50 flex justify-center px-3 safe-bottom pointer-events-none",
-        "transition-[bottom] duration-[250ms] ease-out",
         className
       )}
       style={{
-        bottom: isFullscreen
-          ? "calc(env(safe-area-inset-bottom) + 0.75rem)"
-          : "calc(env(safe-area-inset-bottom) + 5.5rem)",
+        bottom: "calc(env(safe-area-inset-bottom) + 5.5rem)",
       }}
       role="navigation"
       aria-label="Page navigation"
