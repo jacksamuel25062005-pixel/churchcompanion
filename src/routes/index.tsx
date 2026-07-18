@@ -11,6 +11,7 @@ import { useTodaySnap, saveToday, removeOffline, OFFLINE_KEYS } from "../lib/off
 import type { Book, Song } from "../lib/types";
 import { AnnouncementModule, AnnouncementBell } from "../components/AnnouncementModule";
 import { StainedGlass } from "../components/StainedGlass";
+import { useExitConfirmation } from "../lib/use-exit-confirmation";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const [splash, setSplash] = useState(true);
+  useExitConfirmation(!splash);
   useEffect(() => {
     const seen = typeof window !== "undefined" && sessionStorage.getItem("cc.splash");
     if (seen) { setSplash(false); return; }
