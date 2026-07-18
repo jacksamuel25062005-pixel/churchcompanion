@@ -7,7 +7,7 @@ import { AppShell } from "../components/AppShell";
 import { Card } from "../components/ui-bits";
 import { Switch } from "../components/ui/switch";
 import { useT } from "../lib/i18n";
-import { ACCENT_PRESETS, useSettings, type FontSize, type ThemeMode, type Language } from "../lib/settings";
+import { ACCENT_PRESETS, FONT_FAMILY_PRESETS, useSettings, type FontSize, type ThemeMode, type Language } from "../lib/settings";
 import { getPushPermission, promptForPush, setPushOptIn, getPushOptedIn } from "../lib/onesignal";
 import { downloadEntireApp, removeAllOffline, useOfflineIndex, formatBytes, type FullDownloadProgress } from "../lib/offline";
 
@@ -76,6 +76,25 @@ function SettingsPage() {
                 style={{ backgroundColor: a.value, borderColor: a.value }}
               />
             ))}
+          </div>
+        </Section>
+
+        <Section label="Font family">
+          <div className="grid grid-cols-2 gap-2">
+            {FONT_FAMILY_PRESETS.map((f) => {
+              const active = s.fontFamily === f.id;
+              return (
+                <button
+                  key={f.id}
+                  onClick={() => s.setFontFamily(f.id)}
+                  className={`rounded-xl py-3 px-3 text-left border transition-colors ${active ? "brand-bg brand-border" : "bg-card hover:bg-secondary/60"}`}
+                  style={{ fontFamily: f.sans }}
+                >
+                  <span className="block text-sm font-semibold">{f.name}</span>
+                  <span className="block text-xs text-muted-foreground mt-0.5">The quick brown fox</span>
+                </button>
+              );
+            })}
           </div>
         </Section>
 

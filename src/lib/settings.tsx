@@ -3,6 +3,19 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 export type FontSize = "s" | "m" | "l" | "xl";
 export type ThemeMode = "light" | "dark" | "system";
 export type Language = "en" | "hi";
+export type FontFamilyId =
+  | "system"
+  | "inter"
+  | "poppins"
+  | "manrope"
+  | "nunito"
+  | "source-sans"
+  | "space-grotesk"
+  | "baloo"
+  | "lora"
+  | "merriweather"
+  | "playfair"
+  | "roboto-slab";
 
 export interface AccentOption {
   id: string;
@@ -19,11 +32,38 @@ export const ACCENT_PRESETS: AccentOption[] = [
   { id: "slate", name: "Slate", value: "#475569" },
 ];
 
+export interface FontFamilyOption {
+  id: FontFamilyId;
+  name: string;
+  sans: string;
+  display: string;
+  category: "sans" | "serif" | "display";
+}
+
+const DEFAULT_SANS = `"Inter", "Manrope", "Noto Sans Devanagari", system-ui, sans-serif`;
+const DEFAULT_DISPLAY = `"Poppins", "Space Grotesk", "Manrope", system-ui, sans-serif`;
+
+export const FONT_FAMILY_PRESETS: FontFamilyOption[] = [
+  { id: "system", name: "Default", sans: DEFAULT_SANS, display: DEFAULT_DISPLAY, category: "sans" },
+  { id: "inter", name: "Inter", sans: `"Inter", system-ui, sans-serif`, display: `"Inter", system-ui, sans-serif`, category: "sans" },
+  { id: "poppins", name: "Poppins", sans: `"Poppins", system-ui, sans-serif`, display: `"Poppins", system-ui, sans-serif`, category: "sans" },
+  { id: "manrope", name: "Manrope", sans: `"Manrope", system-ui, sans-serif`, display: `"Manrope", system-ui, sans-serif`, category: "sans" },
+  { id: "nunito", name: "Nunito", sans: `"Nunito", system-ui, sans-serif`, display: `"Nunito", system-ui, sans-serif`, category: "sans" },
+  { id: "source-sans", name: "Source Sans", sans: `"Source Sans 3", system-ui, sans-serif`, display: `"Source Sans 3", system-ui, sans-serif`, category: "sans" },
+  { id: "space-grotesk", name: "Space Grotesk", sans: `"Space Grotesk", system-ui, sans-serif`, display: `"Space Grotesk", system-ui, sans-serif`, category: "display" },
+  { id: "baloo", name: "Baloo 2", sans: `"Baloo 2", system-ui, sans-serif`, display: `"Baloo 2", system-ui, sans-serif`, category: "display" },
+  { id: "lora", name: "Lora", sans: `"Lora", Georgia, serif`, display: `"Lora", Georgia, serif`, category: "serif" },
+  { id: "merriweather", name: "Merriweather", sans: `"Merriweather", Georgia, serif`, display: `"Merriweather", Georgia, serif`, category: "serif" },
+  { id: "playfair", name: "Playfair Display", sans: `"Playfair Display", Georgia, serif`, display: `"Playfair Display", Georgia, serif`, category: "serif" },
+  { id: "roboto-slab", name: "Roboto Slab", sans: `"Roboto Slab", Georgia, serif`, display: `"Roboto Slab", Georgia, serif`, category: "serif" },
+];
+
 interface Settings {
   fontSize: FontSize;
   theme: ThemeMode;
   accent: string; // hex
   language: Language;
+  fontFamily: FontFamilyId;
 }
 
 const DEFAULT: Settings = {
@@ -31,6 +71,7 @@ const DEFAULT: Settings = {
   theme: "system",
   accent: "#6366f1",
   language: "en",
+  fontFamily: "system",
 };
 
 const STORAGE_KEY = "cc.settings.v1";
@@ -40,6 +81,7 @@ interface Ctx extends Settings {
   setTheme: (v: ThemeMode) => void;
   setAccent: (v: string) => void;
   setLanguage: (v: Language) => void;
+  setFontFamily: (v: FontFamilyId) => void;
 }
 
 const SettingsContext = createContext<Ctx | null>(null);
@@ -66,6 +108,9 @@ function applyToDOM(s: Settings) {
   root.classList.toggle("dark", dark);
   root.style.setProperty("--brand", s.accent);
   root.style.setProperty("--brand-foreground", "#ffffff");
+  const font = FONT_FAMILY_PRESETS.find((f) => f.id === s.fontFamily) ?? FONT_FAMILY_PRESETS[0];
+  root.style.setProperty("--font-sans", font.sans);
+  root.style.setProperty("--font-display", font.display);
   root.lang = s.language;
 }
 
@@ -99,6 +144,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         setTheme: (v) => update({ theme: v }),
         setAccent: (v) => update({ accent: v }),
         setLanguage: (v) => update({ language: v }),
+        setFontFamily: (v) => update({ fontFamily: v }),
       }}
     >
       {children}
