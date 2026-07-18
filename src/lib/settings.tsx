@@ -144,6 +144,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         setTheme: (v) => update({ theme: v }),
         setAccent: (v) => update({ accent: v }),
         setLanguage: (v) => update({ language: v }),
+        setFontFamily: (v) => update({ fontFamily: v }),
       }}
     >
       {children}
