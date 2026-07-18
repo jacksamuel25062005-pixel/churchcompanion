@@ -108,6 +108,9 @@ function applyToDOM(s: Settings) {
   root.classList.toggle("dark", dark);
   root.style.setProperty("--brand", s.accent);
   root.style.setProperty("--brand-foreground", "#ffffff");
+  const font = FONT_FAMILY_PRESETS.find((f) => f.id === s.fontFamily) ?? FONT_FAMILY_PRESETS[0];
+  root.style.setProperty("--font-sans", font.sans);
+  root.style.setProperty("--font-display", font.display);
   root.lang = s.language;
 }
 
