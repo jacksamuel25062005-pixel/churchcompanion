@@ -16,7 +16,8 @@ function Dashboard() {
   const [role, setRole] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
-  const [stats, setStats] = useState({ songs: 0, sections: 0, pending: 0 });
+  const [stats, setStats] = useState<{ songs: number; sections: number; pending: number } | null>(null);
+
 
   useEffect(() => {
     (async () => {
