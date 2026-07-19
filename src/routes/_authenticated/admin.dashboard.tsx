@@ -99,12 +99,17 @@ function Stat({ label, value, loading }: { label: string; value?: number; loadin
 
 function NavTile({ to, icon, title, subtitle }: { to: string; icon: React.ReactNode; title: string; subtitle: string }) {
   return (
-    <Link to={to as any} className="tap-card flex items-center gap-3 rounded-2xl border bg-card p-4 hover:bg-accent">
-      <div className="brand-bg rounded-xl p-2.5">{icon}</div>
+    <Link
+      to={to as any}
+      className="premium-card tap-card focus-ring flex items-center gap-3 hover:bg-secondary/50 transition-colors"
+    >
+      <div className="grid place-items-center h-11 w-11 rounded-2xl brand-bg elev-1 shrink-0">{icon}</div>
       <div className="flex-1 min-w-0">
-        <p className="font-medium">{title}</p>
+        <p className="font-semibold">{title}</p>
         <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
       </div>
+      <ChevronRight className="h-4 w-4 text-muted-foreground" />
     </Link>
   );
 }
+
