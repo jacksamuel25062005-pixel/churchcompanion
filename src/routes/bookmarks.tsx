@@ -5,7 +5,8 @@ import { EmptyState } from "../components/ui-bits";
 import { useT } from "../lib/i18n";
 import { bookmarks, continueReading, type Bookmark, type ContinueItem } from "../lib/storage";
 import { supabase } from "@/integrations/supabase/client";
-import { Trash2, ArrowRight } from "lucide-react";
+import { Trash2, ArrowRight, Bookmark as BookmarkIcon } from "lucide-react";
+
 
 export const Route = createFileRoute("/bookmarks")({
   head: () => ({ meta: [{ title: "Bookmarks — Church Companion" }] }),
