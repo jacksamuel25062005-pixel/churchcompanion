@@ -272,8 +272,14 @@ function OfflineSection() {
               <span className="text-muted-foreground truncate">{progress.step}</span>
               <span className="tabular-nums">{pct}%</span>
             </div>
-            <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
-              <div className="h-full brand-bg transition-all" style={{ width: `${pct}%` }} />
+            <div className="h-2 w-full rounded-full bg-secondary overflow-hidden">
+              <div
+                className="h-full transition-all"
+                style={{
+                  width: `${pct}%`,
+                  background: "linear-gradient(90deg, var(--brand), var(--gold, var(--brand)))",
+                }}
+              />
             </div>
           </div>
         )}
@@ -282,7 +288,7 @@ function OfflineSection() {
           <button
             onClick={downloadAll}
             disabled={busy}
-            className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl brand-bg py-2.5 text-sm font-medium disabled:opacity-50"
+            className="tap-card focus-ring flex-1 inline-flex items-center justify-center gap-2 rounded-xl brand-bg py-3 min-h-11 text-sm font-semibold elev-1 disabled:opacity-50"
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : hasAny ? <CheckCircle2 className="h-4 w-4" /> : <Download className="h-4 w-4" />}
             {busy ? "Downloading…" : hasAny ? "Refresh offline copy" : "Download everything"}
@@ -290,7 +296,7 @@ function OfflineSection() {
           {hasAny && !busy && (
             <button
               onClick={removeAll}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl border bg-card px-3 py-2.5 text-sm font-medium"
+              className="tap-card focus-ring inline-flex items-center justify-center gap-1.5 rounded-xl glass-chip px-3.5 min-h-11 text-sm font-medium"
               aria-label="Remove all offline content"
             >
               <Trash2 className="h-4 w-4" />
@@ -301,3 +307,4 @@ function OfflineSection() {
     </Section>
   );
 }
+
