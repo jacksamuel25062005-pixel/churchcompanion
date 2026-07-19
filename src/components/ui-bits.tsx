@@ -32,7 +32,7 @@ export function BackButton({ to = "/", label }: { to?: string; label?: string })
     <Link
       to={to}
       onClick={onClick}
-      className="-ml-2 inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium hover:bg-accent"
+      className="-ml-2 inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium hover:bg-accent focus-visible:outline-none focus-visible:ring-2 brand-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
     >
       <ChevronLeft className="h-5 w-5" />
       {label}
@@ -48,11 +48,23 @@ export function Card({ children, className = "" }: { children: ReactNode; classN
   );
 }
 
-export function EmptyState({ title, hint }: { title: string; hint?: string }) {
+export function EmptyState({
+  title,
+  hint,
+  icon,
+}: {
+  title: string;
+  hint?: string;
+  icon?: ReactNode;
+}) {
   return (
-    <div className="rounded-2xl border border-dashed py-12 text-center text-muted-foreground">
-      <p className="text-sm font-medium">{title}</p>
-      {hint && <p className="mt-1 text-xs">{hint}</p>}
+    <div className="glass rounded-2xl px-6 py-10 text-center">
+      <div className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-2xl brand-bg elev-1">
+        {icon ?? <Inbox className="h-5 w-5" />}
+      </div>
+      <p className="text-sm font-semibold text-foreground">{title}</p>
+      {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }
+
