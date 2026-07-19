@@ -57,9 +57,9 @@ function Dashboard() {
         </Card>
 
         <div className="grid grid-cols-3 gap-2">
-          <Stat label="Songs" value={stats.songs} />
-          <Stat label="Sections" value={stats.sections} />
-          <Stat label="Pending" value={stats.pending} />
+          <Stat label="Songs" value={stats?.songs} loading={stats === null} />
+          <Stat label="Sections" value={stats?.sections} loading={stats === null} />
+          <Stat label="Pending" value={stats?.pending} loading={stats === null} />
         </div>
 
         <div className="space-y-2">
@@ -72,7 +72,10 @@ function Dashboard() {
           <NavTile to="/admin/requests" icon={<UserCheck className="h-5 w-5" />} title="Admin requests" subtitle="Approve or reject" />
         </div>
 
-        <button onClick={signOut} className="w-full inline-flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium">
+        <button
+          onClick={signOut}
+          className="tap-card focus-ring w-full inline-flex items-center justify-center gap-2 rounded-xl glass-chip py-3 min-h-11 text-sm font-medium"
+        >
           <LogOut className="h-4 w-4" /> Sign out
         </button>
       </div>
@@ -80,14 +83,19 @@ function Dashboard() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+function Stat({ label, value, loading }: { label: string; value?: number; loading?: boolean }) {
   return (
     <Card className="p-4 text-center">
-      <p className="text-2xl font-bold tabular-nums">{value}</p>
-      <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</p>
+      {loading ? (
+        <div className="mx-auto h-7 w-10 rounded-md bg-muted/60 animate-pulse" />
+      ) : (
+        <p className="text-2xl font-bold tabular-nums">{value ?? 0}</p>
+      )}
+      <p className="mt-1 text-[11px] uppercase tracking-wider text-muted-foreground">{label}</p>
     </Card>
   );
 }
+
 
 function NavTile({ to, icon, title, subtitle }: { to: string; icon: React.ReactNode; title: string; subtitle: string }) {
   return (
