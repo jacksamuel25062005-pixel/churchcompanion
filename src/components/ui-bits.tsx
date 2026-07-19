@@ -1,6 +1,7 @@
 import { Link, useRouter } from "@tanstack/react-router";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Inbox } from "lucide-react";
 import { type MouseEvent, type ReactNode } from "react";
+
 
 // Records the history index when the app first mounted this session, so we
 // know whether "back" would land inside our app or exit it.
