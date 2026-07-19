@@ -50,7 +50,7 @@ function SearchPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t("common.search_ph")}
-            className="w-full pl-10 pr-3 py-3 rounded-xl bg-secondary text-sm outline-none focus:ring-2 brand-ring"
+            className="focus-ring w-full pl-10 pr-3 py-3 rounded-xl glass-chip text-sm outline-none"
             inputMode="search"
           />
         </div>
@@ -58,25 +58,36 @@ function SearchPage() {
 
       <div className="mt-4 space-y-2">
         {q.trim().length < 2 ? (
-          <p className="text-sm text-muted-foreground py-8 text-center">Type at least 2 characters</p>
+          <EmptyState
+            title="Search songs and books"
+            hint="Type at least 2 characters to see matches."
+            icon={<SearchIcon className="h-5 w-5" />}
+          />
         ) : sQ.isLoading ? (
-          <p className="text-sm text-muted-foreground py-8 text-center">{t("common.loading")}</p>
+          <div className="space-y-2">
+            {[0,1,2].map((i) => (
+              <div key={i} className="glass rounded-2xl p-4 space-y-2">
+                <div className="h-3 w-1/3 rounded bg-muted/60 animate-pulse" />
+                <div className="h-4 w-2/3 rounded bg-muted/60 animate-pulse" />
+              </div>
+            ))}
+          </div>
         ) : (sQ.data ?? []).length === 0 ? (
-          <EmptyState title="No matches" />
+          <EmptyState title="No matches" hint="Try a different word, or check your spelling." icon={<SearchIcon className="h-5 w-5" />} />
         ) : (
           (sQ.data ?? []).map((r) => (
             <Link
               key={`${r.kind}-${r.id}`}
               to={r.kind === "song" ? "/books/song-book/$id" : "/books/$slug"}
               params={r.kind === "song" ? { id: r.id } : { slug: r.book_slug }}
-              className="tap-card block rounded-2xl border bg-card p-4 hover:bg-accent"
+              className="premium-card tap-card focus-ring block hover:bg-secondary/40"
             >
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                 <span className="rounded-full brand-bg px-2 py-0.5 font-bold uppercase tracking-wider">{r.kind}</span>
                 {r.number != null && <span>#{r.number}</span>}
                 <span>· {r.book_slug}</span>
               </div>
-              <p className="font-medium font-hi truncate">{r.title || "(untitled)"}</p>
+              <p className="font-semibold font-hi truncate">{r.title || "(untitled)"}</p>
               {r.snippet && <p className="text-xs text-muted-foreground mt-1 line-clamp-2 font-hi">{r.snippet}</p>}
             </Link>
           ))
@@ -85,3 +96,4 @@ function SearchPage() {
     </AppShell>
   );
 }
+
