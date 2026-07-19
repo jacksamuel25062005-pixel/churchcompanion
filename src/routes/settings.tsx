@@ -184,29 +184,36 @@ function NotificationsSection() {
     <Section label="Notifications">
       <Card className="p-4">
         {perm === "unsupported" ? (
-          <p className="text-xs text-muted-foreground">Push notifications are not supported on this device.</p>
+          <p className="text-xs text-muted-foreground">Push notifications aren't supported on this device or browser.</p>
         ) : perm === "granted" ? (
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-sm">
-              {optedIn ? <Bell className="h-4 w-4 brand-text" /> : <BellOff className="h-4 w-4 text-muted-foreground" />}
-              <span>{optedIn ? "Push notifications on" : "Push notifications off"}</span>
+            <div className="flex items-center gap-3 text-sm">
+              <span className="grid place-items-center h-9 w-9 rounded-xl brand-bg elev-1 shrink-0">
+                {optedIn ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+              </span>
+              <span className="font-medium">{optedIn ? "Push notifications on" : "Push notifications off"}</span>
             </div>
             <Switch checked={optedIn} onCheckedChange={toggle} disabled={busy} aria-label="Toggle push notifications" />
           </div>
         ) : perm === "denied" ? (
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-sm"><BellOff className="h-4 w-4 text-muted-foreground" /> Notifications are blocked.</div>
-            <p className="text-xs text-muted-foreground">Allow notifications for this site in your browser settings.</p>
+            <p className="text-xs text-muted-foreground">Open browser settings for this site and allow notifications, then reload.</p>
           </div>
         ) : (
-          <button onClick={enable} disabled={busy} className="w-full inline-flex items-center justify-center gap-2 rounded-xl brand-bg py-2.5 text-sm font-medium disabled:opacity-50">
-            <Bell className="h-4 w-4" /> {busy ? "…" : "Enable notifications"}
+          <button
+            onClick={enable}
+            disabled={busy}
+            className="tap-card focus-ring w-full inline-flex items-center justify-center gap-2 rounded-xl brand-bg py-3 min-h-11 text-sm font-semibold elev-1 disabled:opacity-50"
+          >
+            <Bell className="h-4 w-4" /> {busy ? "Please wait…" : "Enable notifications"}
           </button>
         )}
       </Card>
     </Section>
   );
 }
+
 
 function OfflineSection() {
   const entries = useOfflineIndex();
