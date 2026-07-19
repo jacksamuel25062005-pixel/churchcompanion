@@ -51,9 +51,10 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
         </header>
       ) : null}
 
-      <main className={`flex-1 mx-auto w-full max-w-screen-sm px-4 ${hideNav ? "pb-6" : "pb-28"} animate-fade-up`}>
+      <main className={`flex-1 mx-auto w-full max-w-screen-sm px-4 ${hideNav ? "pb-6" : "pb-28"} cc-screen-enter`}>
         {children}
       </main>
+
 
       {!hideNav && (
         <nav

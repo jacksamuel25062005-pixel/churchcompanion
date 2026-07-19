@@ -5,7 +5,8 @@ import { EmptyState } from "../components/ui-bits";
 import { useT } from "../lib/i18n";
 import { bookmarks, continueReading, type Bookmark, type ContinueItem } from "../lib/storage";
 import { supabase } from "@/integrations/supabase/client";
-import { Trash2, ArrowRight } from "lucide-react";
+import { Trash2, ArrowRight, Bookmark as BookmarkIcon } from "lucide-react";
+
 
 export const Route = createFileRoute("/bookmarks")({
   head: () => ({ meta: [{ title: "Bookmarks — Church Companion" }] }),
@@ -81,10 +82,10 @@ function BookmarksPage() {
           <Link
             to={cont.kind === "song" ? "/books/song-book/$id" : "/books/$slug"}
             params={cont.kind === "song" ? { id: cont.id } : { slug: cont.bookSlug }}
-            className="tap-card flex items-center gap-3 rounded-2xl border bg-card p-4"
+            className="premium-card tap-card focus-ring flex items-center gap-3 hover:bg-secondary/40"
           >
             <div className="flex-1 min-w-0">
-              <p className="font-medium font-hi truncate">{cont.title}</p>
+              <p className="font-semibold font-hi truncate">{cont.title}</p>
               <p className="text-xs text-muted-foreground">{cont.bookSlug}</p>
             </div>
             <ArrowRight className="h-5 w-5 text-muted-foreground" />
@@ -95,7 +96,11 @@ function BookmarksPage() {
       <section className="mt-5">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Saved</h2>
         {list.length === 0 ? (
-          <EmptyState title="No bookmarks yet" hint="Tap the bookmark icon while reading." />
+          <EmptyState
+            title="No bookmarks yet"
+            hint="While reading, tap the bookmark icon in the top-right — saved items appear here for quick return."
+            icon={<BookmarkIcon className="h-5 w-5" />}
+          />
         ) : (
           <ul className="space-y-2">
             {list.map((b) => (
@@ -103,19 +108,19 @@ function BookmarksPage() {
                 <Link
                   to={b.kind === "song" ? "/books/song-book/$id" : "/books/$slug"}
                   params={b.kind === "song" ? { id: b.id } : { slug: b.bookSlug }}
-                  className="tap-card flex-1 flex items-center gap-3 rounded-2xl border bg-card p-3.5"
+                  className="premium-card tap-card focus-ring flex-1 flex items-center gap-3 hover:bg-secondary/40"
                 >
                   {b.number != null && (
                     <span className="rounded-full brand-bg px-2 py-0.5 text-xs font-bold">#{b.number}</span>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium font-hi truncate">{b.title}</p>
+                    <p className="font-semibold font-hi truncate">{b.title}</p>
                     <p className="text-xs text-muted-foreground">{b.bookSlug}</p>
                   </div>
                 </Link>
                 <button
                   onClick={() => { bookmarks.remove(b.id); setList(bookmarks.list()); }}
-                  className="rounded-full p-2 text-muted-foreground hover:bg-accent"
+                  className="focus-ring grid place-items-center h-11 w-11 rounded-full glass-chip text-muted-foreground"
                   aria-label="Remove bookmark"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -125,6 +130,7 @@ function BookmarksPage() {
           </ul>
         )}
       </section>
+
     </AppShell>
   );
 }

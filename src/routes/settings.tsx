@@ -27,12 +27,12 @@ function SettingsPage() {
         <Section label="Admin">
           <Link
             to="/admin"
-            className="flex items-center gap-3 rounded-2xl border bg-card p-4 hover:bg-secondary/60 transition-colors"
+            className="premium-card tap-card focus-ring flex items-center gap-3 hover:bg-secondary/50 transition-colors"
           >
-            <span className="grid place-items-center h-10 w-10 rounded-xl brand-bg">
+            <span className="grid place-items-center h-11 w-11 rounded-2xl brand-bg elev-1 shrink-0">
               <Shield className="h-5 w-5" />
             </span>
-            <span className="flex-1">
+            <span className="flex-1 min-w-0">
               <span className="block text-sm font-semibold">Admin Login</span>
               <span className="block text-xs text-muted-foreground">Sign in or request admin access</span>
             </span>
@@ -40,15 +40,14 @@ function SettingsPage() {
           </Link>
         </Section>
 
+
         <Section label={t("settings.font_size")}>
 
           <div className="grid grid-cols-4 gap-2">
             {(["s","m","l","xl"] as FontSize[]).map((sz) => (
-              <button
-                key={sz}
-                onClick={() => s.setFontSize(sz)}
-                className={`rounded-xl py-2.5 text-sm font-medium border ${s.fontSize === sz ? "brand-bg brand-border" : "bg-card"}`}
-              >{t(`fs.${sz}`)}</button>
+              <SegButton key={sz} active={s.fontSize === sz} onClick={() => s.setFontSize(sz)}>
+                {t(`fs.${sz}`)}
+              </SegButton>
             ))}
           </div>
         </Section>
@@ -56,11 +55,9 @@ function SettingsPage() {
         <Section label={t("settings.theme")}>
           <div className="grid grid-cols-3 gap-2">
             {(["light","dark","system"] as ThemeMode[]).map((m) => (
-              <button
-                key={m}
-                onClick={() => s.setTheme(m)}
-                className={`rounded-xl py-2.5 text-sm font-medium border ${s.theme === m ? "brand-bg brand-border" : "bg-card"}`}
-              >{t(`settings.${m}`)}</button>
+              <SegButton key={m} active={s.theme === m} onClick={() => s.setTheme(m)}>
+                {t(`settings.${m}`)}
+              </SegButton>
             ))}
           </div>
         </Section>
@@ -72,8 +69,8 @@ function SettingsPage() {
                 key={a.id}
                 aria-label={a.name}
                 onClick={() => s.setAccent(a.value)}
-                className={`relative h-11 rounded-xl border-2 ${s.accent === a.value ? "ring-2 ring-offset-2 ring-foreground" : ""}`}
-                style={{ backgroundColor: a.value, borderColor: a.value }}
+                className={`focus-ring relative h-11 w-11 min-w-11 rounded-2xl transition-all ${s.accent === a.value ? "elev-1 ring-2 ring-offset-2 ring-offset-background" : ""}`}
+                style={{ backgroundColor: a.value, boxShadow: s.accent === a.value ? undefined : "inset 0 0 0 1px color-mix(in oklab, black 10%, transparent)", ...(s.accent === a.value ? { ["--tw-ring-color" as any]: a.value } : {}) }}
               />
             ))}
           </div>
@@ -87,11 +84,11 @@ function SettingsPage() {
                 <button
                   key={f.id}
                   onClick={() => s.setFontFamily(f.id)}
-                  className={`rounded-xl py-3 px-3 text-left border transition-colors ${active ? "brand-bg brand-border" : "bg-card hover:bg-secondary/60"}`}
+                  className={`tap-card focus-ring rounded-2xl py-3 px-3 text-left transition-all min-h-11 ${active ? "brand-bg elev-1 ring-2 brand-ring ring-offset-2 ring-offset-background" : "glass-chip hover:bg-secondary/50"}`}
                   style={{ fontFamily: f.sans }}
                 >
                   <span className="block text-sm font-semibold">{f.name}</span>
-                  <span className="block text-xs text-muted-foreground mt-0.5">The quick brown fox</span>
+                  <span className={`block text-xs mt-0.5 ${active ? "opacity-90" : "text-muted-foreground"}`}>The quick brown fox</span>
                 </button>
               );
             })}
@@ -101,14 +98,13 @@ function SettingsPage() {
         <Section label={t("settings.language")}>
           <div className="grid grid-cols-2 gap-2">
             {(["en","hi"] as Language[]).map((l) => (
-              <button
-                key={l}
-                onClick={() => s.setLanguage(l)}
-                className={`rounded-xl py-2.5 text-sm font-medium border ${s.language === l ? "brand-bg brand-border" : "bg-card"}`}
-              >{l === "en" ? "English" : "हिन्दी"}</button>
+              <SegButton key={l} active={s.language === l} onClick={() => s.setLanguage(l)}>
+                {l === "en" ? "English" : "हिन्दी"}
+              </SegButton>
             ))}
           </div>
         </Section>
+
 
         <NotificationsSection />
 
@@ -135,6 +131,22 @@ function Section({ label, children }: { label: string; children: React.ReactNode
     </div>
   );
 }
+
+function SegButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`focus-ring rounded-xl py-2.5 min-h-11 text-sm font-medium tap-card transition-all ${
+        active
+          ? "brand-bg elev-1 ring-2 brand-ring ring-offset-2 ring-offset-background"
+          : "glass-chip hover:bg-secondary/50"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
 
 function NotificationsSection() {
   const [perm, setPerm] = useState<"granted" | "denied" | "default" | "unsupported">("default");
@@ -172,29 +184,36 @@ function NotificationsSection() {
     <Section label="Notifications">
       <Card className="p-4">
         {perm === "unsupported" ? (
-          <p className="text-xs text-muted-foreground">Push notifications are not supported on this device.</p>
+          <p className="text-xs text-muted-foreground">Push notifications aren't supported on this device or browser.</p>
         ) : perm === "granted" ? (
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-sm">
-              {optedIn ? <Bell className="h-4 w-4 brand-text" /> : <BellOff className="h-4 w-4 text-muted-foreground" />}
-              <span>{optedIn ? "Push notifications on" : "Push notifications off"}</span>
+            <div className="flex items-center gap-3 text-sm">
+              <span className="grid place-items-center h-9 w-9 rounded-xl brand-bg elev-1 shrink-0">
+                {optedIn ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+              </span>
+              <span className="font-medium">{optedIn ? "Push notifications on" : "Push notifications off"}</span>
             </div>
             <Switch checked={optedIn} onCheckedChange={toggle} disabled={busy} aria-label="Toggle push notifications" />
           </div>
         ) : perm === "denied" ? (
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-sm"><BellOff className="h-4 w-4 text-muted-foreground" /> Notifications are blocked.</div>
-            <p className="text-xs text-muted-foreground">Allow notifications for this site in your browser settings.</p>
+            <p className="text-xs text-muted-foreground">Open browser settings for this site and allow notifications, then reload.</p>
           </div>
         ) : (
-          <button onClick={enable} disabled={busy} className="w-full inline-flex items-center justify-center gap-2 rounded-xl brand-bg py-2.5 text-sm font-medium disabled:opacity-50">
-            <Bell className="h-4 w-4" /> {busy ? "…" : "Enable notifications"}
+          <button
+            onClick={enable}
+            disabled={busy}
+            className="tap-card focus-ring w-full inline-flex items-center justify-center gap-2 rounded-xl brand-bg py-3 min-h-11 text-sm font-semibold elev-1 disabled:opacity-50"
+          >
+            <Bell className="h-4 w-4" /> {busy ? "Please wait…" : "Enable notifications"}
           </button>
         )}
       </Card>
     </Section>
   );
 }
+
 
 function OfflineSection() {
   const entries = useOfflineIndex();
@@ -253,8 +272,14 @@ function OfflineSection() {
               <span className="text-muted-foreground truncate">{progress.step}</span>
               <span className="tabular-nums">{pct}%</span>
             </div>
-            <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
-              <div className="h-full brand-bg transition-all" style={{ width: `${pct}%` }} />
+            <div className="h-2 w-full rounded-full bg-secondary overflow-hidden">
+              <div
+                className="h-full transition-all"
+                style={{
+                  width: `${pct}%`,
+                  background: "linear-gradient(90deg, var(--brand), var(--gold, var(--brand)))",
+                }}
+              />
             </div>
           </div>
         )}
@@ -263,7 +288,7 @@ function OfflineSection() {
           <button
             onClick={downloadAll}
             disabled={busy}
-            className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl brand-bg py-2.5 text-sm font-medium disabled:opacity-50"
+            className="tap-card focus-ring flex-1 inline-flex items-center justify-center gap-2 rounded-xl brand-bg py-3 min-h-11 text-sm font-semibold elev-1 disabled:opacity-50"
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : hasAny ? <CheckCircle2 className="h-4 w-4" /> : <Download className="h-4 w-4" />}
             {busy ? "Downloading…" : hasAny ? "Refresh offline copy" : "Download everything"}
@@ -271,7 +296,7 @@ function OfflineSection() {
           {hasAny && !busy && (
             <button
               onClick={removeAll}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl border bg-card px-3 py-2.5 text-sm font-medium"
+              className="tap-card focus-ring inline-flex items-center justify-center gap-1.5 rounded-xl glass-chip px-3.5 min-h-11 text-sm font-medium"
               aria-label="Remove all offline content"
             >
               <Trash2 className="h-4 w-4" />
@@ -282,3 +307,4 @@ function OfflineSection() {
     </Section>
   );
 }
+

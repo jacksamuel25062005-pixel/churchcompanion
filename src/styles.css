@@ -160,6 +160,14 @@
   transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 180ms;
   &:active { transform: scale(0.97); }
 }
+@utility focus-ring {
+  outline: none;
+  &:focus-visible {
+    box-shadow: 0 0 0 2px var(--color-background), 0 0 0 4px var(--brand);
+    border-radius: 12px;
+  }
+}
+
 
 /* Glass surfaces — Lovable-style frosted panels. Blur amounts kept moderate
    for mid-range Android GPUs; use `will-change` so the compositor promotes
