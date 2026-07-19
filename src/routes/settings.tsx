@@ -132,6 +132,22 @@ function Section({ label, children }: { label: string; children: React.ReactNode
   );
 }
 
+function SegButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`focus-ring rounded-xl py-2.5 min-h-11 text-sm font-medium tap-card transition-all ${
+        active
+          ? "brand-bg elev-1 ring-2 brand-ring ring-offset-2 ring-offset-background"
+          : "glass-chip hover:bg-secondary/50"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+
 function NotificationsSection() {
   const [perm, setPerm] = useState<"granted" | "denied" | "default" | "unsupported">("default");
   const [optedIn, setOptedIn] = useState(false);
