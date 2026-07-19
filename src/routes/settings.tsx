@@ -45,11 +45,9 @@ function SettingsPage() {
 
           <div className="grid grid-cols-4 gap-2">
             {(["s","m","l","xl"] as FontSize[]).map((sz) => (
-              <button
-                key={sz}
-                onClick={() => s.setFontSize(sz)}
-                className={`rounded-xl py-2.5 text-sm font-medium border ${s.fontSize === sz ? "brand-bg brand-border" : "bg-card"}`}
-              >{t(`fs.${sz}`)}</button>
+              <SegButton key={sz} active={s.fontSize === sz} onClick={() => s.setFontSize(sz)}>
+                {t(`fs.${sz}`)}
+              </SegButton>
             ))}
           </div>
         </Section>
@@ -57,11 +55,9 @@ function SettingsPage() {
         <Section label={t("settings.theme")}>
           <div className="grid grid-cols-3 gap-2">
             {(["light","dark","system"] as ThemeMode[]).map((m) => (
-              <button
-                key={m}
-                onClick={() => s.setTheme(m)}
-                className={`rounded-xl py-2.5 text-sm font-medium border ${s.theme === m ? "brand-bg brand-border" : "bg-card"}`}
-              >{t(`settings.${m}`)}</button>
+              <SegButton key={m} active={s.theme === m} onClick={() => s.setTheme(m)}>
+                {t(`settings.${m}`)}
+              </SegButton>
             ))}
           </div>
         </Section>
@@ -73,8 +69,8 @@ function SettingsPage() {
                 key={a.id}
                 aria-label={a.name}
                 onClick={() => s.setAccent(a.value)}
-                className={`relative h-11 rounded-xl border-2 ${s.accent === a.value ? "ring-2 ring-offset-2 ring-foreground" : ""}`}
-                style={{ backgroundColor: a.value, borderColor: a.value }}
+                className={`focus-ring relative h-11 w-11 min-w-11 rounded-2xl transition-all ${s.accent === a.value ? "elev-1 ring-2 ring-offset-2 ring-offset-background" : ""}`}
+                style={{ backgroundColor: a.value, boxShadow: s.accent === a.value ? undefined : "inset 0 0 0 1px color-mix(in oklab, black 10%, transparent)", ...(s.accent === a.value ? { ["--tw-ring-color" as any]: a.value } : {}) }}
               />
             ))}
           </div>
@@ -88,11 +84,11 @@ function SettingsPage() {
                 <button
                   key={f.id}
                   onClick={() => s.setFontFamily(f.id)}
-                  className={`rounded-xl py-3 px-3 text-left border transition-colors ${active ? "brand-bg brand-border" : "bg-card hover:bg-secondary/60"}`}
+                  className={`tap-card focus-ring rounded-2xl py-3 px-3 text-left transition-all min-h-11 ${active ? "brand-bg elev-1 ring-2 brand-ring ring-offset-2 ring-offset-background" : "glass-chip hover:bg-secondary/50"}`}
                   style={{ fontFamily: f.sans }}
                 >
                   <span className="block text-sm font-semibold">{f.name}</span>
-                  <span className="block text-xs text-muted-foreground mt-0.5">The quick brown fox</span>
+                  <span className={`block text-xs mt-0.5 ${active ? "opacity-90" : "text-muted-foreground"}`}>The quick brown fox</span>
                 </button>
               );
             })}
@@ -102,14 +98,13 @@ function SettingsPage() {
         <Section label={t("settings.language")}>
           <div className="grid grid-cols-2 gap-2">
             {(["en","hi"] as Language[]).map((l) => (
-              <button
-                key={l}
-                onClick={() => s.setLanguage(l)}
-                className={`rounded-xl py-2.5 text-sm font-medium border ${s.language === l ? "brand-bg brand-border" : "bg-card"}`}
-              >{l === "en" ? "English" : "हिन्दी"}</button>
+              <SegButton key={l} active={s.language === l} onClick={() => s.setLanguage(l)}>
+                {l === "en" ? "English" : "हिन्दी"}
+              </SegButton>
             ))}
           </div>
         </Section>
+
 
         <NotificationsSection />
 
