@@ -33,14 +33,15 @@ export function PageNavDock({
         className
       )}
       style={{
-        // Sits 16px above the home bottom dock; in fullscreen home dock is hidden so 16px above safe area.
+        // In fullscreen, slide down to where the home dock used to sit (home dock is hidden then).
         bottom: isFullscreen
-          ? "calc(env(safe-area-inset-bottom) + 16px)"
+          ? "calc(env(safe-area-inset-bottom) + 1rem)"
           : "calc(env(safe-area-inset-bottom) + 6.5rem)",
-        // Neutralize any inherited transforms/filters from ancestors (portal already escapes DOM tree)
         transform: "none",
         margin: 0,
         padding: "0 12px",
+        transition: "bottom 300ms cubic-bezier(0.22, 1, 0.36, 1)",
+        willChange: "bottom",
       }}
       role="navigation"
       aria-label="Page navigation"
