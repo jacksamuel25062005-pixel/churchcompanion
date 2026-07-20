@@ -327,7 +327,7 @@ export function BookPageViewer({ pages, accentColor = "#6366f1" }: Props) {
         totalPages={total}
         onPrev={() => go(-1)}
         onNext={() => go(1)}
-        isFullscreen={fullscreen && !chromeHidden ? false : fullscreen}
+        isFullscreen={fullscreen}
       />
 
       {/* Thumbnails sheet */}
