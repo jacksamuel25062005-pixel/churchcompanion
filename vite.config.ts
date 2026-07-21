@@ -38,14 +38,34 @@ export default defineConfig({
                 matchOptions: { ignoreVary: true },
               },
             },
-            // App-shell HTML: NetworkFirst with a fast fallback
+            // App-shell HTML: StaleWhileRevalidate so pages open instantly
+            // from cache and refresh in the background — no visible reload.
             {
               urlPattern: ({ request }) => request.mode === "navigate",
-              handler: "NetworkFirst",
+              handler: "StaleWhileRevalidate",
               options: {
                 cacheName: "html-navigations",
-                networkTimeoutSeconds: 4,
-                expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 7 },
+                expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 },
+                cacheableResponse: { statuses: [0, 200] },
+              },
+            },
+            // Google Fonts stylesheet + font files
+            {
+              urlPattern: ({ url }) => url.hostname === "fonts.googleapis.com",
+              handler: "StaleWhileRevalidate",
+              options: {
+                cacheName: "google-fonts-css",
+                expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 365 },
+                cacheableResponse: { statuses: [0, 200] },
+              },
+            },
+            {
+              urlPattern: ({ url }) => url.hostname === "fonts.gstatic.com",
+              handler: "CacheFirst",
+              options: {
+                cacheName: "google-fonts-files",
+                expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 365 },
+                cacheableResponse: { statuses: [0, 200] },
               },
             },
             // Supabase Data API GETs: SWR for instant offline reads
