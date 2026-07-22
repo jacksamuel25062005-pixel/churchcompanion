@@ -141,12 +141,14 @@ function UploadPage() {
     try {
       if (kind === "song") {
         const num = number ? parseInt(number, 10) : null;
+        const cat = SONG_DESTINATIONS.includes(destination) ? categoryFor(destination) : "church";
         const { error } = await supabase.from("songs").insert({
           number: Number.isFinite(num as number) ? num : null,
           title_hi: titleHi || "(untitled)",
           title_en: titleEn || null,
           lyrics_hi: body,
-        });
+          category: cat,
+        } as any);
         if (error) throw error;
       } else {
         if (!bookId) throw new Error("Pick a target book");
