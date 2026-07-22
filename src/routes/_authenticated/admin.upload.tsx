@@ -205,6 +205,7 @@ function UploadPage() {
   const runBatchImport = async () => {
     setBatchBusy(true);
     setBatchProgress({ done: 0, total: parsedSongs.length });
+    const targetCat = SONG_DESTINATIONS.includes(destination) ? categoryFor(destination) : "church";
     const summary: ImportSummary = {
       detected: parsedSongs.length,
       imported: 0,
@@ -228,7 +229,8 @@ function UploadPage() {
             .update({
               title_hi: s.title || "(untitled)",
               lyrics_hi: s.body,
-            })
+              category: targetCat as any,
+            } as any)
             .eq("id", existingId);
           if (error) throw error;
           summary.updated++;
@@ -238,10 +240,12 @@ function UploadPage() {
             number: s.number,
             title_hi: s.title || "(untitled)",
             lyrics_hi: s.body,
-          });
+            category: targetCat as any,
+          } as any);
           if (error) throw error;
           summary.imported++;
         }
+
       } catch (e: any) {
         summary.failed++;
         summary.errors.push({ number: s.number, message: e?.message ?? "Unknown error" });
