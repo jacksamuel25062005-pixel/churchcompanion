@@ -181,13 +181,15 @@ function UploadPage() {
     setBatchSummary(null);
     setPerConflict({});
     setBatchOpen(true);
-    // Check which serial numbers already exist.
+    // Check which serial numbers already exist within the target category.
     const nums = Array.from(new Set(parsedSongs.map((s) => s.number)));
     if (nums.length === 0) return;
+    const targetCat = SONG_DESTINATIONS.includes(destination) ? categoryFor(destination) : "church";
     const { data, error } = await supabase
       .from("songs")
       .select("id, number")
       .in("number", nums)
+      .eq("category", targetCat as any)
       .eq("is_deleted", false);
     if (error) {
       toast.error(`Could not check existing numbers: ${error.message}`);
