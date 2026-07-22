@@ -16,15 +16,20 @@ export const Route = createFileRoute("/_authenticated/admin/upload")({
   component: UploadPage,
 });
 
-type Destination = "song-book" | "lords-supper" | "ashaya-rabbani" | "prata-sayan" | "almanac";
+type Destination = "song-church" | "song-additional" | "lords-supper" | "ashaya-rabbani" | "prata-sayan" | "almanac";
 
 const DESTINATIONS: { id: Destination; label: string }[] = [
-  { id: "song-book", label: "Song Book" },
+  { id: "song-church", label: "Church Song Book" },
+  { id: "song-additional", label: "Additional Songs" },
   { id: "lords-supper", label: "Lord's Supper" },
   { id: "ashaya-rabbani", label: "Ashaya Rabbani" },
   { id: "prata-sayan", label: "Prata Kaal & Sayan Kalin" },
   { id: "almanac", label: "Almanac" },
 ];
+
+const SONG_DESTINATIONS: Destination[] = ["song-church", "song-additional"];
+const categoryFor = (d: Destination): "church" | "additional" => (d === "song-additional" ? "additional" : "church");
+
 
 type AlmanacImportSummary = {
   year: number;
