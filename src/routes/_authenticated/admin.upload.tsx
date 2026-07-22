@@ -56,7 +56,7 @@ interface Draft {
 
 function UploadPage() {
   const { checked } = useAdminGuard();
-  const [destination, setDestination] = useState<Destination>("song-book");
+  const [destination, setDestination] = useState<Destination>("song-church");
   const [books, setBooks] = useState<Book[]>([]);
   const [bookId, setBookId] = useState<string>("");
   const [kind, setKind] = useState<Kind>("song");
