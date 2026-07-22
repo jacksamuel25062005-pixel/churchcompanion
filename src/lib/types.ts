@@ -20,6 +20,8 @@ export interface BookSection {
   sort_order: number;
 }
 
+export type SongCategory = "church" | "additional";
+
 export interface Song {
   id: string;
   number: number | null;
@@ -28,6 +30,7 @@ export interface Song {
   lyrics_hi: string;
   lyrics_en: string | null;
   tags: string[] | null;
+  category?: SongCategory;
 }
 
 export interface TodaySet {
