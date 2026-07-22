@@ -22,6 +22,8 @@ import { Route as BooksSlugRouteImport } from './routes/books/$slug'
 import { Route as BooksSongBookIndexRouteImport } from './routes/books/song-book.index'
 import { Route as AboutTimelineIndexRouteImport } from './routes/about/timeline.index'
 import { Route as AboutChurchIndexRouteImport } from './routes/about/church.index'
+import { Route as BooksSongBookChurchRouteImport } from './routes/books/song-book.church'
+import { Route as BooksSongBookAdditionalRouteImport } from './routes/books/song-book.additional'
 import { Route as BooksSongBookIdRouteImport } from './routes/books/song-book.$id'
 import { Route as AboutTimelineIdRouteImport } from './routes/about/timeline.$id'
 import { Route as AboutChurchIdRouteImport } from './routes/about/church.$id'
@@ -96,6 +98,16 @@ const AboutTimelineIndexRoute = AboutTimelineIndexRouteImport.update({
 const AboutChurchIndexRoute = AboutChurchIndexRouteImport.update({
   id: '/about/church/',
   path: '/about/church/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BooksSongBookChurchRoute = BooksSongBookChurchRouteImport.update({
+  id: '/books/song-book/church',
+  path: '/books/song-book/church',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BooksSongBookAdditionalRoute = BooksSongBookAdditionalRouteImport.update({
+  id: '/books/song-book/additional',
+  path: '/books/song-book/additional',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BooksSongBookIdRoute = BooksSongBookIdRouteImport.update({
@@ -182,6 +194,8 @@ export interface FileRoutesByFullPath {
   '/about/church/$id': typeof AboutChurchIdRoute
   '/about/timeline/$id': typeof AboutTimelineIdRoute
   '/books/song-book/$id': typeof BooksSongBookIdRoute
+  '/books/song-book/additional': typeof BooksSongBookAdditionalRoute
+  '/books/song-book/church': typeof BooksSongBookChurchRoute
   '/about/church/': typeof AboutChurchIndexRoute
   '/about/timeline/': typeof AboutTimelineIndexRoute
   '/books/song-book/': typeof BooksSongBookIndexRoute
@@ -207,6 +221,8 @@ export interface FileRoutesByTo {
   '/about/church/$id': typeof AboutChurchIdRoute
   '/about/timeline/$id': typeof AboutTimelineIdRoute
   '/books/song-book/$id': typeof BooksSongBookIdRoute
+  '/books/song-book/additional': typeof BooksSongBookAdditionalRoute
+  '/books/song-book/church': typeof BooksSongBookChurchRoute
   '/about/church': typeof AboutChurchIndexRoute
   '/about/timeline': typeof AboutTimelineIndexRoute
   '/books/song-book': typeof BooksSongBookIndexRoute
@@ -234,6 +250,8 @@ export interface FileRoutesById {
   '/about/church/$id': typeof AboutChurchIdRoute
   '/about/timeline/$id': typeof AboutTimelineIdRoute
   '/books/song-book/$id': typeof BooksSongBookIdRoute
+  '/books/song-book/additional': typeof BooksSongBookAdditionalRoute
+  '/books/song-book/church': typeof BooksSongBookChurchRoute
   '/about/church/': typeof AboutChurchIndexRoute
   '/about/timeline/': typeof AboutTimelineIndexRoute
   '/books/song-book/': typeof BooksSongBookIndexRoute
@@ -261,6 +279,8 @@ export interface FileRouteTypes {
     | '/about/church/$id'
     | '/about/timeline/$id'
     | '/books/song-book/$id'
+    | '/books/song-book/additional'
+    | '/books/song-book/church'
     | '/about/church/'
     | '/about/timeline/'
     | '/books/song-book/'
@@ -286,6 +306,8 @@ export interface FileRouteTypes {
     | '/about/church/$id'
     | '/about/timeline/$id'
     | '/books/song-book/$id'
+    | '/books/song-book/additional'
+    | '/books/song-book/church'
     | '/about/church'
     | '/about/timeline'
     | '/books/song-book'
@@ -312,6 +334,8 @@ export interface FileRouteTypes {
     | '/about/church/$id'
     | '/about/timeline/$id'
     | '/books/song-book/$id'
+    | '/books/song-book/additional'
+    | '/books/song-book/church'
     | '/about/church/'
     | '/about/timeline/'
     | '/books/song-book/'
@@ -331,6 +355,8 @@ export interface RootRouteChildren {
   AboutChurchIdRoute: typeof AboutChurchIdRoute
   AboutTimelineIdRoute: typeof AboutTimelineIdRoute
   BooksSongBookIdRoute: typeof BooksSongBookIdRoute
+  BooksSongBookAdditionalRoute: typeof BooksSongBookAdditionalRoute
+  BooksSongBookChurchRoute: typeof BooksSongBookChurchRoute
   AboutChurchIndexRoute: typeof AboutChurchIndexRoute
   AboutTimelineIndexRoute: typeof AboutTimelineIndexRoute
   BooksSongBookIndexRoute: typeof BooksSongBookIndexRoute
@@ -427,6 +453,20 @@ declare module '@tanstack/react-router' {
       path: '/about/church'
       fullPath: '/about/church/'
       preLoaderRoute: typeof AboutChurchIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/books/song-book/church': {
+      id: '/books/song-book/church'
+      path: '/books/song-book/church'
+      fullPath: '/books/song-book/church'
+      preLoaderRoute: typeof BooksSongBookChurchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/books/song-book/additional': {
+      id: '/books/song-book/additional'
+      path: '/books/song-book/additional'
+      fullPath: '/books/song-book/additional'
+      preLoaderRoute: typeof BooksSongBookAdditionalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/books/song-book/$id': {
@@ -548,6 +588,8 @@ const rootRouteChildren: RootRouteChildren = {
   AboutChurchIdRoute: AboutChurchIdRoute,
   AboutTimelineIdRoute: AboutTimelineIdRoute,
   BooksSongBookIdRoute: BooksSongBookIdRoute,
+  BooksSongBookAdditionalRoute: BooksSongBookAdditionalRoute,
+  BooksSongBookChurchRoute: BooksSongBookChurchRoute,
   AboutChurchIndexRoute: AboutChurchIndexRoute,
   AboutTimelineIndexRoute: AboutTimelineIndexRoute,
   BooksSongBookIndexRoute: BooksSongBookIndexRoute,

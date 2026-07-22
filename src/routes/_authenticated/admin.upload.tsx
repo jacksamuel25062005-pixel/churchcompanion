@@ -16,15 +16,20 @@ export const Route = createFileRoute("/_authenticated/admin/upload")({
   component: UploadPage,
 });
 
-type Destination = "song-book" | "lords-supper" | "ashaya-rabbani" | "prata-sayan" | "almanac";
+type Destination = "song-church" | "song-additional" | "lords-supper" | "ashaya-rabbani" | "prata-sayan" | "almanac";
 
 const DESTINATIONS: { id: Destination; label: string }[] = [
-  { id: "song-book", label: "Song Book" },
+  { id: "song-church", label: "Church Song Book" },
+  { id: "song-additional", label: "Additional Songs" },
   { id: "lords-supper", label: "Lord's Supper" },
   { id: "ashaya-rabbani", label: "Ashaya Rabbani" },
   { id: "prata-sayan", label: "Prata Kaal & Sayan Kalin" },
   { id: "almanac", label: "Almanac" },
 ];
+
+const SONG_DESTINATIONS: Destination[] = ["song-church", "song-additional"];
+const categoryFor = (d: Destination): "church" | "additional" => (d === "song-additional" ? "additional" : "church");
+
 
 type AlmanacImportSummary = {
   year: number;
@@ -51,7 +56,7 @@ interface Draft {
 
 function UploadPage() {
   const { checked } = useAdminGuard();
-  const [destination, setDestination] = useState<Destination>("song-book");
+  const [destination, setDestination] = useState<Destination>("song-church");
   const [books, setBooks] = useState<Book[]>([]);
   const [bookId, setBookId] = useState<string>("");
   const [kind, setKind] = useState<Kind>("song");
@@ -136,12 +141,14 @@ function UploadPage() {
     try {
       if (kind === "song") {
         const num = number ? parseInt(number, 10) : null;
+        const cat = SONG_DESTINATIONS.includes(destination) ? categoryFor(destination) : "church";
         const { error } = await supabase.from("songs").insert({
           number: Number.isFinite(num as number) ? num : null,
           title_hi: titleHi || "(untitled)",
           title_en: titleEn || null,
           lyrics_hi: body,
-        });
+          category: cat,
+        } as any);
         if (error) throw error;
       } else {
         if (!bookId) throw new Error("Pick a target book");
@@ -174,13 +181,15 @@ function UploadPage() {
     setBatchSummary(null);
     setPerConflict({});
     setBatchOpen(true);
-    // Check which serial numbers already exist.
+    // Check which serial numbers already exist within the target category.
     const nums = Array.from(new Set(parsedSongs.map((s) => s.number)));
     if (nums.length === 0) return;
+    const targetCat = SONG_DESTINATIONS.includes(destination) ? categoryFor(destination) : "church";
     const { data, error } = await supabase
       .from("songs")
       .select("id, number")
       .in("number", nums)
+      .eq("category", targetCat as any)
       .eq("is_deleted", false);
     if (error) {
       toast.error(`Could not check existing numbers: ${error.message}`);
@@ -196,6 +205,7 @@ function UploadPage() {
   const runBatchImport = async () => {
     setBatchBusy(true);
     setBatchProgress({ done: 0, total: parsedSongs.length });
+    const targetCat = SONG_DESTINATIONS.includes(destination) ? categoryFor(destination) : "church";
     const summary: ImportSummary = {
       detected: parsedSongs.length,
       imported: 0,
@@ -219,7 +229,8 @@ function UploadPage() {
             .update({
               title_hi: s.title || "(untitled)",
               lyrics_hi: s.body,
-            })
+              category: targetCat as any,
+            } as any)
             .eq("id", existingId);
           if (error) throw error;
           summary.updated++;
@@ -229,10 +240,12 @@ function UploadPage() {
             number: s.number,
             title_hi: s.title || "(untitled)",
             lyrics_hi: s.body,
-          });
+            category: targetCat as any,
+          } as any);
           if (error) throw error;
           summary.imported++;
         }
+
       } catch (e: any) {
         summary.failed++;
         summary.errors.push({ number: s.number, message: e?.message ?? "Unknown error" });

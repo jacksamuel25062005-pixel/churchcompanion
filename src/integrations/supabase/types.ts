@@ -395,6 +395,7 @@ export type Database = {
       }
       songs: {
         Row: {
+          category: Database["public"]["Enums"]["song_category"]
           created_at: string
           id: string
           is_deleted: boolean
@@ -408,6 +409,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category?: Database["public"]["Enums"]["song_category"]
           created_at?: string
           id?: string
           is_deleted?: boolean
@@ -421,6 +423,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category?: Database["public"]["Enums"]["song_category"]
           created_at?: string
           id?: string
           is_deleted?: boolean
@@ -621,6 +624,7 @@ export type Database = {
     Enums: {
       admin_request_status: "pending" | "approved" | "rejected"
       app_role: "super_admin" | "admin"
+      song_category: "church" | "additional"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -750,6 +754,7 @@ export const Constants = {
     Enums: {
       admin_request_status: ["pending", "approved", "rejected"],
       app_role: ["super_admin", "admin"],
+      song_category: ["church", "additional"],
     },
   },
 } as const
