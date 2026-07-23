@@ -21,12 +21,21 @@ export function initOffline(): void {
     void prefetchAllImages();
   };
 
-  // Online / focus
+  // Online / focus / visibility — silent sync triggers
   window.addEventListener("online", () => trigger("online"));
   window.addEventListener("focus", () => trigger("focus"));
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") trigger("visible");
   });
+
+  // Listen for background-sync replay from the service worker so we refresh
+  // local Dexie state the moment queued writes reach Supabase.
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.addEventListener("message", (ev) => {
+      const t = (ev.data as { type?: string } | undefined)?.type;
+      if (t === "cc-writes-replayed" || t === "SKIP_WAITING") trigger("sw-replay");
+    });
+  }
 
   // Initial run + pending count
   void refreshPendingCount();
@@ -40,13 +49,20 @@ export function initOffline(): void {
     setTimeout(() => void prefetchAllImages(), 2000);
   }
 
-  // Periodic 5-minute heartbeat (cheap; pull is delta-based)
+  // Silent 90-second heartbeat — cheap delta pull keeps every device in sync
+  // in the background without any user-visible refresh.
   setInterval(() => {
     if (!navigator.onLine) return;
     if (document.visibilityState !== "visible") return;
     void runSync();
+  }, 90_000);
+
+  // Slower 10-minute image prefetch sweep
+  setInterval(() => {
+    if (!navigator.onLine) return;
+    if (document.visibilityState !== "visible") return;
     void prefetchAllImages();
-  }, 5 * 60_000);
+  }, 10 * 60_000);
 }
 
 export * from "./hooks";
