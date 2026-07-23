@@ -41,41 +41,43 @@
 }
 
 :root {
-  --radius: 0.875rem;
-  --background: oklch(0.99 0.005 90);
-  --foreground: oklch(0.18 0.02 270);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.02 270);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.02 270);
-  --primary: oklch(0.5 0.18 270);
+  --radius: 1.25rem;
+  /* Midnight Indigo — dark by default */
+  --background: oklch(0.14 0.03 275);       /* #0a0a1a-ish */
+  --foreground: oklch(0.97 0.01 275);
+  --card:       oklch(0.20 0.05 275);       /* #141432 */
+  --card-raised: oklch(0.26 0.09 275);      /* #1e1e5a */
+  --card-foreground: oklch(0.97 0.01 275);
+  --popover:    oklch(0.20 0.05 275);
+  --popover-foreground: oklch(0.97 0.01 275);
+  --primary:    oklch(0.58 0.24 275);       /* #4f46e5 */
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.96 0.008 270);
-  --secondary-foreground: oklch(0.2 0.02 270);
-  --muted: oklch(0.96 0.008 270);
-  --muted-foreground: oklch(0.5 0.02 270);
-  --accent: oklch(0.95 0.02 270);
-  --accent-foreground: oklch(0.2 0.02 270);
-  --destructive: oklch(0.57 0.24 27);
+  --secondary:  oklch(0.24 0.06 275);
+  --secondary-foreground: oklch(0.97 0.01 275);
+  --muted:      oklch(0.24 0.06 275);
+  --muted-foreground: oklch(0.76 0.04 275);
+  --accent:     oklch(0.30 0.10 275);
+  --accent-foreground: oklch(0.97 0.01 275);
+  --destructive: oklch(0.65 0.24 27);
   --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.92 0.01 270);
-  --input: oklch(0.92 0.01 270);
-  --ring: oklch(0.7 0.04 270);
-  /* Brand = currently active book accent OR user-selected accent. Defaults to primary. */
+  --border:     color-mix(in oklab, white 10%, transparent);
+  --input:      color-mix(in oklab, white 12%, transparent);
+  --ring:       oklch(0.58 0.24 275);
+
   --brand: var(--primary);
   --brand-foreground: var(--primary-foreground);
   --reader-font-size: 1.05rem;
 
-  /* iOS-reference Liquid Glass tokens (T1) */
-  --glass-bg:          rgba(255, 248, 240, 0.50);
-  --glass-bg-deep:     rgba(107,  63,  30, 0.50);
+  /* Midnight glass tokens */
+  --glass-bg:          color-mix(in oklab, var(--card) 78%, transparent);
+  --glass-bg-deep:     color-mix(in oklab, var(--card) 88%, transparent);
   --glass-blur:        20px;
   --glass-blur-heavy:  32px;
-  --glass-border:      rgba(255, 255, 255, 0.30);
-  --glass-shadow:      0 8px 32px rgba(107, 63, 30, 0.18),
-                       0 1px 0    rgba(255,255,255, 0.60) inset;
-  --glass-shadow-card: 0 4px 24px rgba(107, 63, 30, 0.12),
-                       0 1px 0    rgba(255,255,255, 0.55) inset;
+  --glass-border:      color-mix(in oklab, white 12%, transparent);
+  --glass-shadow:      0 20px 50px rgba(0,0,0,0.5),
+                       0 1px 0 color-mix(in oklab, white 8%, transparent) inset;
+  --glass-shadow-card: 0 8px 24px rgba(0,0,0,0.35),
+                       0 1px 0 color-mix(in oklab, white 6%, transparent) inset;
 
   /* Safe-area insets */
   --sat: env(safe-area-inset-top,    0px);
@@ -83,7 +85,7 @@
   --sab: env(safe-area-inset-bottom, 0px);
   --sal: env(safe-area-inset-left,   0px);
 
-  /* Liturgical accent palette — apply app-wide, not just Almanac. */
+  /* Liturgical accent palette (kept for Almanac / church colors) */
   --lit-purple: #6B3080;
   --lit-gold:   #C9A227;
   --lit-green:  #2D6A4F;
@@ -92,14 +94,12 @@
   --gold:       var(--lit-gold);
   --gold-soft:  #E9C86A;
 
-  /* Radius scale (small / card / sheet) */
-  --radius-chip:  8px;
-  --radius-card:  16px;
-  --radius-sheet: 24px;
+  --radius-chip:  10px;
+  --radius-card:  24px;
+  --radius-sheet: 28px;
 
-  /* Elevation — 2 levels only */
-  --elev-1: 0 1px 2px rgba(20,10,5,0.06), 0 4px 12px rgba(20,10,5,0.06);
-  --elev-2: 0 4px 8px rgba(20,10,5,0.10), 0 12px 28px rgba(20,10,5,0.12);
+  --elev-1: 0 1px 2px rgba(0,0,0,0.35), 0 6px 16px rgba(0,0,0,0.35);
+  --elev-2: 0 10px 30px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.4);
 }
 
 
