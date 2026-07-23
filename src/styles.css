@@ -320,13 +320,13 @@
 
 /* Opaque fallback when backdrop-filter is unsupported */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass, .glass-strong, .glass-chip, .glass-card, .glass-modal {
-    background: rgba(245, 240, 232, 0.92) !important;
+  .glass, .glass-strong, .glass-chip, .glass-card, .glass-modal, .dock-pill {
+    background: var(--color-card) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
   .glass-dark {
-    background: rgba(107, 63, 30, 0.92) !important;
+    background: var(--card-raised) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
@@ -334,15 +334,15 @@
 
 /* Honor reduced-transparency users */
 @media (prefers-reduced-transparency: reduce) {
-  .glass, .glass-strong, .glass-chip, .glass-card, .glass-modal {
+  .glass, .glass-strong, .glass-chip, .glass-card, .glass-modal, .dock-pill {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    background: rgba(245, 240, 232, 0.96) !important;
+    background: var(--color-card) !important;
   }
   .glass-dark {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    background: rgba(107, 63, 30, 0.96) !important;
+    background: var(--card-raised) !important;
   }
 }
 
