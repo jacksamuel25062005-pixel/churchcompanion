@@ -19,7 +19,10 @@ export default defineConfig({
           ],
           navigateFallback: "/",
           navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//],
+          navigationPreload: true,
           cleanupOutdatedCaches: true,
+          clientsClaim: true,
+          skipWaiting: true,
           maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
           runtimeCaching: [
             // ANY image (book scans, almanac icons, storage covers, remote imgs)
