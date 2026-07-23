@@ -469,3 +469,40 @@ body.dock-hidden [data-app-nav] { transform: translateY(200%); }
   .cc-stagger > * { animation: none !important; }
   .ripple:active { animation: none !important; }
 }
+
+/* ─── View Transitions API: fade + slide on every route change ─── */
+@keyframes cc-vt-in {
+  from { opacity: 0; transform: translate3d(24px, 0, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes cc-vt-out {
+  from { opacity: 1; transform: translate3d(0, 0, 0); }
+  to   { opacity: 0; transform: translate3d(-24px, 0, 0); }
+}
+@keyframes cc-vt-in-back {
+  from { opacity: 0; transform: translate3d(-24px, 0, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes cc-vt-out-back {
+  from { opacity: 1; transform: translate3d(0, 0, 0); }
+  to   { opacity: 0; transform: translate3d(24px, 0, 0); }
+}
+
+::view-transition-old(root) {
+  animation: cc-vt-out 260ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+::view-transition-new(root) {
+  animation: cc-vt-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+html[data-nav-dir="back"]::view-transition-old(root) {
+  animation: cc-vt-out-back 260ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+html[data-nav-dir="back"]::view-transition-new(root) {
+  animation: cc-vt-in-back 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation: none !important; }
+}
+
