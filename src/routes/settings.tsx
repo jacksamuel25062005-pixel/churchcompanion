@@ -77,22 +77,7 @@ function SettingsPage() {
         </Section>
 
         <Section label="Font family">
-          <div className="grid grid-cols-2 gap-2">
-            {FONT_FAMILY_PRESETS.map((f) => {
-              const active = s.fontFamily === f.id;
-              return (
-                <button
-                  key={f.id}
-                  onClick={() => s.setFontFamily(f.id)}
-                  className={`tap-card focus-ring rounded-2xl py-3 px-3 text-left transition-all min-h-11 ${active ? "brand-bg elev-1 ring-2 brand-ring ring-offset-2 ring-offset-background" : "glass-chip hover:bg-secondary/50"}`}
-                  style={{ fontFamily: f.sans }}
-                >
-                  <span className="block text-sm font-semibold">{f.name}</span>
-                  <span className={`block text-xs mt-0.5 ${active ? "opacity-90" : "text-muted-foreground"}`}>The quick brown fox</span>
-                </button>
-              );
-            })}
-          </div>
+          <FontFamilyRow />
         </Section>
 
         <Section label={t("settings.language")}>
@@ -129,6 +114,94 @@ function Section({ label, children }: { label: string; children: React.ReactNode
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">{label}</p>
       {children}
     </div>
+  );
+}
+
+function FontFamilyRow() {
+  const s = useSettings();
+  const [open, setOpen] = useState(false);
+  const [pending, setPending] = useState(s.fontFamily);
+  const current = FONT_FAMILY_PRESETS.find((f) => f.id === s.fontFamily) ?? FONT_FAMILY_PRESETS[0];
+
+  useEffect(() => {
+    if (!open) return;
+    setPending(s.fontFamily);
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
+  }, [open, s.fontFamily]);
+
+  const apply = () => { s.setFontFamily(pending); setOpen(false); };
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="premium-card tap-card focus-ring w-full flex items-center gap-3 hover:bg-secondary/50 transition-colors"
+      >
+        <span className="flex-1 text-left">
+          <span className="block text-xs text-muted-foreground">Current</span>
+          <span className="block text-sm font-semibold" style={{ fontFamily: current.sans }}>{current.name}</span>
+        </span>
+        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+      </button>
+
+      {open && (
+        <div className="fixed inset-0 z-[60] flex items-end justify-center" role="dialog" aria-modal="true" aria-label="Choose font family">
+          <div
+            className="absolute inset-0 glass-scrim animate-fade-up"
+            onClick={() => setOpen(false)}
+            style={{ animationDuration: "180ms" }}
+          />
+          <div
+            className="glass-modal relative w-full max-w-screen-sm rounded-t-[28px] pt-3 pb-4 px-4 animate-fade-up"
+            style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
+          >
+            <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-foreground/20" />
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 px-1">Font family</p>
+            <div className="max-h-[55vh] overflow-y-auto pr-1 -mr-1 space-y-1.5">
+              {FONT_FAMILY_PRESETS.map((f) => {
+                const active = pending === f.id;
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setPending(f.id)}
+                    className={`tap-card focus-ring w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-all ${active ? "brand-bg elev-1" : "glass-chip"}`}
+                    style={{ fontFamily: f.sans }}
+                  >
+                    <span className="flex-1">
+                      <span className="block text-sm font-semibold">{f.name}</span>
+                      <span className={`block text-xs mt-0.5 ${active ? "opacity-90" : "text-muted-foreground"}`}>The quick brown fox</span>
+                    </span>
+                    {active && <CheckCircle2 className="h-5 w-5 shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="tap-card focus-ring rounded-xl glass-chip py-3 min-h-11 text-sm font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={apply}
+                className="tap-card focus-ring rounded-xl brand-bg py-3 min-h-11 text-sm font-semibold elev-1"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
