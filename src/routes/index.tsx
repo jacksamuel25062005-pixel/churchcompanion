@@ -3,14 +3,12 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../components/AppShell";
-import { Card } from "../components/ui-bits";
 import { OfflineButton } from "../components/OfflineButton";
 import { useT, pickLang } from "../lib/i18n";
-import { Music, BookOpen, Sparkles, Megaphone } from "lucide-react";
+import { Music, BookOpen, Sparkles, Megaphone, CalendarDays, Info, ChevronRight } from "lucide-react";
 import { useTodaySnap, saveToday, removeOffline, OFFLINE_KEYS } from "../lib/offline";
 import type { Book, Song } from "../lib/types";
 import { AnnouncementModule, AnnouncementBell } from "../components/AnnouncementModule";
-import { StainedGlass } from "../components/StainedGlass";
 import { useExitConfirmation } from "../lib/use-exit-confirmation";
 
 export const Route = createFileRoute("/")({
@@ -34,7 +32,7 @@ function HomePage() {
     const t = setTimeout(() => {
       setSplash(false);
       try { sessionStorage.setItem("cc.splash", "1"); } catch {}
-    }, 1500);
+    }, 1200);
     return () => clearTimeout(t);
   }, []);
 
@@ -46,11 +44,19 @@ function SplashScreen() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background animate-fade-in">
       <div className="flex flex-col items-center gap-4">
-        <img src="/icon-512.png" alt="Church Companion" width={112} height={112} className="rounded-3xl shadow-lg" />
-        <p className="text-sm font-medium text-muted-foreground">Church Companion</p>
+        <img src="/icon-512.png" alt="Church Companion" width={96} height={96} className="rounded-3xl shadow-2xl gpu" />
+        <p className="font-display text-sm font-semibold text-indigo-accent">Church Companion</p>
       </div>
     </div>
   );
+}
+
+function greetingKey(): "home.greeting.morning" | "home.greeting.afternoon" | "home.greeting.evening" | "home.greeting" {
+  if (typeof window === "undefined") return "home.greeting";
+  const h = new Date().getHours();
+  if (h < 12) return "home.greeting.morning";
+  if (h < 17) return "home.greeting.afternoon";
+  return "home.greeting.evening";
 }
 
 function Home() {
@@ -127,133 +133,190 @@ function Home() {
     return () => { supabase.removeChannel(ch); };
   }, [qc]);
 
+  const today = new Date();
+  const dateLabel = today.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+  const books = (booksQ.data ?? []).filter((b) => b.slug !== "almanac");
+  const [featuredBook, ...restBooks] = books;
+
+  const gKey = greetingKey();
+  const greetingEn = gKey === "home.greeting.morning" ? "Good Morning"
+    : gKey === "home.greeting.afternoon" ? "Good Afternoon"
+    : gKey === "home.greeting.evening" ? "Good Evening" : t("home.greeting");
+  const greetingHi = gKey === "home.greeting.morning" ? "शुभ प्रभात"
+    : gKey === "home.greeting.afternoon" ? "नमस्ते" : "शुभ संध्या";
+
   return (
     <AppShell>
-      <section className="relative mt-4 overflow-hidden rounded-[24px] elev-1"
-        style={{ background: "linear-gradient(150deg, color-mix(in oklab, var(--lit-purple) 14%, var(--card)) 0%, color-mix(in oklab, var(--lit-gold) 10%, var(--card)) 100%)" }}
-      >
-        <StainedGlass variant="hero" />
-        <div className="relative flex items-center gap-3 px-4 py-5">
-          <img src="/icon-192.png" alt="" width={44} height={44} className="rounded-2xl elev-1 lit-ring-gold" />
-          <div className="min-w-0 flex-1">
-            <p className="text-[12px] font-medium text-muted-foreground">{t("home.greeting")}</p>
-            <h1 className="font-display text-[22px] font-bold leading-tight truncate">{t("app.name")}</h1>
+      {/* Greeting hero */}
+      <header className="pt-6 pb-2 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="font-display text-[28px] font-bold tracking-tight leading-tight">
+            {greetingEn}
+            <br />
+            <span className="text-indigo-accent font-hi">{greetingHi}</span>
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground font-medium">{dateLabel}</p>
+        </div>
+        <div className="shrink-0 pt-1"><AnnouncementBell /></div>
+      </header>
+
+      {/* Top bento: Announcements + Today's Songs */}
+      <section className="mt-4 grid grid-cols-2 gap-3">
+        <Link to="/bookmarks" className="bento-tile p-4 min-h-[130px] flex flex-col gpu">
+          <div className="mb-2 grid h-9 w-9 place-items-center rounded-xl" style={{ background: "color-mix(in oklab, var(--primary) 22%, transparent)" }}>
+            <Megaphone className="h-4 w-4 text-indigo-accent" />
           </div>
-          <AnnouncementBell />
-        </div>
-      </section>
+          <h3 className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-white/60">Announcements</h3>
+          <div className="mt-2 flex-1 min-h-0 overflow-hidden text-[11px] text-white/50">
+            <AnnouncementCompact />
+          </div>
+        </Link>
 
-      <section className="mt-5">
-        <div className="flex items-center gap-2 mb-2">
-          <Megaphone className="h-4 w-4 brand-text" />
-          <h2 className="text-[12px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Announcements</h2>
-        </div>
-        <AnnouncementModule />
-      </section>
-
-      <section className="mt-7">
-        <div className="flex items-center gap-2 mb-2">
-          <Sparkles className="h-4 w-4 gold-highlight" />
-          <h2 className="text-[12px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-          {t("home.today")}
-          </h2>
-          <div className="ml-auto">
+        <div className="bento-tile bento-tile-accent p-4 min-h-[130px] flex flex-col gpu">
+          <div className="mb-2 grid h-9 w-9 place-items-center rounded-xl bg-white/15">
+            <Music className="h-4 w-4" />
+          </div>
+          <h3 className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-white/90">{t("home.today")}</h3>
+          <div className="mt-2 flex items-end justify-between gap-2">
+            <p className="text-[11px] text-white/85">
+              {todayQ.data?.items?.length ? `${todayQ.data.items.length} ${todayQ.data.items.length === 1 ? "hymn" : "hymns"}` : t("home.no_today")}
+            </p>
             <OfflineButton
               storageKey={OFFLINE_KEYS.today()}
-              label="Save today"
+              label=""
               onDownload={handleDownloadToday}
               onRemove={() => removeOffline(OFFLINE_KEYS.today())}
             />
           </div>
         </div>
-        <Card className="overflow-hidden">
-          {todayQ.isLoading && !todayQ.data ? (
-            <div className="p-5 text-sm text-muted-foreground">{t("common.loading")}</div>
-          ) : !todayQ.data?.set || todayQ.data.items.length === 0 ? (
-            <div className="p-6 text-center">
-              <Music className="mx-auto h-8 w-8 text-muted-foreground/40" />
-              <p className="mt-2 text-sm font-medium text-muted-foreground">{t("home.no_today")}</p>
-            </div>
-          ) : (
-            <ul className="divide-y">
-              {todayQ.data.set.title && (
-                <li className="px-4 py-3 brand-bg text-sm font-semibold">
-                  {todayQ.data.set.title}
-                </li>
-              )}
+      </section>
+
+      {/* Today's songs list (only when populated) */}
+      {todayQ.data?.set && todayQ.data.items.length > 0 && (
+        <section className="mt-3">
+          <div className="bento-tile p-2 gpu">
+            {todayQ.data.set.title && (
+              <div className="px-3 py-2 rounded-2xl text-sm font-semibold" style={{ background: "color-mix(in oklab, var(--primary) 18%, transparent)" }}>
+                {todayQ.data.set.title}
+              </div>
+            )}
+            <ul className="mt-1 divide-y divide-white/5">
               {todayQ.data.items.map((s, i) => (
                 <li key={s.id}>
                   <Link
                     to="/books/song-book/$id"
                     params={{ id: s.id }}
-                    className="tap-card flex items-center gap-3 px-4 py-3 hover:bg-accent"
+                    className="tap-card flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white/5"
                   >
-                    <span className="text-xs font-bold text-muted-foreground w-6 tabular-nums">{i + 1}</span>
+                    <span className="text-xs font-bold text-indigo-accent w-6 tabular-nums">{String(i + 1).padStart(2, "0")}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{pickLang(s.title_en, s.title_hi, language)}</p>
+                      <p className="font-medium truncate text-sm">{pickLang(s.title_en, s.title_hi, language)}</p>
                       {s.number != null && (
-                        <p className="text-xs text-muted-foreground">#{s.number}</p>
+                        <p className="text-[11px] text-white/45">#{s.number}</p>
                       )}
                     </div>
+                    <ChevronRight className="h-4 w-4 text-white/30" />
                   </Link>
                 </li>
               ))}
             </ul>
-          )}
-        </Card>
-      </section>
+          </div>
+        </section>
+      )}
 
-      <section className="mt-7">
-        <div className="flex items-center gap-2 mb-2">
-          <BookOpen className="h-4 w-4 brand-text" />
-          <h2 className="text-[12px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("home.books")}</h2>
+      {/* Books bento */}
+      <section className="mt-6">
+        <div className="flex items-center gap-2 mb-3">
+          <BookOpen className="h-4 w-4 text-indigo-accent" />
+          <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/60">{t("home.books")}</h2>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          {(booksQ.data ?? []).filter((b) => b.slug !== "almanac").map((b) => (
+
+        {booksQ.isLoading && !books.length ? (
+          <div className="grid grid-cols-2 gap-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bento-tile h-36 animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {featuredBook && (
+              <Link
+                to={`/books/${featuredBook.slug}` as any}
+                className="bento-tile bento-tile-featured col-span-2 h-40 p-6 flex flex-col justify-end gpu"
+              >
+                <div aria-hidden className="absolute -top-16 -right-8 h-56 w-56 rounded-full blur-3xl opacity-40"
+                  style={{ background: "radial-gradient(circle, color-mix(in oklab, var(--primary) 70%, transparent), transparent 70%)" }} />
+                <span className="absolute top-4 right-4 grid h-9 w-9 place-items-center rounded-2xl bg-white/10 border border-white/10">
+                  <BookOpen className="h-4 w-4" />
+                </span>
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/70">{featuredBook.title_en}</p>
+                <h3 className="font-display text-2xl font-bold leading-tight mt-1">
+                  <span className="font-hi text-indigo-accent">{featuredBook.title_hi}</span>
+                </h3>
+              </Link>
+            )}
+
+            {restBooks.map((b) => (
+              <Link
+                key={b.id}
+                to={`/books/${b.slug}` as any}
+                className="bento-tile h-36 p-5 flex flex-col justify-between gpu"
+              >
+                <div className="grid h-9 w-9 place-items-center rounded-xl" style={{ background: "color-mix(in oklab, var(--primary) 20%, transparent)" }}>
+                  <BookOpen className="h-4 w-4 text-indigo-accent" />
+                </div>
+                <div className="leading-tight">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/55">{b.title_en}</p>
+                  <p className="font-hi text-sm font-semibold text-white mt-0.5">{b.title_hi}</p>
+                </div>
+              </Link>
+            ))}
+
             <Link
-              key={b.id}
-              to={`/books/${b.slug}` as any}
-              className="tap-card relative overflow-hidden rounded-2xl p-4 min-h-32 flex flex-col justify-end text-white shadow-md"
-              style={{
-                background: `linear-gradient(140deg, ${b.accent_color}, ${shade(b.accent_color, -25)})`,
-              }}
+              to="/about"
+              className="bento-tile h-36 p-5 flex flex-col justify-between gpu"
             >
-              <span className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-lg bg-white/20 backdrop-blur-sm">
-                <BookOpen className="h-3.5 w-3.5 opacity-90" />
-              </span>
-              <p className="text-[11px] uppercase tracking-wide font-semibold opacity-90">{b.title_en}</p>
-              <p className="font-hi text-base font-semibold leading-tight">{b.title_hi}</p>
+              <div className="grid h-9 w-9 place-items-center rounded-xl" style={{ background: "color-mix(in oklab, var(--primary) 20%, transparent)" }}>
+                <Info className="h-4 w-4 text-indigo-accent" />
+              </div>
+              <div className="leading-tight">
+                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/55">About</p>
+                <p className="font-hi text-sm font-semibold text-white mt-0.5">कलीसिया के बारे में</p>
+              </div>
             </Link>
-          ))}
-
-          <Link
-            to="/about"
-            className="tap-card relative overflow-hidden rounded-2xl p-4 min-h-32 flex flex-col justify-end text-white shadow-md"
-            style={{ background: "linear-gradient(140deg, #7C3AED, #4C1D95)" }}
-          >
-            <span className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-lg bg-white/20 backdrop-blur-sm">
-              <BookOpen className="h-3.5 w-3.5 opacity-90" />
-            </span>
-            <p className="text-[11px] uppercase tracking-wide font-semibold opacity-90">About</p>
-            <p className="font-hi text-base font-semibold leading-tight">कलीसिया के बारे में</p>
-          </Link>
-
-
-        </div>
+          </div>
+        )}
       </section>
 
+      {/* Almanac banner */}
+      <section className="mt-5">
+        <Link to="/almanac" className="bento-tile bento-tile-featured p-5 flex items-center justify-between gap-4 gpu">
+          <div className="min-w-0">
+            <h3 className="font-display text-lg font-bold leading-tight">Almanac</h3>
+            <p className="text-[11px] text-white/60 mt-0.5">Daily Liturgical Guide • <span className="font-hi">पंचांग</span></p>
+          </div>
+          <div className="shrink-0 grid h-14 w-14 place-items-center rounded-2xl border" style={{ borderColor: "color-mix(in oklab, var(--primary) 40%, transparent)", background: "color-mix(in oklab, var(--primary) 15%, transparent)" }}>
+            <div className="text-center leading-none">
+              <div className="text-[9px] font-bold uppercase tracking-widest text-indigo-accent">{today.toLocaleDateString(undefined, { month: "short" })}</div>
+              <div className="mt-0.5 font-display text-lg font-bold">{today.getDate()}</div>
+            </div>
+          </div>
+          <CalendarDays className="h-5 w-5 text-indigo-accent shrink-0" />
+        </Link>
+      </section>
+
+      <section className="mt-5">
+        <div className="flex items-center gap-2 mb-2">
+          <Sparkles className="h-3.5 w-3.5 text-indigo-accent" />
+          <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/60">Announcements</h2>
+        </div>
+        <AnnouncementModule />
+      </section>
     </AppShell>
   );
 }
 
-function shade(hex: string, percent: number): string {
-  const h = hex.replace("#", "");
-  const n = parseInt(h, 16);
-  let r = (n >> 16) & 0xff;
-  let g = (n >> 8) & 0xff;
-  let b = n & 0xff;
-  r = Math.max(0, Math.min(255, r + Math.round((percent / 100) * 255)));
-  g = Math.max(0, Math.min(255, g + Math.round((percent / 100) * 255)));
-  b = Math.max(0, Math.min(255, b + Math.round((percent / 100) * 255)));
-  return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
+/** Tiny inline preview of the latest announcement for the top bento tile. */
+function AnnouncementCompact() {
+  return <span className="line-clamp-2">Tap for latest updates from the church.</span>;
 }
