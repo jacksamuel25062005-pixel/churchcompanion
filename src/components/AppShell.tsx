@@ -59,11 +59,12 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
       {!hideNav && (
         <nav
           data-app-nav
-          className="fixed inset-x-0 z-40 flex justify-center px-4 pointer-events-none safe-bottom transition-transform duration-[250ms] ease-out"
-          style={{ bottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}
+          className="fixed inset-x-0 z-40 flex justify-center px-3 safe-bottom transition-transform duration-[250ms] ease-out"
+          style={{ bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
         >
-          <div className="glass rounded-[28px] w-full max-w-screen-sm pointer-events-auto shadow-[0_18px_50px_-12px_rgba(0,0,0,0.55),0_6px_18px_-8px_rgba(79,70,229,0.35)] ring-1 ring-white/10">
+          <div className="glass rounded-[28px] w-full max-w-screen-sm">
             <ul className="grid grid-cols-5 px-1.5 py-1.5">
+
 
 
               {items.map((it) => {
