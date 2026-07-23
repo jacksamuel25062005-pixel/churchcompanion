@@ -34,50 +34,48 @@
   --color-ring-offset-background: var(--background);
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
-  --font-sans: "Manrope", "Noto Sans Devanagari", system-ui, sans-serif;
-  --font-display: "Sora", "Manrope", system-ui, sans-serif;
+  --font-sans: "Inter", "Manrope", "Noto Sans Devanagari", system-ui, sans-serif;
+  --font-display: "Poppins", "Space Grotesk", "Manrope", system-ui, sans-serif;
   --font-devanagari: "Noto Sans Devanagari", "Baloo 2", "Hind", "Manrope", sans-serif;
-  --font-display-hi: "Baloo 2", "Hind", "Noto Sans Devanagari", "Sora", sans-serif;
+  --font-display-hi: "Baloo 2", "Hind", "Noto Sans Devanagari", "Poppins", sans-serif;
 }
 
 :root {
-  --radius: 1.25rem;
-  /* Midnight Indigo — dark by default */
-  --background: oklch(0.14 0.03 275);       /* #0a0a1a-ish */
-  --foreground: oklch(0.97 0.01 275);
-  --card:       oklch(0.20 0.05 275);       /* #141432 */
-  --card-raised: oklch(0.26 0.09 275);      /* #1e1e5a */
-  --card-foreground: oklch(0.97 0.01 275);
-  --popover:    oklch(0.20 0.05 275);
-  --popover-foreground: oklch(0.97 0.01 275);
-  --primary:    oklch(0.58 0.24 275);       /* #4f46e5 */
+  --radius: 0.875rem;
+  --background: oklch(0.99 0.005 90);
+  --foreground: oklch(0.18 0.02 270);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.02 270);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.02 270);
+  --primary: oklch(0.5 0.18 270);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary:  oklch(0.24 0.06 275);
-  --secondary-foreground: oklch(0.97 0.01 275);
-  --muted:      oklch(0.24 0.06 275);
-  --muted-foreground: oklch(0.76 0.04 275);
-  --accent:     oklch(0.30 0.10 275);
-  --accent-foreground: oklch(0.97 0.01 275);
-  --destructive: oklch(0.65 0.24 27);
+  --secondary: oklch(0.96 0.008 270);
+  --secondary-foreground: oklch(0.2 0.02 270);
+  --muted: oklch(0.96 0.008 270);
+  --muted-foreground: oklch(0.5 0.02 270);
+  --accent: oklch(0.95 0.02 270);
+  --accent-foreground: oklch(0.2 0.02 270);
+  --destructive: oklch(0.57 0.24 27);
   --destructive-foreground: oklch(0.99 0 0);
-  --border:     color-mix(in oklab, white 10%, transparent);
-  --input:      color-mix(in oklab, white 12%, transparent);
-  --ring:       oklch(0.58 0.24 275);
-
+  --border: oklch(0.92 0.01 270);
+  --input: oklch(0.92 0.01 270);
+  --ring: oklch(0.7 0.04 270);
+  /* Brand = currently active book accent OR user-selected accent. Defaults to primary. */
   --brand: var(--primary);
   --brand-foreground: var(--primary-foreground);
   --reader-font-size: 1.05rem;
 
-  /* Midnight glass tokens */
-  --glass-bg:          color-mix(in oklab, var(--card) 78%, transparent);
-  --glass-bg-deep:     color-mix(in oklab, var(--card) 88%, transparent);
+  /* iOS-reference Liquid Glass tokens (T1) */
+  --glass-bg:          rgba(255, 248, 240, 0.50);
+  --glass-bg-deep:     rgba(107,  63,  30, 0.50);
   --glass-blur:        20px;
   --glass-blur-heavy:  32px;
-  --glass-border:      color-mix(in oklab, white 12%, transparent);
-  --glass-shadow:      0 20px 50px rgba(0,0,0,0.5),
-                       0 1px 0 color-mix(in oklab, white 8%, transparent) inset;
-  --glass-shadow-card: 0 8px 24px rgba(0,0,0,0.35),
-                       0 1px 0 color-mix(in oklab, white 6%, transparent) inset;
+  --glass-border:      rgba(255, 255, 255, 0.30);
+  --glass-shadow:      0 8px 32px rgba(107, 63, 30, 0.18),
+                       0 1px 0    rgba(255,255,255, 0.60) inset;
+  --glass-shadow-card: 0 4px 24px rgba(107, 63, 30, 0.12),
+                       0 1px 0    rgba(255,255,255, 0.55) inset;
 
   /* Safe-area insets */
   --sat: env(safe-area-inset-top,    0px);
@@ -85,7 +83,7 @@
   --sab: env(safe-area-inset-bottom, 0px);
   --sal: env(safe-area-inset-left,   0px);
 
-  /* Liturgical accent palette (kept for Almanac / church colors) */
+  /* Liturgical accent palette — apply app-wide, not just Almanac. */
   --lit-purple: #6B3080;
   --lit-gold:   #C9A227;
   --lit-green:  #2D6A4F;
@@ -94,18 +92,38 @@
   --gold:       var(--lit-gold);
   --gold-soft:  #E9C86A;
 
-  --radius-chip:  10px;
-  --radius-card:  24px;
-  --radius-sheet: 28px;
+  /* Radius scale (small / card / sheet) */
+  --radius-chip:  8px;
+  --radius-card:  16px;
+  --radius-sheet: 24px;
 
-  --elev-1: 0 1px 2px rgba(0,0,0,0.35), 0 6px 16px rgba(0,0,0,0.35);
-  --elev-2: 0 10px 30px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.4);
+  /* Elevation — 2 levels only */
+  --elev-1: 0 1px 2px rgba(20,10,5,0.06), 0 4px 12px rgba(20,10,5,0.06);
+  --elev-2: 0 4px 8px rgba(20,10,5,0.10), 0 12px 28px rgba(20,10,5,0.12);
 }
 
 
-/* Dark variant mirrors root (app is dark-by-default) */
-.dark { color-scheme: dark; }
-:root { color-scheme: dark; }
+.dark {
+  --background: oklch(0.16 0.015 270);
+  --foreground: oklch(0.97 0.005 270);
+  --card: oklch(0.21 0.02 270);
+  --card-foreground: oklch(0.97 0.005 270);
+  --popover: oklch(0.21 0.02 270);
+  --popover-foreground: oklch(0.97 0.005 270);
+  --primary: oklch(0.72 0.18 270);
+  --primary-foreground: oklch(0.15 0.02 270);
+  --secondary: oklch(0.27 0.03 270);
+  --secondary-foreground: oklch(0.97 0.005 270);
+  --muted: oklch(0.27 0.03 270);
+  --muted-foreground: oklch(0.72 0.02 270);
+  --accent: oklch(0.3 0.04 270);
+  --accent-foreground: oklch(0.97 0.005 270);
+  --destructive: oklch(0.7 0.2 22);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.55 0.03 270);
+}
 
 /* Font-size scale set by Settings */
 .fs-s { --reader-font-size: 0.95rem; }
@@ -320,13 +338,13 @@
 
 /* Opaque fallback when backdrop-filter is unsupported */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass, .glass-strong, .glass-chip, .glass-card, .glass-modal, .dock-pill {
-    background: var(--color-card) !important;
+  .glass, .glass-strong, .glass-chip, .glass-card, .glass-modal {
+    background: rgba(245, 240, 232, 0.92) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
   .glass-dark {
-    background: var(--card-raised) !important;
+    background: rgba(107, 63, 30, 0.92) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
@@ -334,15 +352,15 @@
 
 /* Honor reduced-transparency users */
 @media (prefers-reduced-transparency: reduce) {
-  .glass, .glass-strong, .glass-chip, .glass-card, .glass-modal, .dock-pill {
+  .glass, .glass-strong, .glass-chip, .glass-card, .glass-modal {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    background: var(--color-card) !important;
+    background: rgba(245, 240, 232, 0.96) !important;
   }
   .glass-dark {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    background: var(--card-raised) !important;
+    background: rgba(107, 63, 30, 0.96) !important;
   }
 }
 
@@ -399,58 +417,3 @@ h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0
 
 /* Hide bottom dock during fullscreen readers */
 body.dock-hidden [data-app-nav] { transform: translateY(200%); }
-
-/* ─────────────────────────────────────────────────────────────
-   Midnight Bento — v11 redesign
-   ───────────────────────────────────────────────────────────── */
-
-/* Force full-viewport dark canvas even before React mounts */
-html, body { background-color: var(--color-background); }
-
-/* 120hz-friendly compositor hints */
-@utility gpu {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  will-change: transform, opacity;
-}
-
-/* Indigo bento tile */
-@utility bento-tile {
-  position: relative;
-  background: var(--color-card);
-  border: 1px solid color-mix(in oklab, white 6%, transparent);
-  border-radius: 24px;
-  overflow: hidden;
-  transform: translateZ(0);
-  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform;
-}
-.bento-tile:active { transform: scale(0.97) translateZ(0); }
-
-@utility bento-tile-featured {
-  background: linear-gradient(140deg, var(--card-raised), var(--color-card));
-  border: 1px solid color-mix(in oklab, var(--primary) 25%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary) 15%, transparent),
-              0 20px 40px -20px color-mix(in oklab, var(--primary) 60%, transparent);
-}
-@utility bento-tile-accent {
-  background: linear-gradient(140deg, var(--primary), color-mix(in oklab, var(--primary) 70%, black));
-  color: var(--primary-foreground);
-  box-shadow: 0 0 30px -6px color-mix(in oklab, var(--primary) 55%, transparent);
-}
-
-/* Floating indigo dock */
-@utility dock-pill {
-  background: color-mix(in oklab, var(--card) 78%, transparent);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-          backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid color-mix(in oklab, white 10%, transparent);
-  border-radius: 9999px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.55),
-              0 1px 0 color-mix(in oklab, white 8%, transparent) inset;
-  transform: translateZ(0);
-  will-change: transform;
-}
-
-/* Bilingual + Devanagari colored accent used across the app */
-.text-indigo-accent { color: color-mix(in oklab, var(--primary) 85%, white 15%); }
