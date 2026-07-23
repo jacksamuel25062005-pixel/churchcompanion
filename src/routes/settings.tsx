@@ -130,7 +130,12 @@ function FontFamilyRow() {
     window.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
+    document.body.classList.add("dock-hidden");
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+      document.body.classList.remove("dock-hidden");
+    };
   }, [open, s.fontFamily]);
 
   const apply = () => { s.setFontFamily(pending); setOpen(false); };
