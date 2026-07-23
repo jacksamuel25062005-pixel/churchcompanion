@@ -64,17 +64,18 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
           style={{ bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
         >
           <div className="glass dock-pill relative w-full max-w-screen-sm rounded-[28px]">
-            {/* Sliding active indicator */}
+            {/* Sliding active indicator — width matches a single grid cell so it stays centered on the icon */}
             <span
               aria-hidden
               className="dock-indicator"
               style={{
-                width: `${100 / items.length}%`,
-                transform: `translate3d(${items.findIndex((it) => it.match(pathname)) * 100}%, 0, 0)`,
+                width: `calc((100% - 12px) / ${items.length})`,
+                transform: `translate3d(calc(${items.findIndex((it) => it.match(pathname))} * 100%), 0, 0)`,
               }}
             >
               <span className="dock-indicator-glow" />
             </span>
+
 
             <ul className="relative grid grid-cols-5 px-1.5 py-1.5">
               {items.map((it) => {
