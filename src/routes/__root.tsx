@@ -17,6 +17,7 @@ import { initOneSignal } from "../lib/onesignal";
 import { initDiagnostics } from "../lib/diagnostics";
 import { initOffline } from "../offline";
 import { initHighRefreshRate } from "../lib/smoothness";
+import { RouteTransition } from "../components/RouteTransition";
 
 
 function NotFoundComponent() {
@@ -148,7 +149,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <SettingsProvider>
-        <Outlet />
+        <RouteTransition />
         <Toaster />
       </SettingsProvider>
     </QueryClientProvider>

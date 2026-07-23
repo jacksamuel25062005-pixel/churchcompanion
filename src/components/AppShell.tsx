@@ -51,7 +51,7 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
         </header>
       ) : null}
 
-      <main className={`flex-1 mx-auto w-full max-w-screen-sm px-4 ${hideNav ? "pb-6" : "pb-36"} cc-screen-enter cc-stagger`}>
+      <main className={`flex-1 mx-auto w-full max-w-screen-sm px-4 ${hideNav ? "pb-6" : "pb-36"} cc-stagger`}>
         {children}
       </main>
 
