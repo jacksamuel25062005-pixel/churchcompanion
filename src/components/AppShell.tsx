@@ -88,9 +88,15 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
       {!hideNav && (
         <nav
           data-app-nav
-          className="fixed inset-x-0 z-40 flex justify-center px-3 safe-bottom transition-transform duration-[250ms] ease-out"
-          style={{ bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
+          data-dock-hidden={dockHidden ? "true" : "false"}
+          className="fixed inset-x-0 z-40 flex justify-center px-3 safe-bottom will-change-transform transition-[transform,opacity] duration-[320ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+          style={{
+            bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)",
+            transform: dockHidden ? "translate3d(0, 140%, 0) scale(0.96)" : "translate3d(0, 0, 0) scale(1)",
+            opacity: dockHidden ? 0 : 1,
+          }}
         >
+
           <div className="glass rounded-[28px] w-full max-w-screen-sm">
             <ul className="grid grid-cols-5 px-1.5 py-1.5">
 
