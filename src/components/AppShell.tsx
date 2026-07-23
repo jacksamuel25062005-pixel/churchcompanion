@@ -1,7 +1,8 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Search, Bookmark, Settings as SettingsIcon, CalendarDays } from "lucide-react";
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useT } from "../lib/i18n";
+
 
 interface Props {
   children: ReactNode;
