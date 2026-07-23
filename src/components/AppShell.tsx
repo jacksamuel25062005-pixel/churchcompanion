@@ -51,7 +51,7 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
         </header>
       ) : null}
 
-      <main className={`flex-1 mx-auto w-full max-w-screen-sm px-4 ${hideNav ? "pb-6" : "pb-36"} cc-stagger`}>
+      <main className={`flex-1 mx-auto w-full max-w-screen-sm px-4 ${hideNav ? "pb-6" : "pb-36"} cc-screen-enter cc-stagger`}>
         {children}
       </main>
 
@@ -64,8 +64,6 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
         >
           <div className="glass rounded-[28px] w-full max-w-screen-sm">
             <ul className="grid grid-cols-5 px-1.5 py-1.5">
-
-
 
               {items.map((it) => {
                 const Active = it.match(pathname);
