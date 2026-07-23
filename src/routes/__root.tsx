@@ -17,6 +17,8 @@ import { initOneSignal } from "../lib/onesignal";
 import { initDiagnostics } from "../lib/diagnostics";
 import { initOffline } from "../offline";
 import { initHighRefreshRate } from "../lib/smoothness";
+import { initViewTransitions } from "../lib/view-transitions";
+
 
 
 function NotFoundComponent() {
