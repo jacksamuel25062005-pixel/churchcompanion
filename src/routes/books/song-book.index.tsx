@@ -47,7 +47,6 @@ function SongBookLanding() {
           to="/books/song-book/church"
           accent={accent}
           icon={<Music className="h-6 w-6" />}
-          eyebrow="Category 1"
           titleEn="Church Song Book"
           titleHi="कलीसिया गीतमाला"
         />
@@ -55,22 +54,21 @@ function SongBookLanding() {
           to="/books/song-book/additional"
           accent={accent}
           icon={<Sparkles className="h-6 w-6" />}
-          eyebrow="Category 2"
           titleEn="Additional Songs"
           titleHi="अतिरिक्त गीत"
         />
+
       </div>
     </AppShell>
   );
 }
 
 function CategoryCard({
-  to, accent, icon, eyebrow, titleEn, titleHi,
+  to, accent, icon, titleEn, titleHi,
 }: {
   to: string;
   accent: string;
   icon: React.ReactNode;
-  eyebrow: string;
   titleEn: string;
   titleHi: string;
 }) {
@@ -87,7 +85,6 @@ function CategoryCard({
           {icon}
         </span>
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{eyebrow}</p>
           <p className="font-semibold truncate">{titleEn}</p>
           <p className="text-sm text-muted-foreground truncate font-hi">{titleHi}</p>
         </div>
