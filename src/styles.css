@@ -417,3 +417,55 @@ h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0
 
 /* Hide bottom dock during fullscreen readers */
 body.dock-hidden [data-app-nav] { transform: translateY(200%); }
+
+/* ─── v11 UX polish: tactile press, staggered entrance, nav pop ─── */
+
+/* Enhanced tap feedback on any .tap-card / .premium-card / .glass-card */
+.tap-card, .premium-card, .glass-card {
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+              box-shadow 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+              filter 180ms ease-out;
+}
+.tap-card:active, .premium-card:active, .glass-card:active {
+  transform: scale(0.965) translateZ(0);
+  filter: brightness(1.04);
+}
+
+/* Nav item pop on tap */
+.nav-item { -webkit-tap-highlight-color: transparent; }
+.nav-item:active > span:first-child {
+  transform: scale(0.88) translateZ(0);
+  transition: transform 120ms ease-out;
+}
+.nav-active-glow {
+  box-shadow: 0 4px 14px -4px color-mix(in oklab, var(--brand) 55%, transparent),
+              inset 0 1px 0 color-mix(in oklab, white 40%, transparent);
+}
+
+/* Staggered entrance for children of a route (first few) */
+@keyframes cc-item-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.cc-stagger > * {
+  animation: cc-item-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.cc-stagger > *:nth-child(1) { animation-delay: 40ms; }
+.cc-stagger > *:nth-child(2) { animation-delay: 90ms; }
+.cc-stagger > *:nth-child(3) { animation-delay: 140ms; }
+.cc-stagger > *:nth-child(4) { animation-delay: 190ms; }
+.cc-stagger > *:nth-child(5) { animation-delay: 230ms; }
+.cc-stagger > *:nth-child(6) { animation-delay: 260ms; }
+.cc-stagger > *:nth-child(n+7) { animation-delay: 290ms; }
+
+/* Ripple utility — add className="ripple" to buttons/links for a soft pulse */
+@keyframes cc-ripple {
+  0%   { box-shadow: 0 0 0 0 color-mix(in oklab, var(--brand) 35%, transparent); }
+  100% { box-shadow: 0 0 0 14px color-mix(in oklab, var(--brand) 0%, transparent); }
+}
+.ripple:active { animation: cc-ripple 420ms ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cc-stagger > * { animation: none !important; }
+  .ripple:active { animation: none !important; }
+}
