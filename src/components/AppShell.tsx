@@ -60,12 +60,23 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
       {!hideNav && (
         <nav
           data-app-nav
-          className="fixed inset-x-0 z-40 flex justify-center px-3 safe-bottom transition-transform duration-[250ms] ease-out"
+          className="fixed inset-x-0 z-40 flex justify-center px-3 safe-bottom dock-shell"
           style={{ bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
         >
-          <div className="glass rounded-[28px] w-full max-w-screen-sm">
-            <ul className="grid grid-cols-5 px-1.5 py-1.5">
+          <div className="glass dock-pill relative w-full max-w-screen-sm rounded-[28px]">
+            {/* Sliding active indicator */}
+            <span
+              aria-hidden
+              className="dock-indicator"
+              style={{
+                width: `${100 / items.length}%`,
+                transform: `translate3d(${items.findIndex((it) => it.match(pathname)) * 100}%, 0, 0)`,
+              }}
+            >
+              <span className="dock-indicator-glow" />
+            </span>
 
+            <ul className="relative grid grid-cols-5 px-1.5 py-1.5">
               {items.map((it) => {
                 const Active = it.match(pathname);
                 const Icon = it.icon;
@@ -73,26 +84,14 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
                   <li key={it.to}>
                     <Link
                       to={it.to}
-                      className={`nav-item relative flex flex-col items-center gap-0.5 py-1.5 text-[10.5px] font-medium transition-all ${
-                        Active ? "brand-text" : "text-muted-foreground"
+                      className={`nav-item relative flex flex-col items-center gap-0.5 py-1.5 text-[10.5px] font-medium ${
+                        Active ? "brand-text is-active" : "text-muted-foreground"
                       }`}
                     >
-                      <span
-                        className={`flex h-9 w-12 items-center justify-center rounded-2xl transition-transform duration-200 ${
-                          Active ? "scale-105 shadow-sm nav-active-glow" : ""
-                        }`}
-                        style={
-                          Active
-                            ? {
-                                background:
-                                  "linear-gradient(140deg, color-mix(in oklab, var(--brand) 32%, transparent), color-mix(in oklab, var(--brand) 14%, transparent))",
-                              }
-                            : undefined
-                        }
-                      >
-                        <Icon className="h-[18px] w-[18px]" />
+                      <span className="nav-icon flex h-9 w-12 items-center justify-center rounded-2xl">
+                        <Icon className="h-[18px] w-[18px]" strokeWidth={Active ? 2.4 : 2} />
                       </span>
-                      <span className="leading-none">{it.label}</span>
+                      <span className="nav-label leading-none">{it.label}</span>
                     </Link>
                   </li>
                 );
@@ -101,6 +100,7 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
           </div>
         </nav>
       )}
+
     </div>
   );
 }

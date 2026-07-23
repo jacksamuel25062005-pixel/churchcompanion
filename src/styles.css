@@ -415,10 +415,103 @@ h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0
 @utility lit-ring-purple { box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--lit-purple) 40%, transparent); }
 @utility lit-ring-gold   { box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--lit-gold)   50%, transparent); }
 
-/* Hide bottom dock during fullscreen readers */
+/* ─── Premium floating dock ─── */
+.dock-shell {
+  transition: transform 380ms cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 240ms ease-out;
+  will-change: transform;
+}
 body.dock-hidden [data-app-nav] { transform: translateY(200%); }
 
-/* ─── v11 UX polish: tactile press, staggered entrance, nav pop ─── */
+.dock-pill {
+  box-shadow:
+    0 1px 0 color-mix(in oklab, white 10%, transparent) inset,
+    0 -1px 0 color-mix(in oklab, black 18%, transparent) inset,
+    0 10px 30px -12px color-mix(in oklab, var(--brand) 45%, transparent),
+    0 20px 50px -20px rgba(0, 0, 0, 0.55);
+  transition: box-shadow 300ms ease-out, transform 300ms ease-out;
+}
+.dock-pill:hover {
+  box-shadow:
+    0 1px 0 color-mix(in oklab, white 14%, transparent) inset,
+    0 -1px 0 color-mix(in oklab, black 18%, transparent) inset,
+    0 14px 36px -12px color-mix(in oklab, var(--brand) 55%, transparent),
+    0 24px 60px -22px rgba(0, 0, 0, 0.6);
+}
+
+/* Sliding active indicator (spring easing) */
+.dock-indicator {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 6px;
+  pointer-events: none;
+  border-radius: 22px;
+  padding: 0 4px;
+  transition: transform 520ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+}
+.dock-indicator::before {
+  content: "";
+  position: absolute;
+  inset: 0 6px;
+  border-radius: 20px;
+  background: linear-gradient(140deg,
+    color-mix(in oklab, var(--brand) 36%, transparent),
+    color-mix(in oklab, var(--brand) 14%, transparent));
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, white 45%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, black 20%, transparent),
+    0 6px 18px -6px color-mix(in oklab, var(--brand) 60%, transparent);
+}
+.dock-indicator-glow {
+  position: absolute;
+  inset: -6px 0;
+  border-radius: 24px;
+  background: radial-gradient(closest-side,
+    color-mix(in oklab, var(--brand) 45%, transparent),
+    transparent 70%);
+  filter: blur(10px);
+  opacity: 0.7;
+  animation: cc-dock-breathe 3.2s ease-in-out infinite;
+}
+@keyframes cc-dock-breathe {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 0.85; transform: scale(1.06); }
+}
+
+/* Nav items */
+.nav-item { -webkit-tap-highlight-color: transparent; }
+.nav-item .nav-icon {
+  transition:
+    transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    color 200ms ease-out;
+}
+.nav-item .nav-label {
+  opacity: 0.75;
+  transform: translateY(1px);
+  transition: opacity 260ms ease-out, transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.nav-item.is-active .nav-icon {
+  transform: translateY(-2px) scale(1.12);
+  animation: cc-nav-pop 520ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.nav-item.is-active .nav-label {
+  opacity: 1;
+  transform: translateY(0);
+}
+.nav-item:not(.is-active):active .nav-icon {
+  transform: scale(0.86);
+  transition: transform 120ms ease-out;
+}
+.nav-item:not(.is-active):hover .nav-icon {
+  transform: translateY(-1px) scale(1.04);
+}
+@keyframes cc-nav-pop {
+  0%   { transform: translateY(2px) scale(0.82); }
+  55%  { transform: translateY(-4px) scale(1.18); }
+  100% { transform: translateY(-2px) scale(1.12); }
+}
 
 /* Enhanced tap feedback on any .tap-card / .premium-card / .glass-card */
 .tap-card, .premium-card, .glass-card {
@@ -431,16 +524,6 @@ body.dock-hidden [data-app-nav] { transform: translateY(200%); }
   filter: brightness(1.04);
 }
 
-/* Nav item pop on tap */
-.nav-item { -webkit-tap-highlight-color: transparent; }
-.nav-item:active > span:first-child {
-  transform: scale(0.88) translateZ(0);
-  transition: transform 120ms ease-out;
-}
-.nav-active-glow {
-  box-shadow: 0 4px 14px -4px color-mix(in oklab, var(--brand) 55%, transparent),
-              inset 0 1px 0 color-mix(in oklab, white 40%, transparent);
-}
 
 /* Staggered entrance: kept as a utility but no longer applied globally.
    Opt-in only via className="cc-stagger" on lists that benefit from it. */
