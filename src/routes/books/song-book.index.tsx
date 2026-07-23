@@ -47,7 +47,6 @@ function SongBookLanding() {
           to="/books/song-book/church"
           accent={accent}
           icon={<Music className="h-6 w-6" />}
-          eyebrow="Category 1"
           titleEn="Church Song Book"
           titleHi="कलीसिया गीतमाला"
         />
@@ -55,10 +54,10 @@ function SongBookLanding() {
           to="/books/song-book/additional"
           accent={accent}
           icon={<Sparkles className="h-6 w-6" />}
-          eyebrow="Category 2"
           titleEn="Additional Songs"
           titleHi="अतिरिक्त गीत"
         />
+
       </div>
     </AppShell>
   );
