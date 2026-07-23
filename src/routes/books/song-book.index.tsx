@@ -64,12 +64,11 @@ function SongBookLanding() {
 }
 
 function CategoryCard({
-  to, accent, icon, eyebrow, titleEn, titleHi,
+  to, accent, icon, titleEn, titleHi,
 }: {
   to: string;
   accent: string;
   icon: React.ReactNode;
-  eyebrow: string;
   titleEn: string;
   titleHi: string;
 }) {
@@ -86,7 +85,6 @@ function CategoryCard({
           {icon}
         </span>
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{eyebrow}</p>
           <p className="font-semibold truncate">{titleEn}</p>
           <p className="text-sm text-muted-foreground truncate font-hi">{titleHi}</p>
         </div>
