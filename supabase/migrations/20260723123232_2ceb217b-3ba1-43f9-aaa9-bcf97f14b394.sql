@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.unlike_timeline_article(uuid, text) FROM authenticated;
