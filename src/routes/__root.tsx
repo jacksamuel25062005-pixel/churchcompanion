@@ -132,19 +132,22 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
 
   useEffect(() => {
     initDiagnostics();
     initOneSignal();
     initOffline();
     initHighRefreshRate();
+    initViewTransitions(router);
     // Request persistent storage so cached data survives OS eviction.
     if (typeof navigator !== "undefined" && navigator.storage?.persist) {
       navigator.storage.persisted().then((already) => {
         if (!already) navigator.storage.persist().catch(() => {});
       }).catch(() => {});
     }
-  }, []);
+  }, [router]);
+
 
 
   return (
