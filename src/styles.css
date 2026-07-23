@@ -455,6 +455,12 @@ body.dock-hidden [data-app-nav] { transform: translateY(200%); }
   overflow: hidden; /* clip glow so it never escapes the dock silhouette */
 }
 .dock-indicator[data-active="false"] { opacity: 0; }
+/* First paint / deep link: snap to the correct tab with no glide from origin. */
+.dock-indicator[data-mounted="false"] { transition: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .dock-indicator { transition: none; }
+}
+
 
 .dock-indicator::before {
   content: "";
