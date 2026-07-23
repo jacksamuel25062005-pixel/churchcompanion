@@ -34,10 +34,10 @@
   --color-ring-offset-background: var(--background);
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
-  --font-sans: "Inter", "Manrope", "Noto Sans Devanagari", system-ui, sans-serif;
-  --font-display: "Poppins", "Space Grotesk", "Manrope", system-ui, sans-serif;
+  --font-sans: "Manrope", "Noto Sans Devanagari", system-ui, sans-serif;
+  --font-display: "Sora", "Manrope", system-ui, sans-serif;
   --font-devanagari: "Noto Sans Devanagari", "Baloo 2", "Hind", "Manrope", sans-serif;
-  --font-display-hi: "Baloo 2", "Hind", "Noto Sans Devanagari", "Poppins", sans-serif;
+  --font-display-hi: "Baloo 2", "Hind", "Noto Sans Devanagari", "Sora", sans-serif;
 }
 
 :root {
