@@ -72,21 +72,19 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
                   <li key={it.to}>
                     <Link
                       to={it.to}
-                      className={`relative flex flex-col items-center gap-0.5 py-1.5 text-[10.5px] font-medium transition-all ${
+                      className={`nav-item relative flex flex-col items-center gap-0.5 py-1.5 text-[10.5px] font-medium transition-all ${
                         Active ? "brand-text" : "text-muted-foreground"
                       }`}
                     >
                       <span
-                        className={`flex h-9 w-12 items-center justify-center rounded-2xl transition-all ${
-                          Active
-                            ? "scale-105 shadow-sm"
-                            : ""
+                        className={`flex h-9 w-12 items-center justify-center rounded-2xl transition-transform duration-200 ${
+                          Active ? "scale-105 shadow-sm nav-active-glow" : ""
                         }`}
                         style={
                           Active
                             ? {
                                 background:
-                                  "linear-gradient(140deg, color-mix(in oklab, var(--brand) 28%, transparent), color-mix(in oklab, var(--brand) 12%, transparent))",
+                                  "linear-gradient(140deg, color-mix(in oklab, var(--brand) 32%, transparent), color-mix(in oklab, var(--brand) 14%, transparent))",
                               }
                             : undefined
                         }
