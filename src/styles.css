@@ -308,15 +308,15 @@
 @utility safe-left   { padding-left:   var(--sal); }
 @utility safe-right  { padding-right:  var(--sar); }
 
-/* Screen enter animation (320ms spring) */
+/* Screen enter animation (iOS-style: short, ease-out, small translate) */
 @keyframes cc-screen-enter {
-  from { opacity: 0; transform: translateY(40px) scale(0.95); }
-  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0);   }
 }
 .cc-screen-enter {
-  animation: cc-screen-enter 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  will-change: transform, opacity;
+  animation: cc-screen-enter 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
 
 /* Bilingual typography rules */
 :lang(en) { letter-spacing: 0.01em; }
@@ -442,21 +442,22 @@ body.dock-hidden [data-app-nav] { transform: translateY(200%); }
               inset 0 1px 0 color-mix(in oklab, white 40%, transparent);
 }
 
-/* Staggered entrance for children of a route (first few) */
+/* Staggered entrance: kept as a utility but no longer applied globally.
+   Opt-in only via className="cc-stagger" on lists that benefit from it. */
 @keyframes cc-item-in {
-  from { opacity: 0; transform: translateY(14px) scale(0.985); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 .cc-stagger > * {
-  animation: cc-item-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: cc-item-in 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.cc-stagger > *:nth-child(1) { animation-delay: 40ms; }
-.cc-stagger > *:nth-child(2) { animation-delay: 90ms; }
-.cc-stagger > *:nth-child(3) { animation-delay: 140ms; }
-.cc-stagger > *:nth-child(4) { animation-delay: 190ms; }
-.cc-stagger > *:nth-child(5) { animation-delay: 230ms; }
-.cc-stagger > *:nth-child(6) { animation-delay: 260ms; }
-.cc-stagger > *:nth-child(n+7) { animation-delay: 290ms; }
+.cc-stagger > *:nth-child(1) { animation-delay: 20ms; }
+.cc-stagger > *:nth-child(2) { animation-delay: 50ms; }
+.cc-stagger > *:nth-child(3) { animation-delay: 80ms; }
+.cc-stagger > *:nth-child(4) { animation-delay: 110ms; }
+.cc-stagger > *:nth-child(5) { animation-delay: 140ms; }
+.cc-stagger > *:nth-child(6) { animation-delay: 170ms; }
+.cc-stagger > *:nth-child(n+7) { animation-delay: 200ms; }
 
 /* Ripple utility — add className="ripple" to buttons/links for a soft pulse */
 @keyframes cc-ripple {
@@ -470,39 +471,23 @@ body.dock-hidden [data-app-nav] { transform: translateY(200%); }
   .ripple:active { animation: none !important; }
 }
 
-/* ─── View Transitions API: fade + slide on every route change ─── */
-@keyframes cc-vt-in {
-  from { opacity: 0; transform: translate3d(24px, 0, 0); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0); }
-}
-@keyframes cc-vt-out {
-  from { opacity: 1; transform: translate3d(0, 0, 0); }
-  to   { opacity: 0; transform: translate3d(-24px, 0, 0); }
-}
-@keyframes cc-vt-in-back {
-  from { opacity: 0; transform: translate3d(-24px, 0, 0); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0); }
-}
-@keyframes cc-vt-out-back {
-  from { opacity: 1; transform: translate3d(0, 0, 0); }
-  to   { opacity: 0; transform: translate3d(24px, 0, 0); }
-}
+
+/* ─── View Transitions API: lightweight iOS-style cross-fade ───
+   Kept short and opacity-only to avoid the compositor overhead of
+   snapshotting + translating the whole root on mobile. */
+@keyframes cc-vt-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cc-vt-out { from { opacity: 1; } to { opacity: 0; } }
 
 ::view-transition-old(root) {
-  animation: cc-vt-out 260ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation: cc-vt-out 140ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 ::view-transition-new(root) {
-  animation: cc-vt-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-html[data-nav-dir="back"]::view-transition-old(root) {
-  animation: cc-vt-out-back 260ms cubic-bezier(0.4, 0, 0.2, 1) both;
-}
-html[data-nav-dir="back"]::view-transition-new(root) {
-  animation: cc-vt-in-back 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: cc-vt-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root),
   ::view-transition-new(root) { animation: none !important; }
 }
+
 

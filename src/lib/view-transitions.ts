@@ -30,14 +30,13 @@ export function initViewTransitions(router: AnyRouter) {
     lastPath = nextPath;
 
     try {
-      doc.startViewTransition?.(() => {
-        // The router mutates the DOM synchronously after this callback resolves.
-        return new Promise<void>((resolve) => {
-          requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
-        });
-      });
+      // Fire-and-forget: let the router swap the DOM on its own tick.
+      // The browser captures the old snapshot immediately and cross-fades
+      // to whatever is painted next — no artificial rAF wait needed.
+      doc.startViewTransition?.(() => {});
     } catch {
       // ignore — fall through to a normal navigation
     }
   });
 }
+
