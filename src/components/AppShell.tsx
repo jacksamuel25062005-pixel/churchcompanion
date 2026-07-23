@@ -16,6 +16,32 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
   const { t } = useT();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
+  // Hide-on-scroll-down, show-on-scroll-up dock behavior
+  const [dockHidden, setDockHidden] = useState(false);
+  const lastYRef = useRef(0);
+  const tickingRef = useRef(false);
+  useEffect(() => {
+    if (hideNav) return;
+    lastYRef.current = window.scrollY;
+    const onScroll = () => {
+      if (tickingRef.current) return;
+      tickingRef.current = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        const dy = y - lastYRef.current;
+        if (y < 24) {
+          setDockHidden(false);
+        } else if (Math.abs(dy) > 6) {
+          setDockHidden(dy > 0);
+        }
+        lastYRef.current = y;
+        tickingRef.current = false;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [hideNav]);
+
   const items = [
     { to: "/", label: t("nav.home"), icon: Home, match: (p: string) => p === "/" },
     { to: "/search", label: t("nav.search"), icon: Search, match: (p: string) => p.startsWith("/search") },
@@ -23,6 +49,7 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
     { to: "/bookmarks", label: t("nav.bookmarks"), icon: Bookmark, match: (p: string) => p.startsWith("/bookmarks") },
     { to: "/settings", label: t("nav.settings"), icon: SettingsIcon, match: (p: string) => p.startsWith("/settings") },
   ] as const;
+
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground relative">
