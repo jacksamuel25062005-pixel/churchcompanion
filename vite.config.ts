@@ -98,19 +98,35 @@ export default defineConfig({
               },
             },
             // Supabase writes / RPC: Background-sync queue so offline writes
-            // replay when connectivity returns.
-            {
-              urlPattern: ({ url, request }) =>
+            // replay silently when connectivity returns. Workbox registers
+            // one route per HTTP method — duplicate the entry for each.
+            ...(["POST", "PUT", "PATCH", "DELETE"] as const).map((method) => ({
+              urlPattern: ({ url }: { url: URL }) =>
                 url.hostname.endsWith(".supabase.co") &&
-                (url.pathname.startsWith("/rest/v1/") || url.pathname.startsWith("/storage/v1/")) &&
-                ["POST", "PUT", "PATCH", "DELETE"].includes(request.method),
-              handler: "NetworkOnly",
-              method: "POST",
+                (url.pathname.startsWith("/rest/v1/") ||
+                  url.pathname.startsWith("/storage/v1/") ||
+                  url.pathname.startsWith("/functions/v1/")),
+              handler: "NetworkOnly" as const,
+              method,
               options: {
                 backgroundSync: {
                   name: "cc-writes",
                   options: { maxRetentionTime: 24 * 60 },
                 },
+              },
+            })),
+            // Supabase Edge Function GETs (RPC-style reads): SWR
+            {
+              urlPattern: ({ url, request }) =>
+                url.hostname.endsWith(".supabase.co") &&
+                url.pathname.startsWith("/functions/v1/") &&
+                request.method === "GET",
+              handler: "StaleWhileRevalidate",
+              method: "GET",
+              options: {
+                cacheName: "supabase-functions",
+                expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 7 },
+                cacheableResponse: { statuses: [0, 200] },
               },
             },
             // Same-origin static assets
