@@ -77,22 +77,7 @@ function SettingsPage() {
         </Section>
 
         <Section label="Font family">
-          <div className="grid grid-cols-2 gap-2">
-            {FONT_FAMILY_PRESETS.map((f) => {
-              const active = s.fontFamily === f.id;
-              return (
-                <button
-                  key={f.id}
-                  onClick={() => s.setFontFamily(f.id)}
-                  className={`tap-card focus-ring rounded-2xl py-3 px-3 text-left transition-all min-h-11 ${active ? "brand-bg elev-1 ring-2 brand-ring ring-offset-2 ring-offset-background" : "glass-chip hover:bg-secondary/50"}`}
-                  style={{ fontFamily: f.sans }}
-                >
-                  <span className="block text-sm font-semibold">{f.name}</span>
-                  <span className={`block text-xs mt-0.5 ${active ? "opacity-90" : "text-muted-foreground"}`}>The quick brown fox</span>
-                </button>
-              );
-            })}
-          </div>
+          <FontFamilyRow />
         </Section>
 
         <Section label={t("settings.language")}>
