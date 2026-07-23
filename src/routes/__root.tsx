@@ -149,7 +149,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <SettingsProvider>
-        <Outlet />
+        <RouteTransition />
         <Toaster />
       </SettingsProvider>
     </QueryClientProvider>
