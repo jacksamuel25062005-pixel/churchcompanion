@@ -15,7 +15,7 @@ export type UploadState =
   | "error";
 
 type Mode = "attach" | "scan";
-type Kind = "image" | "pdf" | "txt";
+type Kind = "image" | "pdf" | "txt" | "md";
 
 interface Song { id: string; title: string; body: string }
 interface ErrorInfo {
@@ -30,8 +30,24 @@ function detectKind(file: File): Kind | null {
   const ext = file.name.toLowerCase().split(".").pop();
   if (file.type.startsWith("image/") || ["png", "jpg", "jpeg", "webp", "gif", "bmp"].includes(ext ?? "")) return "image";
   if (file.type === "application/pdf" || ext === "pdf") return "pdf";
-  if (ext === "txt") return "txt";
+  if (ext === "md" || ext === "markdown" || file.type === "text/markdown") return "md";
+  if (ext === "txt" || file.type === "text/plain") return "txt";
   return null;
+}
+
+function stripMarkdown(md: string): string {
+  return md
+    .replace(/^---[\s\S]*?---\s*/m, "") // front-matter
+    .replace(/```[\s\S]*?```/g, (b) => b.replace(/```\w*\n?|```/g, ""))
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/^\s{0,3}#{1,6}\s+/gm, "")
+    .replace(/^\s{0,3}>\s?/gm, "")
+    .replace(/(\*\*|__)(.*?)\1/g, "$2")
+    .replace(/(\*|_)(.*?)\1/g, "$2")
+    .replace(/^\s*[-*+]\s+/gm, "")
+    .replace(/^\s*\d+\.\s+/gm, "");
 }
 
 function splitSongs(text: string): Song[] {
@@ -75,7 +91,7 @@ export function EnhancedUpload({ onExtracted }: { onExtracted?: (text: string) =
     if (inputRef.current) inputRef.current.value = "";
   }, [imgUrl]);
 
-  const acceptAttr = "image/*,application/pdf";
+  const acceptAttr = "image/*,application/pdf,.txt,.md,.markdown,text/plain,text/markdown";
 
   const handleFile = useCallback(async (f: File, currentMode: Mode) => {
     setError(null); setExtracted(""); setSongs([]); setPdfPages([]); setPageIdx(0);
@@ -83,10 +99,15 @@ export function EnhancedUpload({ onExtracted }: { onExtracted?: (text: string) =
       setFile(f); setError({ kind: "size", message: "File exceeds 10 MB.", sizeBytes: f.size }); setState("error"); return;
     }
     const k = detectKind(f);
-    if (!k || k === "txt") { setFile(f); setError({ kind: "type", message: "Enhanced upload supports images and PDFs only." }); setState("error"); return; }
+    if (!k) { setFile(f); setError({ kind: "type", message: "Unsupported file type." }); setState("error"); return; }
     setFile(f); setKind(k); setState("loading");
     try {
-      if (currentMode === "attach") {
+      if (k === "txt" || k === "md") {
+        const raw = await f.text();
+        const text = k === "md" ? stripMarkdown(raw) : raw;
+        if (!text.trim()) { setError({ kind: "type", message: "The file is empty." }); setState("error"); return; }
+        finishExtraction(text);
+      } else if (currentMode === "attach") {
         if (k === "image") {
           const url = URL.createObjectURL(f);
           setImgUrl(url); setState("attach-view");
@@ -122,7 +143,8 @@ export function EnhancedUpload({ onExtracted }: { onExtracted?: (text: string) =
 
   function finishExtraction(text: string) {
     setExtracted(text); onExtracted?.(text);
-    if (file?.name.toLowerCase().endsWith(".txt")) {
+    const name = file?.name.toLowerCase() ?? "";
+    if (name.endsWith(".txt") || name.endsWith(".md") || name.endsWith(".markdown")) {
       const parsed = splitSongs(text);
       if (parsed.length > 0) { setSongs(parsed); setState("song-split"); return; }
     }
@@ -166,9 +188,9 @@ export function EnhancedUpload({ onExtracted }: { onExtracted?: (text: string) =
           <div className="rounded-2xl border-2 border-dashed border-border/70 p-7 text-center transition-colors hover:border-foreground/30">
             <FileUp className="mx-auto h-8 w-8 text-muted-foreground" />
             <p className="mt-2 text-sm font-medium">
-              {mode === "attach" ? "Choose an image or PDF to view" : "Choose an image or PDF to OCR"}
+              {mode === "attach" ? "Choose an image, PDF, TXT or MD" : "Choose an image, PDF, TXT or MD to extract"}
             </p>
-            <p className="text-xs text-muted-foreground">Images & PDFs only · Max 10 MB.</p>
+            <p className="text-xs text-muted-foreground">Images · PDF · TXT · Markdown · Max 10 MB.</p>
             <input
               ref={inputRef}
               type="file"
@@ -314,7 +336,7 @@ function ErrorPanel({ error, onRetry, onReset }: { error: ErrorInfo; onRetry: ()
       <div className={palette}>
         <p className="font-semibold">Unsupported file type</p>
         <p className="mt-1">{error.message}</p>
-        <p className="mt-2 text-xs">Allowed: PNG, JPG, WEBP, PDF, and TXT (scan mode only).</p>
+        <p className="mt-2 text-xs">Allowed: PNG, JPG, WEBP, PDF, TXT, and MD (Markdown).</p>
         <div className="mt-3"><button onClick={onReset} className="rounded-full bg-red-900 px-3 py-1.5 text-xs font-semibold text-white">Choose another file</button></div>
       </div>
     );
