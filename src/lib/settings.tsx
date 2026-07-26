@@ -40,8 +40,8 @@ export interface FontFamilyOption {
   category: "sans" | "serif" | "display";
 }
 
-const DEFAULT_SANS = `"Inter", "Manrope", "Noto Sans Devanagari", system-ui, sans-serif`;
-const DEFAULT_DISPLAY = `"Poppins", "Space Grotesk", "Manrope", system-ui, sans-serif`;
+const DEFAULT_SANS = `"SF Pro Display", "Noto Sans Devanagari", system-ui, sans-serif`;
+const DEFAULT_DISPLAY = `"SF Pro Display", "Noto Sans Devanagari", system-ui, sans-serif`;
 
 export const FONT_FAMILY_PRESETS: FontFamilyOption[] = [
   { id: "system", name: "Default", sans: DEFAULT_SANS, display: DEFAULT_DISPLAY, category: "sans" },
