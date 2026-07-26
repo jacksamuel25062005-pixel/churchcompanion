@@ -446,13 +446,14 @@ body.dock-hidden [data-app-nav] { transform: translateY(200%); }
   bottom: 6px;
   left: 6px;
   pointer-events: none;
-  border-radius: 20px;
-  /* Longer, buttery iOS curve so first→last glide stays smooth */
-  transition: transform 560ms cubic-bezier(0.32, 0.72, 0, 1), opacity 220ms ease-out;
+  border-radius: 9999px;
+  /* Ultra-smooth iOS glide: single transform property, long buttery curve */
+  transition: transform 620ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease-out;
   will-change: transform;
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
-  overflow: hidden; /* clip glow so it never escapes the dock silhouette */
+  contain: layout style paint;
+  overflow: hidden; /* clip glow inside the pill silhouette */
 }
 .dock-indicator[data-active="false"] { opacity: 0; }
 /* First paint / deep link: snap to the correct tab with no glide from origin. */
@@ -460,6 +461,7 @@ body.dock-hidden [data-app-nav] { transform: translateY(200%); }
 @media (prefers-reduced-motion: reduce) {
   .dock-indicator { transition: none; }
 }
+
 
 
 .dock-indicator::before {

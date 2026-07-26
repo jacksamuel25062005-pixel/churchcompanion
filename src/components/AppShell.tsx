@@ -77,7 +77,7 @@ const DockNav = memo(function DockNav() {
       className="fixed inset-x-0 z-40 flex justify-center px-3 safe-bottom dock-shell"
       style={{ bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
     >
-      <div className="glass dock-pill relative w-full max-w-screen-sm rounded-[28px] overflow-hidden">
+      <div className="glass dock-pill relative w-full max-w-screen-sm rounded-full overflow-hidden">
         <span
           aria-hidden
           className="dock-indicator"
