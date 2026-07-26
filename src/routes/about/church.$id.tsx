@@ -1,9 +1,10 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../../components/AppShell";
 import { BackButton, Card } from "../../components/ui-bits";
+import { ImageLightbox } from "../../components/ImageLightbox";
 import { useT, pickLang } from "../../lib/i18n";
 import { signAboutMedia } from "../../lib/about-media";
 
