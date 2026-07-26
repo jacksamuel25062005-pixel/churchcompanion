@@ -433,22 +433,49 @@ body.dock-hidden [data-app-nav] { transform: translateY(200%); }
 ::view-transition-new(app-dock) { animation: none !important; mix-blend-mode: normal; }
 
 .dock-pill {
-  /* Lower blur density (~25%) for a lighter, airier dock */
-  backdrop-filter: blur(6px) saturate(140%);
+  /* Refractive tinted glass — Liquid Glass × OneUI 9 */
+  backdrop-filter: blur(28px) saturate(180%);
+  background: color-mix(in oklab, var(--card) 55%, transparent);
+  border: 1px solid color-mix(in oklab, white 55%, transparent);
   box-shadow:
-    0 1px 0 color-mix(in oklab, white 10%, transparent) inset,
-    0 -1px 0 color-mix(in oklab, black 18%, transparent) inset,
-    0 10px 30px -12px color-mix(in oklab, var(--brand) 45%, transparent),
-    0 20px 50px -20px rgba(0, 0, 0, 0.55);
+    /* top specular */
+    inset 0 1px 0 color-mix(in oklab, white 85%, transparent),
+    /* bottom refractive rim */
+    inset 0 -1px 0 color-mix(in oklab, white 30%, transparent),
+    /* micro hairline ring */
+    0 0 0 1px color-mix(in oklab, black 4%, transparent),
+    /* ambient brand halo */
+    0 10px 30px -14px color-mix(in oklab, var(--brand) 40%, transparent),
+    /* soft floor shadow */
+    0 20px 40px -18px rgba(0, 0, 0, 0.28);
   transition: box-shadow 300ms ease-out, transform 300ms ease-out;
 }
-.dock-pill:hover {
+.dark .dock-pill {
+  background: color-mix(in oklab, var(--card) 45%, transparent);
+  border-color: color-mix(in oklab, white 12%, transparent);
   box-shadow:
-    0 1px 0 color-mix(in oklab, white 14%, transparent) inset,
-    0 -1px 0 color-mix(in oklab, black 18%, transparent) inset,
-    0 14px 36px -12px color-mix(in oklab, var(--brand) 55%, transparent),
-    0 24px 60px -22px rgba(0, 0, 0, 0.6);
+    inset 0 1px 0 color-mix(in oklab, white 18%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, black 40%, transparent),
+    0 0 0 1px color-mix(in oklab, white 6%, transparent),
+    0 12px 32px -14px color-mix(in oklab, var(--brand) 60%, transparent),
+    0 22px 48px -20px rgba(0, 0, 0, 0.65);
 }
+/* Sub-dock refractive under-glow (Liquid Glass caustic) */
+.dock-pill::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -14px;
+  width: 55%;
+  height: 22px;
+  transform: translateX(-50%);
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--brand) 22%, transparent);
+  filter: blur(20px);
+  z-index: -1;
+  pointer-events: none;
+}
+
 
 /* Sliding active indicator — iOS-style smooth glide, always contained inside the dock */
 .dock-indicator {
