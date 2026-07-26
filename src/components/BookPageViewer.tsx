@@ -392,29 +392,28 @@ export function BookPageViewer({ pages, accentColor = "#6366f1" }: Props) {
               </div>
             </div>
           )}
-          <div
-            className="flex-1 overflow-auto grid place-items-start justify-center pb-28 cursor-pointer"
-            style={{ touchAction: "pinch-zoom" }}
-            onTouchStart={onTouchStart}
-            onTouchEnd={onTouchEnd}
-            onClick={(e) => { if (e.detail === 1) setChromeHidden((h) => !h); }}
+          <PinchZoomStage
+            zoom={zoom}
+            setZoom={setZoom}
+            onSwipe={(dir) => go(dir)}
+            onTap={() => setChromeHidden((h) => !h)}
           >
             {currentUrl && (
               <img
                 src={currentUrl}
                 alt={`Page ${current!.page_number}`}
-                className="select-none block"
+                className="select-none block max-w-none"
                 style={{
-                  transform: `rotate(${rotate}deg) scale(${zoom})`,
-                  transformOrigin: "top center",
-                  width: "100%", maxWidth: "100vw",
+                  transform: `rotate(${rotate}deg)`,
+                  transformOrigin: "center center",
+                  width: "100vw",
                   filter: imgFilter,
-                  transition: "transform 150ms ease",
                 }}
                 draggable={false}
               />
             )}
-          </div>
+          </PinchZoomStage>
+
         </div>
       )}
     </>
@@ -456,6 +455,194 @@ function ThemeToggle({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) =
     <ToolbarBtn label={`Theme: ${theme} → ${label}`} onClick={() => setTheme(next)}>
       <Icon className="h-4 w-4" />
     </ToolbarBtn>
+  );
+}
+
+/**
+ * Fullscreen pinch-zoom + pan stage. Two-finger pinch scales toward the
+ * midpoint, one-finger pan when zoomed in, one-finger horizontal swipe to
+ * navigate at rest zoom, double-tap toggles 1x/2.5x, single tap toggles chrome.
+ */
+function PinchZoomStage({
+  zoom,
+  setZoom,
+  onSwipe,
+  onTap,
+  children,
+}: {
+  zoom: number;
+  setZoom: (z: number | ((z: number) => number)) => void;
+  onSwipe: (dir: number) => void;
+  onTap: () => void;
+  children: React.ReactNode;
+}) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
+  const [tx, setTx] = useState(0);
+  const [ty, setTy] = useState(0);
+
+  const pointers = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const gesture = useRef<{
+    startDist: number;
+    startZoom: number;
+    startMid: { x: number; y: number };
+    startTx: number;
+    startTy: number;
+    panStart?: { x: number; y: number; tx: number; ty: number };
+    swipeStart?: { x: number; y: number; t: number };
+    lastTapAt: number;
+    moved: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    if (zoom <= 1.001) { setTx(0); setTy(0); }
+  }, [zoom]);
+
+  const clampPan = useCallback((nx: number, ny: number, z: number) => {
+    const wrap = wrapRef.current;
+    const inner = innerRef.current;
+    if (!wrap || !inner) return { x: nx, y: ny };
+    const wr = wrap.getBoundingClientRect();
+    const ir = inner.getBoundingClientRect();
+    const maxX = Math.max(0, (ir.width - wr.width) / 2) / z + 40;
+    const maxY = Math.max(0, (ir.height - wr.height) / 2) / z + 40;
+    return {
+      x: Math.max(-maxX, Math.min(maxX, nx)),
+      y: Math.max(-maxY, Math.min(maxY, ny)),
+    };
+  }, []);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    (e.target as Element).setPointerCapture?.(e.pointerId);
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const pts = [...pointers.current.values()];
+    if (pts.length === 2) {
+      const dx = pts[0].x - pts[1].x;
+      const dy = pts[0].y - pts[1].y;
+      gesture.current = {
+        startDist: Math.hypot(dx, dy) || 1,
+        startZoom: zoom,
+        startMid: { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 },
+        startTx: tx,
+        startTy: ty,
+        lastTapAt: gesture.current?.lastTapAt ?? 0,
+        moved: true,
+      };
+    } else if (pts.length === 1) {
+      gesture.current = {
+        startDist: 0,
+        startZoom: zoom,
+        startMid: { x: pts[0].x, y: pts[0].y },
+        startTx: tx,
+        startTy: ty,
+        panStart: zoom > 1.001 ? { x: pts[0].x, y: pts[0].y, tx, ty } : undefined,
+        swipeStart: zoom <= 1.001 ? { x: pts[0].x, y: pts[0].y, t: Date.now() } : undefined,
+        lastTapAt: gesture.current?.lastTapAt ?? 0,
+        moved: false,
+      };
+    }
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!pointers.current.has(e.pointerId)) return;
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const g = gesture.current;
+    if (!g) return;
+    const pts = [...pointers.current.values()];
+
+    if (pts.length >= 2) {
+      const dx = pts[0].x - pts[1].x;
+      const dy = pts[0].y - pts[1].y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const rawZoom = g.startZoom * (dist / g.startDist);
+      const nextZoom = Math.max(1, Math.min(5, rawZoom));
+      const wrap = wrapRef.current;
+      if (wrap) {
+        const wr = wrap.getBoundingClientRect();
+        const cx = wr.left + wr.width / 2;
+        const cy = wr.top + wr.height / 2;
+        const mx = g.startMid.x - cx;
+        const my = g.startMid.y - cy;
+        const scaleDelta = nextZoom / g.startZoom;
+        const nx = (g.startTx - mx) * scaleDelta + mx;
+        const ny = (g.startTy - my) * scaleDelta + my;
+        const c = clampPan(nx, ny, nextZoom);
+        setTx(c.x); setTy(c.y);
+      }
+      setZoom(nextZoom);
+      g.moved = true;
+      e.preventDefault();
+    } else if (pts.length === 1 && g.panStart) {
+      const nx = g.panStart.tx + (pts[0].x - g.panStart.x);
+      const ny = g.panStart.ty + (pts[0].y - g.panStart.y);
+      const c = clampPan(nx, ny, zoom);
+      setTx(c.x); setTy(c.y);
+      g.moved = true;
+      e.preventDefault();
+    } else if (pts.length === 1 && g.swipeStart) {
+      const dx = pts[0].x - g.swipeStart.x;
+      const dy = pts[0].y - g.swipeStart.y;
+      if (Math.abs(dx) > 6 || Math.abs(dy) > 6) g.moved = true;
+    }
+  };
+
+  const onPointerUp = (e: React.PointerEvent) => {
+    const g = gesture.current;
+    const wasSingle = pointers.current.size === 1;
+    pointers.current.delete(e.pointerId);
+    if (!g) return;
+
+    if (zoom < 1.05) { setZoom(1); setTx(0); setTy(0); }
+
+    if (wasSingle && g.swipeStart) {
+      const t = Date.now() - g.swipeStart.t;
+      const dx = e.clientX - g.swipeStart.x;
+      const dy = e.clientY - g.swipeStart.y;
+      if (zoom <= 1.001 && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5 && t < 600) {
+        onSwipe(dx < 0 ? 1 : -1);
+        gesture.current = null;
+        return;
+      }
+      if (!g.moved && Math.abs(dx) < 6 && Math.abs(dy) < 6) {
+        const now = Date.now();
+        const isDouble = now - g.lastTapAt < 280;
+        if (isDouble) {
+          if (zoom > 1.05) { setZoom(1); setTx(0); setTy(0); }
+          else { setZoom(2.5); }
+        } else {
+          onTap();
+        }
+        gesture.current = { ...g, lastTapAt: now };
+        return;
+      }
+    }
+
+    if (pointers.current.size === 0) gesture.current = null;
+  };
+
+  return (
+    <div
+      ref={wrapRef}
+      className="flex-1 overflow-hidden grid place-items-center pb-28 select-none"
+      style={{ touchAction: "none", overscrollBehavior: "contain" }}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
+      onDoubleClick={(e) => e.preventDefault()}
+    >
+      <div
+        ref={innerRef}
+        style={{
+          transform: `translate3d(${tx}px, ${ty}px, 0) scale(${zoom})`,
+          transformOrigin: "center center",
+          transition: gesture.current ? "none" : "transform 180ms cubic-bezier(0.22, 1, 0.36, 1)",
+          willChange: "transform",
+        }}
+      >
+        {children}
+      </div>
+    </div>
   );
 }
 
