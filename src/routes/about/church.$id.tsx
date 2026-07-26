@@ -15,6 +15,8 @@ export const Route = createFileRoute("/about/church/$id")({
 function AboutChurchDetail() {
   const { id } = useParams({ from: "/about/church/$id" });
   const { language } = useT();
+  const [lightbox, setLightbox] = useState<number | null>(null);
+
 
   const q = useQuery({
     queryKey: ["about_church_entry", id],
