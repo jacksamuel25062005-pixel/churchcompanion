@@ -130,7 +130,11 @@ function ManagePage() {
       <button
         onClick={() => setEditing({ ...empty })}
         aria-label="New announcement"
-        className="fixed bottom-6 right-5 z-40 grid h-14 w-14 place-items-center rounded-full brand-bg shadow-lg"
+        className="fixed right-5 z-40 grid h-14 w-14 place-items-center rounded-full brand-bg shadow-lg"
+        style={{
+          bottom: "calc(6.5rem + env(safe-area-inset-bottom, 0px))",
+          right: "calc(1.25rem + env(safe-area-inset-right, 0px))",
+        }}
       >
         <Plus className="h-6 w-6" />
       </button>
