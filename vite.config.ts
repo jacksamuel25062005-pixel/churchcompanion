@@ -43,15 +43,16 @@ export default defineConfig({
                 matchOptions: { ignoreVary: true },
               },
             },
-            // App-shell HTML: StaleWhileRevalidate so pages open instantly
-            // from cache and refresh in the background — no visible reload.
+            // App-shell HTML: CacheFirst for instant open with zero network wait.
+            // Updates arrive when the SW itself updates (autoUpdate + skipWaiting).
             {
               urlPattern: ({ request }) => request.mode === "navigate",
-              handler: "StaleWhileRevalidate",
+              handler: "CacheFirst",
               options: {
                 cacheName: "html-navigations",
-                expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 },
+                expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
                 cacheableResponse: { statuses: [0, 200] },
+                matchOptions: { ignoreVary: true },
               },
             },
             // Google Fonts stylesheet + font files
