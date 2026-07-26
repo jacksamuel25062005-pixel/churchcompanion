@@ -96,11 +96,32 @@ const DockNav = memo(function DockNav() {
             aria-hidden
             className="dock-indicator-fm pointer-events-none absolute top-1.5 bottom-1.5"
             initial={false}
-            animate={{ x: indicator.x, width: indicator.w, opacity: 1 }}
-            transition={ready && !reduce ? DOCK_SPRING : { duration: 0 }}
-            style={{ left: 0 }}
+            animate={{
+              x: indicator.x,
+              width: indicator.w,
+              opacity: 1,
+              scaleY: reduce ? 1 : [1, 0.86, 1.06, 1],
+              scaleX: reduce ? 1 : [1, 1.04, 0.98, 1],
+              filter: reduce
+                ? "brightness(1)"
+                : ["brightness(1)", "brightness(1.25)", "brightness(1)"],
+            }}
+            transition={
+              ready && !reduce
+                ? {
+                    x: DOCK_SPRING,
+                    width: DOCK_SPRING,
+                    opacity: { duration: 0.18 },
+                    scaleY: { duration: 0.55, times: [0, 0.35, 0.7, 1], ease: "easeOut" },
+                    scaleX: { duration: 0.55, times: [0, 0.35, 0.7, 1], ease: "easeOut" },
+                    filter: { duration: 0.5, times: [0, 0.4, 1], ease: "easeOut" },
+                  }
+                : { duration: 0 }
+            }
+            style={{ left: 0, transformOrigin: "center" }}
           />
         )}
+
 
         <ul ref={listRef} className="relative grid grid-cols-5 px-1.5 py-1.5">
           {items.map((it, i) => {
