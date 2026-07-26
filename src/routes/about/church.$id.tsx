@@ -1,9 +1,10 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../../components/AppShell";
 import { BackButton, Card } from "../../components/ui-bits";
+import { ImageLightbox } from "../../components/ImageLightbox";
 import { useT, pickLang } from "../../lib/i18n";
 import { signAboutMedia } from "../../lib/about-media";
 
@@ -14,6 +15,8 @@ export const Route = createFileRoute("/about/church/$id")({
 function AboutChurchDetail() {
   const { id } = useParams({ from: "/about/church/$id" });
   const { language } = useT();
+  const [lightbox, setLightbox] = useState<number | null>(null);
+
 
   const q = useQuery({
     queryKey: ["about_church_entry", id],
@@ -45,10 +48,24 @@ function AboutChurchDetail() {
           <h1 className="mt-3 font-display text-2xl font-bold">{pickLang(q.data.title_en, q.data.title_hi, language)}</h1>
           {paths.length > 0 && (
             <div className="mt-4 grid grid-cols-2 gap-2">
-              {paths.map((p: string) => signedQ.data?.[p] && (
-                <img key={p} src={signedQ.data[p]} alt="" className="w-full rounded-xl object-cover aspect-square" loading="lazy" />
+              {paths.map((p: string, idx: number) => signedQ.data?.[p] && (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setLightbox(idx)}
+                  className="overflow-hidden rounded-xl active:scale-[0.98] transition"
+                >
+                  <img src={signedQ.data[p]} alt="" className="w-full rounded-xl object-cover aspect-square" loading="lazy" />
+                </button>
               ))}
             </div>
+          )}
+          {lightbox !== null && signedQ.data && (
+            <ImageLightbox
+              images={paths.map((p: string) => signedQ.data![p]).filter(Boolean)}
+              index={lightbox}
+              onClose={() => setLightbox(null)}
+            />
           )}
           <Card className="mt-4 p-4">
             <p className="whitespace-pre-wrap text-sm leading-relaxed">
