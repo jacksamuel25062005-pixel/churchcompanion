@@ -1,6 +1,8 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Search, Bookmark, Settings as SettingsIcon, CalendarDays } from "lucide-react";
 import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { DOCK_SPRING, IOS_SPRING_SNAP } from "../lib/motion";
 import { useT } from "../lib/i18n";
 
 interface Props {
@@ -34,21 +36,42 @@ function resolveActiveIndex(pathname: string): number {
 const DockNav = memo(function DockNav() {
   const { t } = useT();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const reduce = useReducedMotion();
 
-  // Compute once per pathname; stable identity avoids downstream churn.
   const activeIndex = useMemo(() => resolveActiveIndex(pathname), [pathname]);
   const hasActive = activeIndex >= 0;
 
-  // On first paint, snap the indicator to its target without any glide.
-  // After mount, restore the CSS transition so subsequent taps animate.
-  const [mounted, setMounted] = useState(false);
-  const raf = useRef<number | null>(null);
+  // Measure the actual active nav-item to drive a spring-glide indicator.
+  const listRef = useRef<HTMLUListElement | null>(null);
+  const itemRefs = useRef<Array<HTMLLIElement | null>>([]);
+  const [indicator, setIndicator] = useState<{ x: number; w: number } | null>(null);
+  const [ready, setReady] = useState(false);
+
   useEffect(() => {
-    raf.current = requestAnimationFrame(() => setMounted(true));
-    return () => {
-      if (raf.current != null) cancelAnimationFrame(raf.current);
+    const measure = () => {
+      const el = itemRefs.current[activeIndex];
+      const list = listRef.current;
+      if (!el || !list) return;
+      setIndicator({ x: el.offsetLeft, w: el.offsetWidth });
     };
-  }, []);
+    measure();
+    const r = requestAnimationFrame(measure);
+    const t2 = window.setTimeout(measure, 260);
+    return () => { cancelAnimationFrame(r); window.clearTimeout(t2); };
+  }, [activeIndex]);
+
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const ro = new ResizeObserver(() => {
+      const el = itemRefs.current[activeIndex];
+      if (el) setIndicator({ x: el.offsetLeft, w: el.offsetWidth });
+    });
+    ro.observe(list);
+    return () => ro.disconnect();
+  }, [activeIndex]);
+
+  useEffect(() => { setReady(true); }, []);
 
   const items = useMemo(
     () => [
@@ -61,16 +84,6 @@ const DockNav = memo(function DockNav() {
     [t],
   );
 
-  const indicatorStyle = useMemo<React.CSSProperties>(
-    () => ({
-      width: `calc((100% - 12px) / ${NAV_MATCHERS.length})`,
-      // Use CSS var so we only touch a single custom property, not the whole style string.
-      ["--dock-i" as any]: Math.max(activeIndex, 0),
-      transform: `translate3d(calc(var(--dock-i) * 100%), 0, 0)`,
-    }),
-    [activeIndex],
-  );
-
   return (
     <nav
       data-app-nav
@@ -78,22 +91,30 @@ const DockNav = memo(function DockNav() {
       style={{ bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
     >
       <div className="glass dock-pill relative w-full max-w-screen-sm rounded-full overflow-hidden">
-        <span
-          aria-hidden
-          className="dock-indicator"
-          data-active={hasActive ? "true" : "false"}
-          data-mounted={mounted ? "true" : "false"}
-          style={indicatorStyle}
-        >
-          <span className="dock-indicator-glow" />
-        </span>
+        {hasActive && indicator && (
+          <motion.span
+            aria-hidden
+            className="dock-indicator-fm pointer-events-none absolute top-1.5 bottom-1.5 rounded-full"
+            initial={false}
+            animate={{ x: indicator.x, width: indicator.w, opacity: 1 }}
+            transition={ready && !reduce ? DOCK_SPRING : { duration: 0 }}
+            style={{ left: 0 }}
+          >
+            <span className="dock-indicator-glow absolute inset-0 rounded-full" />
+          </motion.span>
+        )}
 
-        <ul className="relative grid grid-cols-5 px-1.5 py-1.5">
+        <ul ref={listRef} className="relative grid grid-cols-5 px-1.5 py-1.5">
           {items.map((it, i) => {
             const Active = i === activeIndex;
             const Icon = it.icon;
             return (
-              <li key={it.key}>
+              <motion.li
+                key={it.key}
+                ref={(el) => { itemRefs.current[i] = el; }}
+                whileTap={reduce ? undefined : { scale: 0.9 }}
+                transition={IOS_SPRING_SNAP}
+              >
                 <Link
                   to={it.to}
                   className={`nav-item relative flex flex-col items-center gap-0.5 py-1.5 text-[10.5px] font-medium ${
@@ -105,7 +126,7 @@ const DockNav = memo(function DockNav() {
                   </span>
                   <span className="nav-label leading-none">{it.label}</span>
                 </Link>
-              </li>
+              </motion.li>
             );
           })}
         </ul>

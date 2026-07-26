@@ -54,6 +54,7 @@
     "dexie": "^4.4.4",
     "dexie-react-hooks": "^4.4.0",
     "embla-carousel-react": "^8.6.0",
+    "framer-motion": "^12.42.2",
     "idb-keyval": "^6.2.5",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.575.0",
