@@ -2,6 +2,28 @@
 @source "../src";
 @import "tw-animate-css";
 
+@font-face {
+  font-family: "SF Pro Display";
+  src: url("/__l5e/assets-v1/f336525c-08a3-4e35-b796-a00c3a2e0392/sfprodisplayregular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "SF Pro Display";
+  src: url("/__l5e/assets-v1/d7b837f5-8988-4c7d-81ca-c2955c3e63b3/sfprodisplaymedium.otf") format("opentype");
+  font-weight: 500 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "SF Pro Display";
+  src: url("/__l5e/assets-v1/b66fd7f1-21b2-4ae9-b46c-8d325feb348e/sfprodisplaybold.otf") format("opentype");
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -34,8 +56,8 @@
   --color-ring-offset-background: var(--background);
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
-  --font-sans: "Inter", "Manrope", "Noto Sans Devanagari", system-ui, sans-serif;
-  --font-display: "Poppins", "Space Grotesk", "Manrope", system-ui, sans-serif;
+  --font-sans: "SF Pro Display", "Noto Sans Devanagari", system-ui, sans-serif;
+  --font-display: "SF Pro Display", "Noto Sans Devanagari", system-ui, sans-serif;
   --font-devanagari: "Noto Sans Devanagari", "Baloo 2", "Hind", "Manrope", sans-serif;
   --font-display-hi: "Baloo 2", "Hind", "Noto Sans Devanagari", "Poppins", sans-serif;
 }
