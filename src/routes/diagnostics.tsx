@@ -65,8 +65,8 @@ function DiagnosticsPage() {
         <Card className="p-4 space-y-2 text-xs">
           <div className="flex justify-between"><span className="text-muted-foreground">User Agent</span><span className="truncate max-w-[60%] text-right">{mounted ? navigator.userAgent : "—"}</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Online</span><span>{mounted ? (conn.online ? "Yes" : "No") : "—"}</span></div>
-          {conn.effectiveType && (
-            <div className="flex justify-between"><span className="text-muted-foreground">Network</span><span>{conn.effectiveType}{conn.rtt ? ` · ${conn.rtt}ms` : ""}{conn.saveData ? " · saveData" : ""}</span></div>
+          {(conn.label || conn.effectiveType) && (
+            <div className="flex justify-between"><span className="text-muted-foreground">Network</span><span>{conn.label ?? conn.effectiveType}{conn.downlink ? ` · ${conn.downlink}Mbps` : ""}{conn.rtt ? ` · ${conn.rtt}ms` : ""}{conn.saveData ? " · saveData" : ""}</span></div>
           )}
           <div className="flex justify-between"><span className="text-muted-foreground">Storage</span><span>{storage.usage != null ? `${formatBytes(storage.usage)} / ${formatBytes(storage.quota ?? 0)}` : "—"}</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Offline packs</span><span>{mounted ? `${offline.length} (${formatBytes(offline.reduce((a, b) => a + b.bytes, 0))})` : "—"}</span></div>
