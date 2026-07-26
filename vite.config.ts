@@ -23,7 +23,9 @@ export default defineConfig({
           cleanupOutdatedCaches: true,
           clientsClaim: true,
           skipWaiting: true,
-          maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
+          disableDevLogs: true,
+          sourcemap: false,
+          maximumFileSizeToCacheInBytes: 20 * 1024 * 1024,
           runtimeCaching: [
             // ANY image (book scans, almanac icons, storage covers, remote imgs)
             // — CacheFirst with long expiration and LRU eviction under quota.
