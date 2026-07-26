@@ -21,6 +21,7 @@ function TimelineDetail() {
   const qc = useQueryClient();
   const isAdmin = useIsAdmin();
   const clientId = getClientId();
+  const [lightbox, setLightbox] = useState<number | null>(null);
 
   const articleQ = useQuery({
     queryKey: ["timeline_article", id],
