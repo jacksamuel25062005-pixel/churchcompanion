@@ -392,29 +392,28 @@ export function BookPageViewer({ pages, accentColor = "#6366f1" }: Props) {
               </div>
             </div>
           )}
-          <div
-            className="flex-1 overflow-auto grid place-items-start justify-center pb-28 cursor-pointer"
-            style={{ touchAction: "pinch-zoom" }}
-            onTouchStart={onTouchStart}
-            onTouchEnd={onTouchEnd}
-            onClick={(e) => { if (e.detail === 1) setChromeHidden((h) => !h); }}
+          <PinchZoomStage
+            zoom={zoom}
+            setZoom={setZoom}
+            onSwipe={(dir) => go(dir)}
+            onTap={() => setChromeHidden((h) => !h)}
           >
             {currentUrl && (
               <img
                 src={currentUrl}
                 alt={`Page ${current!.page_number}`}
-                className="select-none block"
+                className="select-none block max-w-none"
                 style={{
-                  transform: `rotate(${rotate}deg) scale(${zoom})`,
-                  transformOrigin: "top center",
-                  width: "100%", maxWidth: "100vw",
+                  transform: `rotate(${rotate}deg)`,
+                  transformOrigin: "center center",
+                  width: "100vw",
                   filter: imgFilter,
-                  transition: "transform 150ms ease",
                 }}
                 draggable={false}
               />
             )}
-          </div>
+          </PinchZoomStage>
+
         </div>
       )}
     </>
