@@ -90,18 +90,16 @@ const DockNav = memo(function DockNav() {
       className="fixed inset-x-0 z-40 flex justify-center px-3 safe-bottom dock-shell"
       style={{ bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
     >
-      <div className="glass dock-pill relative w-full max-w-screen-sm rounded-full overflow-hidden">
+      <div className="dock-pill relative w-full max-w-screen-sm rounded-full">
         {hasActive && indicator && (
           <motion.span
             aria-hidden
-            className="dock-indicator-fm pointer-events-none absolute top-1.5 bottom-1.5 rounded-full"
+            className="dock-indicator-fm pointer-events-none absolute top-1.5 bottom-1.5"
             initial={false}
             animate={{ x: indicator.x, width: indicator.w, opacity: 1 }}
             transition={ready && !reduce ? DOCK_SPRING : { duration: 0 }}
             style={{ left: 0 }}
-          >
-            <span className="dock-indicator-glow absolute inset-0 rounded-full" />
-          </motion.span>
+          />
         )}
 
         <ul ref={listRef} className="relative grid grid-cols-5 px-1.5 py-1.5">
