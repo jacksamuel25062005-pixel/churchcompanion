@@ -433,6 +433,8 @@ body.dock-hidden [data-app-nav] { transform: translateY(200%); }
 ::view-transition-new(app-dock) { animation: none !important; mix-blend-mode: normal; }
 
 .dock-pill {
+  /* Lower blur density (~25%) for a lighter, airier dock */
+  backdrop-filter: blur(6px) saturate(140%);
   box-shadow:
     0 1px 0 color-mix(in oklab, white 10%, transparent) inset,
     0 -1px 0 color-mix(in oklab, black 18%, transparent) inset,
