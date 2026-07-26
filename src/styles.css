@@ -420,8 +420,17 @@ h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0
   transition: transform 380ms cubic-bezier(0.22, 1, 0.36, 1),
               opacity 240ms ease-out;
   will-change: transform;
+  /* Lift the dock out of the root view-transition snapshot so route changes
+     don't cross-fade it — the framer-motion indicator owns its own glide. */
+  view-transition-name: app-dock;
+  contain: layout paint;
 }
 body.dock-hidden [data-app-nav] { transform: translateY(200%); }
+
+/* Persist the dock across route transitions: no fade in/out, just live. */
+::view-transition-group(app-dock) { animation: none !important; }
+::view-transition-old(app-dock),
+::view-transition-new(app-dock) { animation: none !important; mix-blend-mode: normal; }
 
 .dock-pill {
   box-shadow:
