@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../components/AppShell";
 import { Card } from "../components/ui-bits";
@@ -12,6 +13,7 @@ import type { Book, Song } from "../lib/types";
 import { AnnouncementModule, AnnouncementBell } from "../components/AnnouncementModule";
 import { StainedGlass } from "../components/StainedGlass";
 import { useExitConfirmation } from "../lib/use-exit-confirmation";
+import { IOS_SPRING, IOS_SPRING_SNAP, STAGGER_FADE, staggerContainer } from "../lib/motion";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -129,7 +131,11 @@ function Home() {
 
   return (
     <AppShell>
-      <section className="relative mt-4 overflow-hidden rounded-[24px] elev-1"
+      <motion.section
+        className="relative mt-4 overflow-hidden rounded-[24px] elev-1"
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={IOS_SPRING}
         style={{ background: "linear-gradient(150deg, color-mix(in oklab, var(--lit-purple) 14%, var(--card)) 0%, color-mix(in oklab, var(--lit-gold) 10%, var(--card)) 100%)" }}
       >
         <StainedGlass variant="hero" />
@@ -141,7 +147,7 @@ function Home() {
           </div>
           <AnnouncementBell />
         </div>
-      </section>
+      </motion.section>
 
       <section className="mt-5">
         <div className="flex items-center gap-2 mb-2">
@@ -208,38 +214,44 @@ function Home() {
           <BookOpen className="h-4 w-4 brand-text" />
           <h2 className="text-[12px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("home.books")}</h2>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <motion.div
+          className="grid grid-cols-2 gap-3"
+          variants={staggerContainer(0.06)}
+          initial="initial"
+          animate="animate"
+        >
           {(booksQ.data ?? []).filter((b) => b.slug !== "almanac").map((b) => (
+            <motion.div key={b.id} variants={STAGGER_FADE} whileTap={{ scale: 0.97 }} transition={IOS_SPRING_SNAP}>
+              <Link
+                to={`/books/${b.slug}` as any}
+                className="tap-card relative overflow-hidden rounded-2xl p-4 min-h-32 flex flex-col justify-end text-white shadow-md"
+                style={{
+                  background: `linear-gradient(140deg, ${b.accent_color}, ${shade(b.accent_color, -25)})`,
+                }}
+              >
+                <span className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-lg bg-white/20 backdrop-blur-sm">
+                  <BookOpen className="h-3.5 w-3.5 opacity-90" />
+                </span>
+                <p className="text-[11px] uppercase tracking-wide font-semibold opacity-90">{b.title_en}</p>
+                <p className="font-hi text-base font-semibold leading-tight">{b.title_hi}</p>
+              </Link>
+            </motion.div>
+          ))}
+
+          <motion.div variants={STAGGER_FADE} whileTap={{ scale: 0.97 }} transition={IOS_SPRING_SNAP}>
             <Link
-              key={b.id}
-              to={`/books/${b.slug}` as any}
+              to="/about"
               className="tap-card relative overflow-hidden rounded-2xl p-4 min-h-32 flex flex-col justify-end text-white shadow-md"
-              style={{
-                background: `linear-gradient(140deg, ${b.accent_color}, ${shade(b.accent_color, -25)})`,
-              }}
+              style={{ background: "linear-gradient(140deg, #7C3AED, #4C1D95)" }}
             >
               <span className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-lg bg-white/20 backdrop-blur-sm">
                 <BookOpen className="h-3.5 w-3.5 opacity-90" />
               </span>
-              <p className="text-[11px] uppercase tracking-wide font-semibold opacity-90">{b.title_en}</p>
-              <p className="font-hi text-base font-semibold leading-tight">{b.title_hi}</p>
+              <p className="text-[11px] uppercase tracking-wide font-semibold opacity-90">About</p>
+              <p className="font-hi text-base font-semibold leading-tight">कलीसिया के बारे में</p>
             </Link>
-          ))}
-
-          <Link
-            to="/about"
-            className="tap-card relative overflow-hidden rounded-2xl p-4 min-h-32 flex flex-col justify-end text-white shadow-md"
-            style={{ background: "linear-gradient(140deg, #7C3AED, #4C1D95)" }}
-          >
-            <span className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-lg bg-white/20 backdrop-blur-sm">
-              <BookOpen className="h-3.5 w-3.5 opacity-90" />
-            </span>
-            <p className="text-[11px] uppercase tracking-wide font-semibold opacity-90">About</p>
-            <p className="font-hi text-base font-semibold leading-tight">कलीसिया के बारे में</p>
-          </Link>
-
-
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
 
     </AppShell>
