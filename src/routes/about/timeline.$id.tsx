@@ -115,11 +115,26 @@ function TimelineDetail() {
 
           {paths.length > 0 && (
             <div className="mt-4 grid grid-cols-2 gap-2">
-              {paths.map((p: string) => signedQ.data?.[p] && (
-                <img key={p} src={signedQ.data[p]} alt="" className="w-full rounded-xl object-cover aspect-square" loading="lazy" />
+              {paths.map((p: string, idx: number) => signedQ.data?.[p] && (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setLightbox(idx)}
+                  className="overflow-hidden rounded-xl active:scale-[0.98] transition"
+                >
+                  <img src={signedQ.data[p]} alt="" className="w-full rounded-xl object-cover aspect-square" loading="lazy" />
+                </button>
               ))}
             </div>
           )}
+          {lightbox !== null && signedQ.data && (
+            <ImageLightbox
+              images={paths.map((p: string) => signedQ.data![p]).filter(Boolean)}
+              index={lightbox}
+              onClose={() => setLightbox(null)}
+            />
+          )}
+
 
           <Card className="mt-4 p-4">
             <p className="whitespace-pre-wrap text-sm leading-relaxed">{pickLang(a.body_en, a.body_hi, language)}</p>
