@@ -731,9 +731,6 @@ html {
   padding-right: calc(var(--app-gutter) + var(--sar));
 }
 
-/* Full viewport height that follows the dynamic browser chrome */
-@utility min-h-dvh { min-height: 100dvh; }
-
 /* Bottom padding that always clears the floating dock */
 @utility pb-dock { padding-bottom: calc(var(--dock-space) + 1.25rem); }
 
