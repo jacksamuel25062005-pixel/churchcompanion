@@ -678,3 +678,76 @@ body.dock-hidden [data-app-nav] { transform: translateY(200%); }
 }
 
 
+
+/* ═══════════════════════════════════════════════════════════════
+   ADAPTIVE LAYOUT LAYER
+   Fluid sizing driven by viewport width, safe-area aware, works
+   from 320px phones through 21:9, foldables and tablets.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Fluid gutter: 14px @320 → 24px @768+ */
+  --app-gutter: clamp(0.875rem, 0.55rem + 1.6vw, 1.5rem);
+  /* Content column: phones fill the width, tablets cap out */
+  --app-max-w: 40rem;
+  /* Fluid base type scale */
+  --app-font-scale: clamp(0.9375rem, 0.86rem + 0.38vw, 1.0625rem);
+  /* Height of the floating dock incl. safe area (used for page padding) */
+  --dock-height: 4.5rem;
+  --dock-gap: 0.75rem;
+  --dock-space: calc(var(--dock-height) + var(--dock-gap) + var(--sab));
+}
+
+@media (min-width: 600px)  { :root { --app-max-w: 42rem; } }
+@media (min-width: 840px)  { :root { --app-max-w: 46rem; } }
+@media (min-width: 1200px) { :root { --app-max-w: 50rem; } }
+
+html {
+  font-size: 100%;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+@layer base {
+  html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+    overscroll-behavior-y: none;
+    font-size: var(--app-font-scale);
+  }
+  body { min-height: 100dvh; }
+  /* Nothing may push the layout wider than the viewport */
+  img, svg, video, canvas, iframe { max-width: 100%; height: auto; }
+  /* Text nodes inside flex/grid can always shrink */
+  h1, h2, h3, h4, p { overflow-wrap: anywhere; }
+}
+
+/* Responsive content column: safe-area aware on notched / gesture devices */
+@utility app-container {
+  width: 100%;
+  max-width: var(--app-max-w);
+  margin-inline: auto;
+  padding-inline: calc(var(--app-gutter) + var(--sal));
+  padding-right: calc(var(--app-gutter) + var(--sar));
+}
+
+/* Bottom padding that always clears the floating dock */
+@utility pb-dock { padding-bottom: calc(var(--dock-space) + 1.25rem); }
+
+/* Short / landscape phones: tighten vertical rhythm so nothing clips */
+@media (max-height: 620px) and (orientation: landscape) {
+  :root { --dock-height: 3.75rem; }
+  .cc-screen-enter { animation-duration: 160ms; }
+}
+
+/* Tablets & foldables unfolded: slightly roomier cards */
+@media (min-width: 700px) {
+  .premium-card { padding: 24px 22px; }
+}
+
+/* Guarantee comfortable touch targets on every density */
+@media (pointer: coarse) {
+  button, a[role="button"], [data-touch-target] {
+    min-height: 44px;
+  }
+}

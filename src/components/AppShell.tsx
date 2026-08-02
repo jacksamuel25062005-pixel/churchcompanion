@@ -87,10 +87,15 @@ const DockNav = memo(function DockNav() {
   return (
     <nav
       data-app-nav
-      className="fixed inset-x-0 z-40 flex justify-center px-3 safe-bottom dock-shell"
-      style={{ bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
+      className="fixed inset-x-0 z-40 flex justify-center safe-bottom dock-shell"
+      style={{
+        bottom: "calc(env(safe-area-inset-bottom) + var(--dock-gap))",
+        paddingLeft: "calc(var(--app-gutter) + var(--sal))",
+        paddingRight: "calc(var(--app-gutter) + var(--sar))",
+      }}
     >
-      <div className="dock-pill relative w-full max-w-screen-sm rounded-full">
+      <div className="dock-pill relative w-full max-w-[min(100%,var(--app-max-w))] rounded-full">
+
         {hasActive && indicator && (
           <motion.span
             aria-hidden
@@ -136,15 +141,17 @@ const DockNav = memo(function DockNav() {
               >
                 <Link
                   to={it.to}
-                  className={`nav-item relative flex flex-col items-center gap-0.5 py-1.5 text-[10.5px] font-medium ${
+                  className={`nav-item relative flex min-w-0 flex-col items-center gap-0.5 py-1.5 font-medium ${
                     Active ? "brand-text is-active" : "text-muted-foreground"
                   }`}
+                  style={{ fontSize: "clamp(9px, 2.4vw, 11px)" }}
                 >
-                  <span className="nav-icon flex h-9 w-12 items-center justify-center rounded-2xl">
-                    <Icon className="h-[18px] w-[18px]" strokeWidth={Active ? 2.4 : 2} />
+                  <span className="nav-icon flex h-9 w-full max-w-12 items-center justify-center rounded-2xl">
+                    <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={Active ? 2.4 : 2} />
                   </span>
-                  <span className="nav-label leading-none">{it.label}</span>
+                  <span className="nav-label w-full truncate text-center leading-none">{it.label}</span>
                 </Link>
+
               </motion.li>
             );
           })}
@@ -156,15 +163,15 @@ const DockNav = memo(function DockNav() {
 
 export function AppShell({ children, hideNav, title, left, right }: Props) {
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground relative">
+    <div className="min-h-screen min-h-dvh flex flex-col bg-background text-foreground relative overflow-x-hidden">
       {/* Ambient orbs — kept light for mid-range GPUs (two fixed layers, no animation) */}
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         <div
-          className="absolute -top-24 -left-20 h-[360px] w-[360px] rounded-full opacity-40 blur-3xl"
+          className="absolute -top-24 -left-20 h-[55vw] max-h-[360px] min-h-[220px] w-[55vw] max-w-[360px] min-w-[220px] rounded-full opacity-40 blur-3xl"
           style={{ background: "radial-gradient(circle, color-mix(in oklab, var(--brand) 50%, transparent), transparent 70%)", transform: "translateZ(0)" }}
         />
         <div
-          className="absolute bottom-0 right-0 h-[320px] w-[320px] rounded-full opacity-25 blur-3xl"
+          className="absolute bottom-0 right-0 h-[50vw] max-h-[320px] min-h-[200px] w-[50vw] max-w-[320px] min-w-[200px] rounded-full opacity-25 blur-3xl"
           style={{ background: "radial-gradient(circle, color-mix(in oklab, var(--brand) 30%, transparent), transparent 70%)", transform: "translateZ(0)" }}
         />
       </div>
@@ -172,9 +179,9 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
       {title || left || right ? (
         <header className="sticky top-0 z-30 safe-top">
           <div className="glass-strong border-b border-transparent">
-            <div className="mx-auto max-w-screen-sm px-4 h-14 flex items-center gap-2">
+            <div className="app-container h-14 flex items-center gap-2">
               {left}
-              <h1 className="flex-1 text-base font-semibold truncate">
+              <h1 className="min-w-0 flex-1 text-base font-semibold truncate">
                 <span lang="en">{title}</span>
               </h1>
               {right}
@@ -183,9 +190,10 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
         </header>
       ) : null}
 
-      <main className={`flex-1 mx-auto w-full max-w-screen-sm px-4 ${hideNav ? "pb-6" : "pb-36"}`}>
+      <main className={`flex-1 app-container ${hideNav ? "pb-6" : "pb-dock"}`}>
         {children}
       </main>
+
 
       {!hideNav && <DockNav />}
     </div>
