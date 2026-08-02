@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../components/AppShell";
 import { Card } from "../components/ui-bits";
 import { Switch } from "../components/ui/switch";
+import { Slider } from "../components/ui/slider";
+
 import { useT } from "../lib/i18n";
 import { ACCENT_PRESETS, useSettings, type FontSize, type ThemeMode, type Language } from "../lib/settings";
 import { getPushPermission, promptForPush, setPushOptIn, getPushOptedIn } from "../lib/onesignal";
