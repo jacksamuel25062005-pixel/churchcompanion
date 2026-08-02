@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.tg_audit_change() FROM PUBLIC, anon, authenticated;
