@@ -192,9 +192,10 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
         </header>
       ) : null}
 
-      <main className={`flex-1 app-container ${hideNav ? "pb-6" : "pb-dock"}`}>
+      <main key={pathname} className={`cc-screen-enter flex-1 app-container ${hideNav ? "pb-6" : "pb-dock"}`}>
         {children}
       </main>
+
 
 
       {!hideNav && <DockNav />}
