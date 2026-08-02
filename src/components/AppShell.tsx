@@ -87,10 +87,15 @@ const DockNav = memo(function DockNav() {
   return (
     <nav
       data-app-nav
-      className="fixed inset-x-0 z-40 flex justify-center px-3 safe-bottom dock-shell"
-      style={{ bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
+      className="fixed inset-x-0 z-40 flex justify-center safe-bottom dock-shell"
+      style={{
+        bottom: "calc(env(safe-area-inset-bottom) + var(--dock-gap))",
+        paddingLeft: "calc(var(--app-gutter) + var(--sal))",
+        paddingRight: "calc(var(--app-gutter) + var(--sar))",
+      }}
     >
-      <div className="dock-pill relative w-full max-w-screen-sm rounded-full">
+      <div className="dock-pill relative w-full max-w-[min(100%,var(--app-max-w))] rounded-full">
+
         {hasActive && indicator && (
           <motion.span
             aria-hidden
