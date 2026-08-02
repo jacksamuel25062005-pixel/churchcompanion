@@ -9,57 +9,41 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as SearchRouteImport } from './routes/search'
-import { Route as DiagnosticsRouteImport } from './routes/diagnostics'
-import { Route as BookmarksRouteImport } from './routes/bookmarks'
-import { Route as AlmanacRouteImport } from './routes/almanac'
-import { Route as AdminRouteImport } from './routes/admin'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AlmanacRouteImport } from './routes/almanac'
+import { Route as BookmarksRouteImport } from './routes/bookmarks'
+import { Route as DiagnosticsRouteImport } from './routes/diagnostics'
+import { Route as SearchRouteImport } from './routes/search'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as AboutIndexRouteImport } from './routes/about/index'
 import { Route as BooksSlugRouteImport } from './routes/books/$slug'
-import { Route as BooksSongBookIndexRouteImport } from './routes/books/song-book.index'
-import { Route as AboutTimelineIndexRouteImport } from './routes/about/timeline.index'
-import { Route as AboutChurchIndexRouteImport } from './routes/about/church.index'
-import { Route as BooksSongBookChurchRouteImport } from './routes/books/song-book.church'
-import { Route as BooksSongBookAdditionalRouteImport } from './routes/books/song-book.additional'
-import { Route as BooksSongBookIdRouteImport } from './routes/books/song-book.$id'
-import { Route as AboutTimelineIdRouteImport } from './routes/about/timeline.$id'
-import { Route as AboutChurchIdRouteImport } from './routes/about/church.$id'
-import { Route as AuthenticatedAdminUploadRouteImport } from './routes/_authenticated/admin.upload'
-import { Route as AuthenticatedAdminTodayRouteImport } from './routes/_authenticated/admin.today'
-import { Route as AuthenticatedAdminRequestsRouteImport } from './routes/_authenticated/admin.requests'
-import { Route as AuthenticatedAdminNotifyRouteImport } from './routes/_authenticated/admin.notify'
-import { Route as AuthenticatedAdminManageRouteImport } from './routes/_authenticated/admin.manage'
-import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated/admin.dashboard'
-import { Route as AuthenticatedAdminBookImportRouteImport } from './routes/_authenticated/admin.book-import'
-import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin.audit'
 import { Route as AuthenticatedAdminAnnouncementsRouteImport } from './routes/_authenticated/admin.announcements'
+import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin.audit'
+import { Route as AuthenticatedAdminBookImportRouteImport } from './routes/_authenticated/admin.book-import'
+import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated/admin.dashboard'
+import { Route as AuthenticatedAdminManageRouteImport } from './routes/_authenticated/admin.manage'
+import { Route as AuthenticatedAdminNotifyRouteImport } from './routes/_authenticated/admin.notify'
+import { Route as AuthenticatedAdminRequestsRouteImport } from './routes/_authenticated/admin.requests'
+import { Route as AuthenticatedAdminTodayRouteImport } from './routes/_authenticated/admin.today'
+import { Route as AuthenticatedAdminUploadRouteImport } from './routes/_authenticated/admin.upload'
+import { Route as AboutChurchIndexRouteImport } from './routes/about/church.index'
+import { Route as AboutChurchIdRouteImport } from './routes/about/church.$id'
+import { Route as AboutTimelineIndexRouteImport } from './routes/about/timeline.index'
+import { Route as AboutTimelineIdRouteImport } from './routes/about/timeline.$id'
+import { Route as BooksSongBookIndexRouteImport } from './routes/books/song-book.index'
+import { Route as BooksSongBookIdRouteImport } from './routes/books/song-book.$id'
+import { Route as BooksSongBookAdditionalRouteImport } from './routes/books/song-book.additional'
+import { Route as BooksSongBookChurchRouteImport } from './routes/books/song-book.church'
 
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SearchRoute = SearchRouteImport.update({
-  id: '/search',
-  path: '/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DiagnosticsRoute = DiagnosticsRouteImport.update({
-  id: '/diagnostics',
-  path: '/diagnostics',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BookmarksRoute = BookmarksRouteImport.update({
-  id: '/bookmarks',
-  path: '/bookmarks',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AlmanacRoute = AlmanacRouteImport.update({
-  id: '/almanac',
-  path: '/almanac',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -67,13 +51,29 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const AlmanacRoute = AlmanacRouteImport.update({
+  id: '/almanac',
+  path: '/almanac',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const BookmarksRoute = BookmarksRouteImport.update({
+  id: '/bookmarks',
+  path: '/bookmarks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DiagnosticsRoute = DiagnosticsRouteImport.update({
+  id: '/diagnostics',
+  path: '/diagnostics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutIndexRoute = AboutIndexRouteImport.update({
@@ -86,73 +86,21 @@ const BooksSlugRoute = BooksSlugRouteImport.update({
   path: '/books/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BooksSongBookIndexRoute = BooksSongBookIndexRouteImport.update({
-  id: '/books/song-book/',
-  path: '/books/song-book/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AboutTimelineIndexRoute = AboutTimelineIndexRouteImport.update({
-  id: '/about/timeline/',
-  path: '/about/timeline/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AboutChurchIndexRoute = AboutChurchIndexRouteImport.update({
-  id: '/about/church/',
-  path: '/about/church/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BooksSongBookChurchRoute = BooksSongBookChurchRouteImport.update({
-  id: '/books/song-book/church',
-  path: '/books/song-book/church',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BooksSongBookAdditionalRoute = BooksSongBookAdditionalRouteImport.update({
-  id: '/books/song-book/additional',
-  path: '/books/song-book/additional',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BooksSongBookIdRoute = BooksSongBookIdRouteImport.update({
-  id: '/books/song-book/$id',
-  path: '/books/song-book/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AboutTimelineIdRoute = AboutTimelineIdRouteImport.update({
-  id: '/about/timeline/$id',
-  path: '/about/timeline/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AboutChurchIdRoute = AboutChurchIdRouteImport.update({
-  id: '/about/church/$id',
-  path: '/about/church/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedAdminUploadRoute =
-  AuthenticatedAdminUploadRouteImport.update({
-    id: '/admin/upload',
-    path: '/admin/upload',
+const AuthenticatedAdminAnnouncementsRoute =
+  AuthenticatedAdminAnnouncementsRouteImport.update({
+    id: '/admin/announcements',
+    path: '/admin/announcements',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAdminTodayRoute = AuthenticatedAdminTodayRouteImport.update({
-  id: '/admin/today',
-  path: '/admin/today',
+const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
+  id: '/admin/audit',
+  path: '/admin/audit',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedAdminRequestsRoute =
-  AuthenticatedAdminRequestsRouteImport.update({
-    id: '/admin/requests',
-    path: '/admin/requests',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAdminNotifyRoute =
-  AuthenticatedAdminNotifyRouteImport.update({
-    id: '/admin/notify',
-    path: '/admin/notify',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAdminManageRoute =
-  AuthenticatedAdminManageRouteImport.update({
-    id: '/admin/manage',
-    path: '/admin/manage',
+const AuthenticatedAdminBookImportRoute =
+  AuthenticatedAdminBookImportRouteImport.update({
+    id: '/admin/book-import',
+    path: '/admin/book-import',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminDashboardRoute =
@@ -161,23 +109,75 @@ const AuthenticatedAdminDashboardRoute =
     path: '/admin/dashboard',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAdminBookImportRoute =
-  AuthenticatedAdminBookImportRouteImport.update({
-    id: '/admin/book-import',
-    path: '/admin/book-import',
+const AuthenticatedAdminManageRoute =
+  AuthenticatedAdminManageRouteImport.update({
+    id: '/admin/manage',
+    path: '/admin/manage',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
-  id: '/admin/audit',
-  path: '/admin/audit',
+const AuthenticatedAdminNotifyRoute =
+  AuthenticatedAdminNotifyRouteImport.update({
+    id: '/admin/notify',
+    path: '/admin/notify',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminRequestsRoute =
+  AuthenticatedAdminRequestsRouteImport.update({
+    id: '/admin/requests',
+    path: '/admin/requests',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminTodayRoute = AuthenticatedAdminTodayRouteImport.update({
+  id: '/admin/today',
+  path: '/admin/today',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedAdminAnnouncementsRoute =
-  AuthenticatedAdminAnnouncementsRouteImport.update({
-    id: '/admin/announcements',
-    path: '/admin/announcements',
+const AuthenticatedAdminUploadRoute =
+  AuthenticatedAdminUploadRouteImport.update({
+    id: '/admin/upload',
+    path: '/admin/upload',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AboutChurchIndexRoute = AboutChurchIndexRouteImport.update({
+  id: '/about/church/',
+  path: '/about/church/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutChurchIdRoute = AboutChurchIdRouteImport.update({
+  id: '/about/church/$id',
+  path: '/about/church/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutTimelineIndexRoute = AboutTimelineIndexRouteImport.update({
+  id: '/about/timeline/',
+  path: '/about/timeline/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutTimelineIdRoute = AboutTimelineIdRouteImport.update({
+  id: '/about/timeline/$id',
+  path: '/about/timeline/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BooksSongBookIndexRoute = BooksSongBookIndexRouteImport.update({
+  id: '/books/song-book/',
+  path: '/books/song-book/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BooksSongBookIdRoute = BooksSongBookIdRouteImport.update({
+  id: '/books/song-book/$id',
+  path: '/books/song-book/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BooksSongBookAdditionalRoute = BooksSongBookAdditionalRouteImport.update({
+  id: '/books/song-book/additional',
+  path: '/books/song-book/additional',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BooksSongBookChurchRoute = BooksSongBookChurchRouteImport.update({
+  id: '/books/song-book/church',
+  path: '/books/song-book/church',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -376,46 +376,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/search': {
-      id: '/search'
-      path: '/search'
-      fullPath: '/search'
-      preLoaderRoute: typeof SearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/diagnostics': {
-      id: '/diagnostics'
-      path: '/diagnostics'
-      fullPath: '/diagnostics'
-      preLoaderRoute: typeof DiagnosticsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/bookmarks': {
-      id: '/bookmarks'
-      path: '/bookmarks'
-      fullPath: '/bookmarks'
-      preLoaderRoute: typeof BookmarksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/almanac': {
-      id: '/almanac'
-      path: '/almanac'
-      fullPath: '/almanac'
-      preLoaderRoute: typeof AlmanacRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -425,11 +390,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/almanac': {
+      id: '/almanac'
+      path: '/almanac'
+      fullPath: '/almanac'
+      preLoaderRoute: typeof AlmanacRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bookmarks': {
+      id: '/bookmarks'
+      path: '/bookmarks'
+      fullPath: '/bookmarks'
+      preLoaderRoute: typeof BookmarksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/diagnostics': {
+      id: '/diagnostics'
+      path: '/diagnostics'
+      fullPath: '/diagnostics'
+      preLoaderRoute: typeof DiagnosticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about/': {
@@ -446,109 +446,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BooksSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/books/song-book/': {
-      id: '/books/song-book/'
-      path: '/books/song-book'
-      fullPath: '/books/song-book/'
-      preLoaderRoute: typeof BooksSongBookIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about/timeline/': {
-      id: '/about/timeline/'
-      path: '/about/timeline'
-      fullPath: '/about/timeline/'
-      preLoaderRoute: typeof AboutTimelineIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about/church/': {
-      id: '/about/church/'
-      path: '/about/church'
-      fullPath: '/about/church/'
-      preLoaderRoute: typeof AboutChurchIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/books/song-book/church': {
-      id: '/books/song-book/church'
-      path: '/books/song-book/church'
-      fullPath: '/books/song-book/church'
-      preLoaderRoute: typeof BooksSongBookChurchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/books/song-book/additional': {
-      id: '/books/song-book/additional'
-      path: '/books/song-book/additional'
-      fullPath: '/books/song-book/additional'
-      preLoaderRoute: typeof BooksSongBookAdditionalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/books/song-book/$id': {
-      id: '/books/song-book/$id'
-      path: '/books/song-book/$id'
-      fullPath: '/books/song-book/$id'
-      preLoaderRoute: typeof BooksSongBookIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about/timeline/$id': {
-      id: '/about/timeline/$id'
-      path: '/about/timeline/$id'
-      fullPath: '/about/timeline/$id'
-      preLoaderRoute: typeof AboutTimelineIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about/church/$id': {
-      id: '/about/church/$id'
-      path: '/about/church/$id'
-      fullPath: '/about/church/$id'
-      preLoaderRoute: typeof AboutChurchIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/admin/upload': {
-      id: '/_authenticated/admin/upload'
-      path: '/admin/upload'
-      fullPath: '/admin/upload'
-      preLoaderRoute: typeof AuthenticatedAdminUploadRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/today': {
-      id: '/_authenticated/admin/today'
-      path: '/admin/today'
-      fullPath: '/admin/today'
-      preLoaderRoute: typeof AuthenticatedAdminTodayRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/requests': {
-      id: '/_authenticated/admin/requests'
-      path: '/admin/requests'
-      fullPath: '/admin/requests'
-      preLoaderRoute: typeof AuthenticatedAdminRequestsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/notify': {
-      id: '/_authenticated/admin/notify'
-      path: '/admin/notify'
-      fullPath: '/admin/notify'
-      preLoaderRoute: typeof AuthenticatedAdminNotifyRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/manage': {
-      id: '/_authenticated/admin/manage'
-      path: '/admin/manage'
-      fullPath: '/admin/manage'
-      preLoaderRoute: typeof AuthenticatedAdminManageRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/dashboard': {
-      id: '/_authenticated/admin/dashboard'
-      path: '/admin/dashboard'
-      fullPath: '/admin/dashboard'
-      preLoaderRoute: typeof AuthenticatedAdminDashboardRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/book-import': {
-      id: '/_authenticated/admin/book-import'
-      path: '/admin/book-import'
-      fullPath: '/admin/book-import'
-      preLoaderRoute: typeof AuthenticatedAdminBookImportRouteImport
+    '/_authenticated/admin/announcements': {
+      id: '/_authenticated/admin/announcements'
+      path: '/admin/announcements'
+      fullPath: '/admin/announcements'
+      preLoaderRoute: typeof AuthenticatedAdminAnnouncementsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/audit': {
@@ -558,12 +460,110 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAuditRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin/announcements': {
-      id: '/_authenticated/admin/announcements'
-      path: '/admin/announcements'
-      fullPath: '/admin/announcements'
-      preLoaderRoute: typeof AuthenticatedAdminAnnouncementsRouteImport
+    '/_authenticated/admin/book-import': {
+      id: '/_authenticated/admin/book-import'
+      path: '/admin/book-import'
+      fullPath: '/admin/book-import'
+      preLoaderRoute: typeof AuthenticatedAdminBookImportRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/dashboard': {
+      id: '/_authenticated/admin/dashboard'
+      path: '/admin/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/manage': {
+      id: '/_authenticated/admin/manage'
+      path: '/admin/manage'
+      fullPath: '/admin/manage'
+      preLoaderRoute: typeof AuthenticatedAdminManageRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/notify': {
+      id: '/_authenticated/admin/notify'
+      path: '/admin/notify'
+      fullPath: '/admin/notify'
+      preLoaderRoute: typeof AuthenticatedAdminNotifyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/requests': {
+      id: '/_authenticated/admin/requests'
+      path: '/admin/requests'
+      fullPath: '/admin/requests'
+      preLoaderRoute: typeof AuthenticatedAdminRequestsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/today': {
+      id: '/_authenticated/admin/today'
+      path: '/admin/today'
+      fullPath: '/admin/today'
+      preLoaderRoute: typeof AuthenticatedAdminTodayRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/upload': {
+      id: '/_authenticated/admin/upload'
+      path: '/admin/upload'
+      fullPath: '/admin/upload'
+      preLoaderRoute: typeof AuthenticatedAdminUploadRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/about/church/': {
+      id: '/about/church/'
+      path: '/about/church'
+      fullPath: '/about/church/'
+      preLoaderRoute: typeof AboutChurchIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about/church/$id': {
+      id: '/about/church/$id'
+      path: '/about/church/$id'
+      fullPath: '/about/church/$id'
+      preLoaderRoute: typeof AboutChurchIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about/timeline/': {
+      id: '/about/timeline/'
+      path: '/about/timeline'
+      fullPath: '/about/timeline/'
+      preLoaderRoute: typeof AboutTimelineIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about/timeline/$id': {
+      id: '/about/timeline/$id'
+      path: '/about/timeline/$id'
+      fullPath: '/about/timeline/$id'
+      preLoaderRoute: typeof AboutTimelineIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/books/song-book/': {
+      id: '/books/song-book/'
+      path: '/books/song-book'
+      fullPath: '/books/song-book/'
+      preLoaderRoute: typeof BooksSongBookIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/books/song-book/$id': {
+      id: '/books/song-book/$id'
+      path: '/books/song-book/$id'
+      fullPath: '/books/song-book/$id'
+      preLoaderRoute: typeof BooksSongBookIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/books/song-book/additional': {
+      id: '/books/song-book/additional'
+      path: '/books/song-book/additional'
+      fullPath: '/books/song-book/additional'
+      preLoaderRoute: typeof BooksSongBookAdditionalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/books/song-book/church': {
+      id: '/books/song-book/church'
+      path: '/books/song-book/church'
+      fullPath: '/books/song-book/church'
+      preLoaderRoute: typeof BooksSongBookChurchRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -618,3 +618,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
