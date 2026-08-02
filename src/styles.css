@@ -455,9 +455,10 @@ body.dock-hidden [data-app-nav] { transform: translateY(200%); }
 ::view-transition-new(app-dock) { animation: none !important; mix-blend-mode: normal; }
 
 .dock-pill {
-  /* Refractive tinted glass — Liquid Glass × OneUI 9 */
-  backdrop-filter: blur(45px) saturate(200%);
-  background: color-mix(in oklab, var(--card) 78%, transparent);
+  /* Refractive tinted glass — Liquid Glass × OneUI 9 (blur user-adjustable) */
+  backdrop-filter: blur(var(--dock-blur, 45px)) saturate(var(--dock-saturate, 200%));
+  background: color-mix(in oklab, var(--card) var(--dock-fill, 78%), transparent);
+
   border: 1px solid color-mix(in oklab, white 55%, transparent);
   box-shadow:
     /* top specular */
