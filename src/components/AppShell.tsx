@@ -162,8 +162,10 @@ const DockNav = memo(function DockNav() {
 });
 
 export function AppShell({ children, hideNav, title, left, right }: Props) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   return (
-    <div className="min-h-screen min-h-dvh flex flex-col bg-background text-foreground relative overflow-x-hidden">
+    <div className="min-h-screen min-h-dvh flex flex-col bg-background text-foreground relative overflow-x-clip">
+
       {/* Ambient orbs — kept light for mid-range GPUs (two fixed layers, no animation) */}
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         <div
