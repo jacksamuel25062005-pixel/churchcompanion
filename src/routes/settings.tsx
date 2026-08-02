@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../components/AppShell";
 import { Card } from "../components/ui-bits";
 import { Switch } from "../components/ui/switch";
+import { Slider } from "../components/ui/slider";
+
 import { useT } from "../lib/i18n";
 import { ACCENT_PRESETS, useSettings, type FontSize, type ThemeMode, type Language } from "../lib/settings";
 import { getPushPermission, promptForPush, setPushOptIn, getPushOptedIn } from "../lib/onesignal";
@@ -77,6 +79,27 @@ function SettingsPage() {
         </Section>
 
 
+        <Section label="Dock glass blur">
+          <Card className="p-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-medium">Blur strength</p>
+              <span className="text-xs tabular-nums text-muted-foreground">{Math.round(s.dockBlur)}px</span>
+            </div>
+            <Slider
+              className="mt-4"
+              min={0}
+              max={60}
+              step={1}
+              value={[s.dockBlur]}
+              onValueChange={(v) => s.setDockBlur(v[0] ?? 45)}
+              aria-label="Home dock blur strength"
+            />
+            <p className="mt-3 text-xs text-muted-foreground">
+              Lower values make the bottom dock more solid, higher values more frosted.
+            </p>
+          </Card>
+        </Section>
+
         <Section label={t("settings.language")}>
           <div className="grid grid-cols-2 gap-2">
             {(["en","hi"] as Language[]).map((l) => (
@@ -86,6 +109,7 @@ function SettingsPage() {
             ))}
           </div>
         </Section>
+
 
 
         <NotificationsSection />

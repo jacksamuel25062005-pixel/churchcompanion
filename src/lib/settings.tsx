@@ -64,6 +64,8 @@ interface Settings {
   accent: string; // hex
   language: Language;
   fontFamily: FontFamilyId;
+  /** Home dock glass blur strength in px (0 = flat, 60 = ultra frosted). */
+  dockBlur: number;
 }
 
 const DEFAULT: Settings = {
@@ -72,6 +74,7 @@ const DEFAULT: Settings = {
   accent: "#6366f1",
   language: "en",
   fontFamily: "system",
+  dockBlur: 45,
 };
 
 const STORAGE_KEY = "cc.settings.v1";
@@ -82,6 +85,7 @@ interface Ctx extends Settings {
   setAccent: (v: string) => void;
   setLanguage: (v: Language) => void;
   setFontFamily: (v: FontFamilyId) => void;
+  setDockBlur: (v: number) => void;
 }
 
 const SettingsContext = createContext<Ctx | null>(null);
@@ -112,6 +116,12 @@ function applyToDOM(s: Settings) {
   root.style.setProperty("--font-sans", font.sans);
   root.style.setProperty("--font-display", font.display);
   root.lang = s.language;
+  const blur = Math.min(60, Math.max(0, Number.isFinite(s.dockBlur) ? s.dockBlur : 45));
+  root.style.setProperty("--dock-blur", `${blur}px`);
+  // Less blur => more opaque fill so the dock stays legible.
+  root.style.setProperty("--dock-fill", `${Math.round(92 - (blur / 60) * 14)}%`);
+  root.style.setProperty("--dock-fill-dark", `${Math.round(90 - (blur / 60) * 18)}%`);
+  root.style.setProperty("--dock-saturate", `${Math.round(120 + (blur / 60) * 80)}%`);
 }
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
@@ -145,6 +155,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         setAccent: (v) => update({ accent: v }),
         setLanguage: (v) => update({ language: v }),
         setFontFamily: (v) => update({ fontFamily: v }),
+        setDockBlur: (v) => update({ dockBlur: v }),
       }}
     >
       {children}
