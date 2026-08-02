@@ -141,15 +141,17 @@ const DockNav = memo(function DockNav() {
               >
                 <Link
                   to={it.to}
-                  className={`nav-item relative flex flex-col items-center gap-0.5 py-1.5 text-[10.5px] font-medium ${
+                  className={`nav-item relative flex min-w-0 flex-col items-center gap-0.5 py-1.5 font-medium ${
                     Active ? "brand-text is-active" : "text-muted-foreground"
                   }`}
+                  style={{ fontSize: "clamp(9px, 2.4vw, 11px)" }}
                 >
-                  <span className="nav-icon flex h-9 w-12 items-center justify-center rounded-2xl">
-                    <Icon className="h-[18px] w-[18px]" strokeWidth={Active ? 2.4 : 2} />
+                  <span className="nav-icon flex h-9 w-full max-w-12 items-center justify-center rounded-2xl">
+                    <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={Active ? 2.4 : 2} />
                   </span>
-                  <span className="nav-label leading-none">{it.label}</span>
+                  <span className="nav-label w-full truncate text-center leading-none">{it.label}</span>
                 </Link>
+
               </motion.li>
             );
           })}
