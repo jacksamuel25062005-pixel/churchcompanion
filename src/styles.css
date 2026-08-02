@@ -711,16 +711,19 @@ html {
 @layer base {
   html, body {
     max-width: 100%;
-    overflow-x: hidden;
-    overscroll-behavior-y: none;
+    /* `clip` (not `hidden`) — prevents a second scroll container from
+       swallowing touch scrolling on mobile while still killing sideways drift. */
+    overflow-x: clip;
     font-size: var(--app-font-scale);
   }
+  html { -webkit-overflow-scrolling: touch; }
   body { min-height: 100dvh; }
   /* Nothing may push the layout wider than the viewport */
   img, svg, video, canvas, iframe { max-width: 100%; height: auto; }
   /* Text nodes inside flex/grid can always shrink */
   h1, h2, h3, h4, p { overflow-wrap: anywhere; }
 }
+
 
 /* Responsive content column: safe-area aware on notched / gesture devices */
 @utility app-container {
