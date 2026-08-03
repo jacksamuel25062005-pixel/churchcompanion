@@ -19,7 +19,9 @@ import {
   listMessages,
   listReactions,
   markRead,
+  onYouthRosterChange,
   presenceChannelName,
+
   readCounts,
   registerCongregation,
   reportMessage,
@@ -55,10 +57,16 @@ function ChatThread() {
   const [identityTick, setIdentityTick] = useState(0);
 
   // Keep an already-approved youth session alive silently — never re-ask.
+  // Re-validate instantly whenever an admin edits the approved list, and on focus.
   useEffect(() => {
     if (channel !== "youth") return;
-    void refreshYouthSession().then(() => setIdentityTick((n) => n + 1));
+    const revalidate = () => void refreshYouthSession().then(() => setIdentityTick((n) => n + 1));
+    revalidate();
+    const off = onYouthRosterChange(revalidate);
+    window.addEventListener("focus", revalidate);
+    return () => { off(); window.removeEventListener("focus", revalidate); };
   }, [channel]);
+
 
   const identity = useMemo(() => {
     void identityTick;
@@ -135,14 +143,21 @@ function YouthGate({ onDone }: { onDone: () => void }) {
   const [busy, setBusy] = useState(false);
   const [denied, setDenied] = useState(false);
 
-  const submit = async () => {
+  const submit = useCallback(async () => {
     if (!phone.trim()) return;
     setBusy(true); setDenied(false);
     try {
       const y = await checkYouthPhone(phone);
       if (y) onDone(); else setDenied(true);
     } catch { setDenied(true); } finally { setBusy(false); }
-  };
+  }, [phone, onDone]);
+
+  // A denied number is retried automatically the moment an admin approves it.
+  useEffect(() => {
+    if (!denied || !phone.trim()) return;
+    return onYouthRosterChange(() => { void submit(); });
+  }, [denied, phone, submit]);
+
 
   return (
     <Card className="mt-6 space-y-3 p-5">

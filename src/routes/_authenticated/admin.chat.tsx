@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { broadcastYouthRoster } from "@/lib/chat";
+
 import { AppShell } from "../../components/AppShell";
 import { BackButton, Card } from "../../components/ui-bits";
 
@@ -55,18 +57,33 @@ function AdminChat() {
     },
   });
 
+  // Live-refresh the roster for every admin device.
+  useEffect(() => {
+    const ch = supabase
+      .channel("admin-approved-youth")
+      .on("postgres_changes", { event: "*", schema: "public", table: "approved_youth" }, () => {
+        void qc.invalidateQueries({ queryKey: ["admin-approved-youth"] });
+      })
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
+  }, [qc]);
+
   const addYouth = async () => {
+
     if (!youthForm.name.trim() || !youthForm.phone.trim()) return;
     const { error } = await supabase.from("approved_youth").insert({ name: youthForm.name.trim(), phone: youthForm.phone.trim() });
     if (error) { window.alert(error.message); return; }
     setYouthForm({ name: "", phone: "" });
+    broadcastYouthRoster();
     void qc.invalidateQueries({ queryKey: ["admin-approved-youth"] });
   };
 
   const removeYouth = async (id: string) => {
     await supabase.from("approved_youth").delete().eq("id", id);
+    broadcastYouthRoster();
     void qc.invalidateQueries({ queryKey: ["admin-approved-youth"] });
   };
+
 
   const addMute = async (ref?: string) => {
     const target = (ref ?? mute.ref).trim();

@@ -301,3 +301,31 @@ export async function unreadCount(channel: ChatChannel): Promise<number> {
 export function presenceChannelName(channel: ChatChannel) {
   return `chat-room:${channel}`;
 }
+
+// ---------------- Approved-youth roster sync ----------------
+//
+// The roster itself is admin-only, so clients cannot subscribe to the table.
+// Instead admins broadcast a lightweight "changed" ping on a realtime channel
+// and every device re-validates its own youth session immediately.
+
+const ROSTER_CHANNEL = "youth-roster";
+
+/** Tell every connected device that the approved youth list changed. */
+export function broadcastYouthRoster() {
+  const ch = supabase.channel(ROSTER_CHANNEL);
+  ch.subscribe((status) => {
+    if (status !== "SUBSCRIBED") return;
+    void ch.send({ type: "broadcast", event: "changed", payload: {} }).then(() => {
+      void supabase.removeChannel(ch);
+    });
+  });
+}
+
+/** Listen for roster changes. Returns an unsubscribe function. */
+export function onYouthRosterChange(cb: () => void) {
+  const ch = supabase
+    .channel(ROSTER_CHANNEL)
+    .on("broadcast", { event: "changed" }, () => cb())
+    .subscribe();
+  return () => { void supabase.removeChannel(ch); };
+}
