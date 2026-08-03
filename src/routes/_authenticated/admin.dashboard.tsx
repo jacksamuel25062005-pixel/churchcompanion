@@ -71,6 +71,8 @@ function Dashboard() {
           <NavTile to="/admin/announcements" icon={<Megaphone className="h-5 w-5" />} title="Announcements" subtitle="Post to church members or youth group" />
           <NavTile to="/admin/requests" icon={<UserCheck className="h-5 w-5" />} title="Admin requests" subtitle="Approve or reject" />
           <NavTile to="/admin/audit" icon={<History className="h-5 w-5" />} title="Change history" subtitle="Who changed songs, books & Today's Songs" />
+          <NavTile to="/admin/chat" icon={<MessagesSquare className="h-5 w-5" />} title="Chat moderation" subtitle="Reports, mutes & approved youth list" />
+
         </div>
 
         <button
