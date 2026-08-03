@@ -91,8 +91,8 @@
   /* iOS-reference Liquid Glass tokens (T1) */
   --glass-bg:          rgba(255, 248, 240, 0.50);
   --glass-bg-deep:     rgba(107,  63,  30, 0.50);
-  --glass-blur:        20px;
-  --glass-blur-heavy:  32px;
+  --glass-blur:        42px;
+  --glass-blur-heavy:  56px;
   --glass-border:      rgba(255, 255, 255, 0.30);
   --glass-shadow:      0 8px 32px rgba(107, 63, 30, 0.18),
                        0 1px 0    rgba(255,255,255, 0.60) inset;
