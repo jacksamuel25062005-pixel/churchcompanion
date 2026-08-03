@@ -33,7 +33,7 @@ export function ChatFab() {
       className="fixed z-40"
       style={{
         right: "calc(var(--app-gutter) + var(--sar))",
-        bottom: "calc(env(safe-area-inset-bottom) + var(--dock-gap) + var(--dock-height) + 0.3mm)",
+        bottom: "calc(env(safe-area-inset-bottom) + var(--dock-gap) + var(--dock-height) + 3mm)",
       }}
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
