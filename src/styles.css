@@ -211,7 +211,7 @@
 }
 @utility glass-strong {
   background: color-mix(in oklab, var(--color-card) 75%, transparent);
-  backdrop-filter: blur(22px) saturate(160%);
+  backdrop-filter: blur(48px) saturate(180%);
   border: 1px solid color-mix(in oklab, var(--color-foreground) 12%, transparent);
   will-change: backdrop-filter;
 }
