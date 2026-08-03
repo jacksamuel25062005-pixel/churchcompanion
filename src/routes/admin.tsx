@@ -82,6 +82,21 @@ function LoginForm({ role }: { role: "super" | "admin" }) {
   const [password, setPassword] = useState("");
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [sendingReset, setSendingReset] = useState(false);
+
+  const sendReset = async () => {
+    if (!email.trim()) { toast.error("Enter your email first"); return; }
+    setSendingReset(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setSendingReset(false);
+    // Never reveal whether an account exists for this address.
+    if (error && !/rate/i.test(error.message)) toast.success("If that email has an account, a reset link is on its way.");
+    else if (error) toast.error(error.message);
+    else toast.success("If that email has an account, a reset link is on its way.");
+  };
+
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
