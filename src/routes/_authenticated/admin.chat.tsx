@@ -57,7 +57,19 @@ function AdminChat() {
     },
   });
 
+  // Live-refresh the roster for every admin device.
+  useEffect(() => {
+    const ch = supabase
+      .channel("admin-approved-youth")
+      .on("postgres_changes", { event: "*", schema: "public", table: "approved_youth" }, () => {
+        void qc.invalidateQueries({ queryKey: ["admin-approved-youth"] });
+      })
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
+  }, [qc]);
+
   const addYouth = async () => {
+
     if (!youthForm.name.trim() || !youthForm.phone.trim()) return;
     const { error } = await supabase.from("approved_youth").insert({ name: youthForm.name.trim(), phone: youthForm.phone.trim() });
     if (error) { window.alert(error.message); return; }
