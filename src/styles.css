@@ -235,8 +235,8 @@
   .animate-fade-up, .cc-screen-enter { animation: none !important; }
 }
 @media (max-width: 380px) {
-  .glass { backdrop-filter: blur(14px) saturate(150%); }
-  .glass-strong { backdrop-filter: blur(18px) saturate(150%); }
+  .glass { backdrop-filter: blur(40px) saturate(170%); }
+  .glass-strong { backdrop-filter: blur(42px) saturate(170%); }
 }
 
 /* ─────────────────────────────────────────────────────────────
