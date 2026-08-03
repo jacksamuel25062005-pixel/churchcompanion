@@ -7,6 +7,7 @@ import { useT } from "../lib/i18n";
 import { toast } from "sonner";
 import { Shield, UserPlus } from "lucide-react";
 import { firstNameFrom } from "@/lib/admin-name";
+import { PasswordField } from "@/components/security/PasswordField";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — Church Companion" }] }),
