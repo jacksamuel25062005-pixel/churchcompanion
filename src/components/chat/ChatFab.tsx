@@ -32,9 +32,13 @@ export function ChatFab() {
     <motion.div
       className="fixed z-40"
       style={{
-        right: "calc(var(--app-gutter) + var(--sar))",
-        bottom: "calc(env(safe-area-inset-bottom) + var(--dock-gap) + var(--dock-height) + 3mm)",
+        right: "max(calc(var(--app-gutter) + var(--sar)), calc(var(--sar) + 0.75rem))",
+        /* Sits above the dock, which itself already clears the gesture bar /
+           home indicator via --sab. Extra 3mm breathing room. */
+        bottom: "calc(var(--dock-space) + 3mm)",
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
+
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ type: "spring", stiffness: 420, damping: 30 }}
