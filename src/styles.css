@@ -217,7 +217,7 @@
 }
 @utility glass-chip {
   background: color-mix(in oklab, var(--color-card) 65%, transparent);
-  backdrop-filter: blur(12px) saturate(150%);
+  backdrop-filter: blur(40px) saturate(170%);
   border: 1px solid color-mix(in oklab, var(--color-foreground) 10%, transparent);
 }
 @utility font-display { font-family: var(--font-display); letter-spacing: -0.011em; }
