@@ -93,7 +93,16 @@ export interface CachedImageRow {
   source?: string;  // 'book-pages' | 'storage' | 'remote' | ...
 }
 
+export interface ChatOutboxRow {
+  id: string;
+  channel: "congregation" | "youth";
+  content: string | null;
+  media_url: string | null;
+  created_at: number;
+}
+
 export interface ImageBlobRow {
+
   key: string;      // `${bucket}/${path}`
   bucket: string;
   path: string;
