@@ -55,10 +55,16 @@ function ChatThread() {
   const [identityTick, setIdentityTick] = useState(0);
 
   // Keep an already-approved youth session alive silently — never re-ask.
+  // Re-validate instantly whenever an admin edits the approved list, and on focus.
   useEffect(() => {
     if (channel !== "youth") return;
-    void refreshYouthSession().then(() => setIdentityTick((n) => n + 1));
+    const revalidate = () => void refreshYouthSession().then(() => setIdentityTick((n) => n + 1));
+    revalidate();
+    const off = onYouthRosterChange(revalidate);
+    window.addEventListener("focus", revalidate);
+    return () => { off(); window.removeEventListener("focus", revalidate); };
   }, [channel]);
+
 
   const identity = useMemo(() => {
     void identityTick;
