@@ -60,13 +60,16 @@ function AdminChat() {
     const { error } = await supabase.from("approved_youth").insert({ name: youthForm.name.trim(), phone: youthForm.phone.trim() });
     if (error) { window.alert(error.message); return; }
     setYouthForm({ name: "", phone: "" });
+    broadcastYouthRoster();
     void qc.invalidateQueries({ queryKey: ["admin-approved-youth"] });
   };
 
   const removeYouth = async (id: string) => {
     await supabase.from("approved_youth").delete().eq("id", id);
+    broadcastYouthRoster();
     void qc.invalidateQueries({ queryKey: ["admin-approved-youth"] });
   };
+
 
   const addMute = async (ref?: string) => {
     const target = (ref ?? mute.ref).trim();
