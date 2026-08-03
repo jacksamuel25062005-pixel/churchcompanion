@@ -33,7 +33,7 @@ export function ChatFab() {
       className="fixed z-40"
       style={{
         right: "calc(var(--app-gutter) + var(--sar))",
-        bottom: "calc(env(safe-area-inset-bottom) + var(--dock-gap) + 4.75rem)",
+        bottom: "calc(env(safe-area-inset-bottom) + var(--dock-gap) + 6rem)",
       }}
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
@@ -43,7 +43,7 @@ export function ChatFab() {
       <Link
         to="/chat"
         aria-label="Chat / चैट"
-        className="dock-pill relative grid h-14 w-14 place-items-center rounded-full brand-text shadow-lg"
+        className="dock-pill relative grid h-12 w-[4.5rem] place-items-center rounded-full brand-text shadow-lg"
       >
         <MessageCircle className="h-6 w-6" strokeWidth={2.2} />
         {unread > 0 && (
