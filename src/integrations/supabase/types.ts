@@ -874,6 +874,14 @@ export type Database = {
           youth_id: string
         }[]
       }
+      youth_refresh_session: {
+        Args: { _token: string }
+        Returns: {
+          name: string
+          token: string
+          youth_id: string
+        }[]
+      }
     }
     Enums: {
       admin_request_status: "pending" | "approved" | "rejected"

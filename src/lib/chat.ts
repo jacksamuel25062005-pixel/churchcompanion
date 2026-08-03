@@ -75,6 +75,27 @@ export async function checkYouthPhone(phone: string): Promise<YouthIdentity | nu
   return identity;
 }
 
+/**
+ * Keeps a saved youth session alive so an approved member is never asked for
+ * their number again. Returns null only when the session is truly revoked.
+ */
+export async function refreshYouthSession(): Promise<YouthIdentity | null> {
+  const current = getYouthIdentity();
+  if (!current) return null;
+  try {
+    const { data, error } = await supabase.rpc("youth_refresh_session" as never, { _token: current.token } as never);
+    if (error) return current; // offline / transient — keep the device session
+    const row = (data as unknown as Array<{ token: string; name: string; youth_id: string }>)?.[0];
+    if (!row) { clearYouthIdentity(); return null; }
+    const identity: YouthIdentity = { token: row.token, youthId: row.youth_id, name: row.name };
+    write(YOUTH_KEY, identity);
+    return identity;
+  } catch {
+    return current;
+  }
+}
+
+
 // ---------------- Clients ----------------
 
 let _youthClient: { token: string; client: SupabaseClient } | null = null;

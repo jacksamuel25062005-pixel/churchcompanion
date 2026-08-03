@@ -15,6 +15,7 @@ import {
   checkYouthPhone,
   getCongregationIdentity,
   getYouthIdentity,
+  refreshYouthSession,
   listMessages,
   listReactions,
   markRead,
@@ -53,11 +54,18 @@ function ChatThread() {
   const { t } = useT();
   const [identityTick, setIdentityTick] = useState(0);
 
+  // Keep an already-approved youth session alive silently — never re-ask.
+  useEffect(() => {
+    if (channel !== "youth") return;
+    void refreshYouthSession().then(() => setIdentityTick((n) => n + 1));
+  }, [channel]);
+
   const identity = useMemo(() => {
     void identityTick;
     if (typeof window === "undefined") return null;
     return senderFor(channel);
   }, [channel, identityTick]);
+
 
   const title = channel === "youth" ? `${t("chat.youth")} / युवा चैट` : `${t("chat.congregation")} / मण्डली चैट`;
 
