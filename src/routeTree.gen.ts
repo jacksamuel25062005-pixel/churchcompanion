@@ -15,6 +15,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AlmanacRouteImport } from './routes/almanac'
 import { Route as BookmarksRouteImport } from './routes/bookmarks'
 import { Route as DiagnosticsRouteImport } from './routes/diagnostics'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as AboutIndexRouteImport } from './routes/about/index'
@@ -67,6 +68,11 @@ const BookmarksRoute = BookmarksRouteImport.update({
 const DiagnosticsRoute = DiagnosticsRouteImport.update({
   id: '/diagnostics',
   path: '/diagnostics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SearchRoute = SearchRouteImport.update({
@@ -203,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/almanac': typeof AlmanacRoute
   '/bookmarks': typeof BookmarksRoute
   '/diagnostics': typeof DiagnosticsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
@@ -234,6 +241,7 @@ export interface FileRoutesByTo {
   '/almanac': typeof AlmanacRoute
   '/bookmarks': typeof BookmarksRoute
   '/diagnostics': typeof DiagnosticsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
@@ -267,6 +275,7 @@ export interface FileRoutesById {
   '/almanac': typeof AlmanacRoute
   '/bookmarks': typeof BookmarksRoute
   '/diagnostics': typeof DiagnosticsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
@@ -300,6 +309,7 @@ export interface FileRouteTypes {
     | '/almanac'
     | '/bookmarks'
     | '/diagnostics'
+    | '/reset-password'
     | '/search'
     | '/settings'
     | '/books/$slug'
@@ -331,6 +341,7 @@ export interface FileRouteTypes {
     | '/almanac'
     | '/bookmarks'
     | '/diagnostics'
+    | '/reset-password'
     | '/search'
     | '/settings'
     | '/books/$slug'
@@ -363,6 +374,7 @@ export interface FileRouteTypes {
     | '/almanac'
     | '/bookmarks'
     | '/diagnostics'
+    | '/reset-password'
     | '/search'
     | '/settings'
     | '/books/$slug'
@@ -396,6 +408,7 @@ export interface RootRouteChildren {
   AlmanacRoute: typeof AlmanacRoute
   BookmarksRoute: typeof BookmarksRoute
   DiagnosticsRoute: typeof DiagnosticsRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
   BooksSlugRoute: typeof BooksSlugRoute
@@ -454,6 +467,13 @@ declare module '@tanstack/react-router' {
       path: '/diagnostics'
       fullPath: '/diagnostics'
       preLoaderRoute: typeof DiagnosticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/search': {
@@ -663,6 +683,7 @@ const rootRouteChildren: RootRouteChildren = {
   AlmanacRoute: AlmanacRoute,
   BookmarksRoute: BookmarksRoute,
   DiagnosticsRoute: DiagnosticsRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
   BooksSlugRoute: BooksSlugRoute,
@@ -681,3 +702,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
