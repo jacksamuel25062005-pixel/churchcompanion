@@ -196,7 +196,7 @@
    them to their own layer instead of repainting on scroll. */
 @utility glass {
   background: color-mix(in oklab, var(--color-card) 60%, transparent);
-  backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(42px) saturate(180%);
   border: 1px solid color-mix(in oklab, var(--color-foreground) 10%, transparent);
   box-shadow:
     0 1px 0 0 color-mix(in oklab, white 35%, transparent) inset,
