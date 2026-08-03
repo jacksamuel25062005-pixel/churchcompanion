@@ -24,6 +24,7 @@ import { Route as ChatChannelRouteImport } from './routes/chat/$channel'
 import { Route as AuthenticatedAdminAnnouncementsRouteImport } from './routes/_authenticated/admin.announcements'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin.audit'
 import { Route as AuthenticatedAdminBookImportRouteImport } from './routes/_authenticated/admin.book-import'
+import { Route as AuthenticatedAdminChatRouteImport } from './routes/_authenticated/admin.chat'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated/admin.dashboard'
 import { Route as AuthenticatedAdminManageRouteImport } from './routes/_authenticated/admin.manage'
 import { Route as AuthenticatedAdminNotifyRouteImport } from './routes/_authenticated/admin.notify'
@@ -115,6 +116,11 @@ const AuthenticatedAdminBookImportRoute =
     path: '/admin/book-import',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminChatRoute = AuthenticatedAdminChatRouteImport.update({
+  id: '/admin/chat',
+  path: '/admin/chat',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminDashboardRoute =
   AuthenticatedAdminDashboardRouteImport.update({
     id: '/admin/dashboard',
@@ -206,6 +212,7 @@ export interface FileRoutesByFullPath {
   '/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/book-import': typeof AuthenticatedAdminBookImportRoute
+  '/admin/chat': typeof AuthenticatedAdminChatRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/admin/manage': typeof AuthenticatedAdminManageRoute
   '/admin/notify': typeof AuthenticatedAdminNotifyRoute
@@ -236,6 +243,7 @@ export interface FileRoutesByTo {
   '/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/book-import': typeof AuthenticatedAdminBookImportRoute
+  '/admin/chat': typeof AuthenticatedAdminChatRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/admin/manage': typeof AuthenticatedAdminManageRoute
   '/admin/notify': typeof AuthenticatedAdminNotifyRoute
@@ -268,6 +276,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/_authenticated/admin/book-import': typeof AuthenticatedAdminBookImportRoute
+  '/_authenticated/admin/chat': typeof AuthenticatedAdminChatRoute
   '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/_authenticated/admin/manage': typeof AuthenticatedAdminManageRoute
   '/_authenticated/admin/notify': typeof AuthenticatedAdminNotifyRoute
@@ -300,6 +309,7 @@ export interface FileRouteTypes {
     | '/admin/announcements'
     | '/admin/audit'
     | '/admin/book-import'
+    | '/admin/chat'
     | '/admin/dashboard'
     | '/admin/manage'
     | '/admin/notify'
@@ -330,6 +340,7 @@ export interface FileRouteTypes {
     | '/admin/announcements'
     | '/admin/audit'
     | '/admin/book-import'
+    | '/admin/chat'
     | '/admin/dashboard'
     | '/admin/manage'
     | '/admin/notify'
@@ -361,6 +372,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/announcements'
     | '/_authenticated/admin/audit'
     | '/_authenticated/admin/book-import'
+    | '/_authenticated/admin/chat'
     | '/_authenticated/admin/dashboard'
     | '/_authenticated/admin/manage'
     | '/_authenticated/admin/notify'
@@ -507,6 +519,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminBookImportRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/chat': {
+      id: '/_authenticated/admin/chat'
+      path: '/admin/chat'
+      fullPath: '/admin/chat'
+      preLoaderRoute: typeof AuthenticatedAdminChatRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/dashboard': {
       id: '/_authenticated/admin/dashboard'
       path: '/admin/dashboard'
@@ -612,6 +631,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminAnnouncementsRoute: typeof AuthenticatedAdminAnnouncementsRoute
   AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
   AuthenticatedAdminBookImportRoute: typeof AuthenticatedAdminBookImportRoute
+  AuthenticatedAdminChatRoute: typeof AuthenticatedAdminChatRoute
   AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
   AuthenticatedAdminManageRoute: typeof AuthenticatedAdminManageRoute
   AuthenticatedAdminNotifyRoute: typeof AuthenticatedAdminNotifyRoute
@@ -624,6 +644,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminAnnouncementsRoute: AuthenticatedAdminAnnouncementsRoute,
   AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
   AuthenticatedAdminBookImportRoute: AuthenticatedAdminBookImportRoute,
+  AuthenticatedAdminChatRoute: AuthenticatedAdminChatRoute,
   AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
   AuthenticatedAdminManageRoute: AuthenticatedAdminManageRoute,
   AuthenticatedAdminNotifyRoute: AuthenticatedAdminNotifyRoute,
