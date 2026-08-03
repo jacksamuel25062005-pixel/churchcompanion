@@ -198,7 +198,9 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
 
 
 
+      {!hideNav && <ChatFab />}
       {!hideNav && <DockNav />}
     </div>
   );
 }
+

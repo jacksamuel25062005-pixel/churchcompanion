@@ -20,6 +20,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as AboutIndexRouteImport } from './routes/about/index'
 import { Route as BooksSlugRouteImport } from './routes/books/$slug'
 import { Route as ChatIndexRouteImport } from './routes/chat/index'
+import { Route as ChatChannelRouteImport } from './routes/chat/$channel'
 import { Route as AuthenticatedAdminAnnouncementsRouteImport } from './routes/_authenticated/admin.announcements'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin.audit'
 import { Route as AuthenticatedAdminBookImportRouteImport } from './routes/_authenticated/admin.book-import'
@@ -90,6 +91,11 @@ const BooksSlugRoute = BooksSlugRouteImport.update({
 const ChatIndexRoute = ChatIndexRouteImport.update({
   id: '/chat/',
   path: '/chat/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatChannelRoute = ChatChannelRouteImport.update({
+  id: '/chat/$channel',
+  path: '/chat/$channel',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminAnnouncementsRoute =
@@ -194,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
+  '/chat/$channel': typeof ChatChannelRoute
   '/about/': typeof AboutIndexRoute
   '/chat/': typeof ChatIndexRoute
   '/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
@@ -223,6 +230,7 @@ export interface FileRoutesByTo {
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
+  '/chat/$channel': typeof ChatChannelRoute
   '/about': typeof AboutIndexRoute
   '/chat': typeof ChatIndexRoute
   '/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
@@ -254,6 +262,7 @@ export interface FileRoutesById {
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
+  '/chat/$channel': typeof ChatChannelRoute
   '/about/': typeof AboutIndexRoute
   '/chat/': typeof ChatIndexRoute
   '/_authenticated/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
@@ -285,6 +294,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/books/$slug'
+    | '/chat/$channel'
     | '/about/'
     | '/chat/'
     | '/admin/announcements'
@@ -314,6 +324,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/books/$slug'
+    | '/chat/$channel'
     | '/about'
     | '/chat'
     | '/admin/announcements'
@@ -344,6 +355,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/books/$slug'
+    | '/chat/$channel'
     | '/about/'
     | '/chat/'
     | '/_authenticated/admin/announcements'
@@ -375,6 +387,7 @@ export interface RootRouteChildren {
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
   BooksSlugRoute: typeof BooksSlugRoute
+  ChatChannelRoute: typeof ChatChannelRoute
   AboutIndexRoute: typeof AboutIndexRoute
   ChatIndexRoute: typeof ChatIndexRoute
   AboutChurchIdRoute: typeof AboutChurchIdRoute
@@ -464,6 +477,13 @@ declare module '@tanstack/react-router' {
       path: '/chat'
       fullPath: '/chat/'
       preLoaderRoute: typeof ChatIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chat/$channel': {
+      id: '/chat/$channel'
+      path: '/chat/$channel'
+      fullPath: '/chat/$channel'
+      preLoaderRoute: typeof ChatChannelRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/announcements': {
@@ -625,6 +645,7 @@ const rootRouteChildren: RootRouteChildren = {
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
   BooksSlugRoute: BooksSlugRoute,
+  ChatChannelRoute: ChatChannelRoute,
   AboutIndexRoute: AboutIndexRoute,
   ChatIndexRoute: ChatIndexRoute,
   AboutChurchIdRoute: AboutChurchIdRoute,
