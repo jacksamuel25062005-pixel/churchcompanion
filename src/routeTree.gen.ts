@@ -19,6 +19,7 @@ import { Route as SearchRouteImport } from './routes/search'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as AboutIndexRouteImport } from './routes/about/index'
 import { Route as BooksSlugRouteImport } from './routes/books/$slug'
+import { Route as ChatIndexRouteImport } from './routes/chat/index'
 import { Route as AuthenticatedAdminAnnouncementsRouteImport } from './routes/_authenticated/admin.announcements'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin.audit'
 import { Route as AuthenticatedAdminBookImportRouteImport } from './routes/_authenticated/admin.book-import'
@@ -84,6 +85,11 @@ const AboutIndexRoute = AboutIndexRouteImport.update({
 const BooksSlugRoute = BooksSlugRouteImport.update({
   id: '/books/$slug',
   path: '/books/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatIndexRoute = ChatIndexRouteImport.update({
+  id: '/chat/',
+  path: '/chat/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminAnnouncementsRoute =
@@ -189,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
   '/about/': typeof AboutIndexRoute
+  '/chat/': typeof ChatIndexRoute
   '/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/book-import': typeof AuthenticatedAdminBookImportRoute
@@ -217,6 +224,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
   '/about': typeof AboutIndexRoute
+  '/chat': typeof ChatIndexRoute
   '/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/book-import': typeof AuthenticatedAdminBookImportRoute
@@ -247,6 +255,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
   '/about/': typeof AboutIndexRoute
+  '/chat/': typeof ChatIndexRoute
   '/_authenticated/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/_authenticated/admin/book-import': typeof AuthenticatedAdminBookImportRoute
@@ -277,6 +286,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/books/$slug'
     | '/about/'
+    | '/chat/'
     | '/admin/announcements'
     | '/admin/audit'
     | '/admin/book-import'
@@ -305,6 +315,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/books/$slug'
     | '/about'
+    | '/chat'
     | '/admin/announcements'
     | '/admin/audit'
     | '/admin/book-import'
@@ -334,6 +345,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/books/$slug'
     | '/about/'
+    | '/chat/'
     | '/_authenticated/admin/announcements'
     | '/_authenticated/admin/audit'
     | '/_authenticated/admin/book-import'
@@ -364,6 +376,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   BooksSlugRoute: typeof BooksSlugRoute
   AboutIndexRoute: typeof AboutIndexRoute
+  ChatIndexRoute: typeof ChatIndexRoute
   AboutChurchIdRoute: typeof AboutChurchIdRoute
   AboutTimelineIdRoute: typeof AboutTimelineIdRoute
   BooksSongBookIdRoute: typeof BooksSongBookIdRoute
@@ -444,6 +457,13 @@ declare module '@tanstack/react-router' {
       path: '/books/$slug'
       fullPath: '/books/$slug'
       preLoaderRoute: typeof BooksSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chat/': {
+      id: '/chat/'
+      path: '/chat'
+      fullPath: '/chat/'
+      preLoaderRoute: typeof ChatIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/announcements': {
@@ -606,6 +626,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   BooksSlugRoute: BooksSlugRoute,
   AboutIndexRoute: AboutIndexRoute,
+  ChatIndexRoute: ChatIndexRoute,
   AboutChurchIdRoute: AboutChurchIdRoute,
   AboutTimelineIdRoute: AboutTimelineIdRoute,
   BooksSongBookIdRoute: BooksSongBookIdRoute,
