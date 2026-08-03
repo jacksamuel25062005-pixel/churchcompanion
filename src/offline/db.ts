@@ -135,6 +135,10 @@ export class ChurchDB extends Dexie {
     this.version(3).stores({
       image_blobs: "key, bucket, cached_at",
     });
+    this.version(4).stores({
+      chat_outbox: "id, channel, created_at",
+    });
+
   }
 }
 
