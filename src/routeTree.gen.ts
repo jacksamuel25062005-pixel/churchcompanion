@@ -30,6 +30,7 @@ import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminManageRouteImport } from './routes/_authenticated/admin.manage'
 import { Route as AuthenticatedAdminNotifyRouteImport } from './routes/_authenticated/admin.notify'
 import { Route as AuthenticatedAdminRequestsRouteImport } from './routes/_authenticated/admin.requests'
+import { Route as AuthenticatedAdminSecurityRouteImport } from './routes/_authenticated/admin.security'
 import { Route as AuthenticatedAdminTodayRouteImport } from './routes/_authenticated/admin.today'
 import { Route as AuthenticatedAdminUploadRouteImport } from './routes/_authenticated/admin.upload'
 import { Route as AboutChurchIndexRouteImport } from './routes/about/church.index'
@@ -151,6 +152,12 @@ const AuthenticatedAdminRequestsRoute =
     path: '/admin/requests',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminSecurityRoute =
+  AuthenticatedAdminSecurityRouteImport.update({
+    id: '/admin/security',
+    path: '/admin/security',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminTodayRoute = AuthenticatedAdminTodayRouteImport.update({
   id: '/admin/today',
   path: '/admin/today',
@@ -224,6 +231,7 @@ export interface FileRoutesByFullPath {
   '/admin/manage': typeof AuthenticatedAdminManageRoute
   '/admin/notify': typeof AuthenticatedAdminNotifyRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsRoute
+  '/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/admin/today': typeof AuthenticatedAdminTodayRoute
   '/admin/upload': typeof AuthenticatedAdminUploadRoute
   '/about/church/$id': typeof AboutChurchIdRoute
@@ -256,6 +264,7 @@ export interface FileRoutesByTo {
   '/admin/manage': typeof AuthenticatedAdminManageRoute
   '/admin/notify': typeof AuthenticatedAdminNotifyRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsRoute
+  '/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/admin/today': typeof AuthenticatedAdminTodayRoute
   '/admin/upload': typeof AuthenticatedAdminUploadRoute
   '/about/church/$id': typeof AboutChurchIdRoute
@@ -290,6 +299,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/manage': typeof AuthenticatedAdminManageRoute
   '/_authenticated/admin/notify': typeof AuthenticatedAdminNotifyRoute
   '/_authenticated/admin/requests': typeof AuthenticatedAdminRequestsRoute
+  '/_authenticated/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/_authenticated/admin/today': typeof AuthenticatedAdminTodayRoute
   '/_authenticated/admin/upload': typeof AuthenticatedAdminUploadRoute
   '/about/church/$id': typeof AboutChurchIdRoute
@@ -324,6 +334,7 @@ export interface FileRouteTypes {
     | '/admin/manage'
     | '/admin/notify'
     | '/admin/requests'
+    | '/admin/security'
     | '/admin/today'
     | '/admin/upload'
     | '/about/church/$id'
@@ -356,6 +367,7 @@ export interface FileRouteTypes {
     | '/admin/manage'
     | '/admin/notify'
     | '/admin/requests'
+    | '/admin/security'
     | '/admin/today'
     | '/admin/upload'
     | '/about/church/$id'
@@ -389,6 +401,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/manage'
     | '/_authenticated/admin/notify'
     | '/_authenticated/admin/requests'
+    | '/_authenticated/admin/security'
     | '/_authenticated/admin/today'
     | '/_authenticated/admin/upload'
     | '/about/church/$id'
@@ -574,6 +587,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRequestsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/security': {
+      id: '/_authenticated/admin/security'
+      path: '/admin/security'
+      fullPath: '/admin/security'
+      preLoaderRoute: typeof AuthenticatedAdminSecurityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/today': {
       id: '/_authenticated/admin/today'
       path: '/admin/today'
@@ -656,6 +676,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminManageRoute: typeof AuthenticatedAdminManageRoute
   AuthenticatedAdminNotifyRoute: typeof AuthenticatedAdminNotifyRoute
   AuthenticatedAdminRequestsRoute: typeof AuthenticatedAdminRequestsRoute
+  AuthenticatedAdminSecurityRoute: typeof AuthenticatedAdminSecurityRoute
   AuthenticatedAdminTodayRoute: typeof AuthenticatedAdminTodayRoute
   AuthenticatedAdminUploadRoute: typeof AuthenticatedAdminUploadRoute
 }
@@ -669,6 +690,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminManageRoute: AuthenticatedAdminManageRoute,
   AuthenticatedAdminNotifyRoute: AuthenticatedAdminNotifyRoute,
   AuthenticatedAdminRequestsRoute: AuthenticatedAdminRequestsRoute,
+  AuthenticatedAdminSecurityRoute: AuthenticatedAdminSecurityRoute,
   AuthenticatedAdminTodayRoute: AuthenticatedAdminTodayRoute,
   AuthenticatedAdminUploadRoute: AuthenticatedAdminUploadRoute,
 }
