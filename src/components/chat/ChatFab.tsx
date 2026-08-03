@@ -36,7 +36,7 @@ export function ChatFab() {
         /* Sits above the dock, which itself already clears the gesture bar /
            home indicator via --sab. Extra 3mm breathing room. */
         bottom: "calc(var(--dock-space) + 3mm)",
-        paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        
       }}
 
       initial={{ opacity: 0, scale: 0.8 }}
