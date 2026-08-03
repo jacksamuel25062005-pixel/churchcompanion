@@ -844,6 +844,7 @@ export type Database = {
         Args: { _email: string; _name: string; _phone: string }
         Returns: string
       }
+      congregation_session_exists: { Args: { _sid: string }; Returns: boolean }
       current_youth_id: { Args: never; Returns: string }
       current_youth_token: { Args: never; Returns: string }
       is_chat_admin: { Args: { _uid: string }; Returns: boolean }
