@@ -15,6 +15,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AlmanacRouteImport } from './routes/almanac'
 import { Route as BookmarksRouteImport } from './routes/bookmarks'
 import { Route as DiagnosticsRouteImport } from './routes/diagnostics'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as AboutIndexRouteImport } from './routes/about/index'
@@ -29,6 +30,7 @@ import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminManageRouteImport } from './routes/_authenticated/admin.manage'
 import { Route as AuthenticatedAdminNotifyRouteImport } from './routes/_authenticated/admin.notify'
 import { Route as AuthenticatedAdminRequestsRouteImport } from './routes/_authenticated/admin.requests'
+import { Route as AuthenticatedAdminSecurityRouteImport } from './routes/_authenticated/admin.security'
 import { Route as AuthenticatedAdminTodayRouteImport } from './routes/_authenticated/admin.today'
 import { Route as AuthenticatedAdminUploadRouteImport } from './routes/_authenticated/admin.upload'
 import { Route as AboutChurchIndexRouteImport } from './routes/about/church.index'
@@ -67,6 +69,11 @@ const BookmarksRoute = BookmarksRouteImport.update({
 const DiagnosticsRoute = DiagnosticsRouteImport.update({
   id: '/diagnostics',
   path: '/diagnostics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SearchRoute = SearchRouteImport.update({
@@ -145,6 +152,12 @@ const AuthenticatedAdminRequestsRoute =
     path: '/admin/requests',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminSecurityRoute =
+  AuthenticatedAdminSecurityRouteImport.update({
+    id: '/admin/security',
+    path: '/admin/security',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminTodayRoute = AuthenticatedAdminTodayRouteImport.update({
   id: '/admin/today',
   path: '/admin/today',
@@ -203,6 +216,7 @@ export interface FileRoutesByFullPath {
   '/almanac': typeof AlmanacRoute
   '/bookmarks': typeof BookmarksRoute
   '/diagnostics': typeof DiagnosticsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
@@ -217,6 +231,7 @@ export interface FileRoutesByFullPath {
   '/admin/manage': typeof AuthenticatedAdminManageRoute
   '/admin/notify': typeof AuthenticatedAdminNotifyRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsRoute
+  '/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/admin/today': typeof AuthenticatedAdminTodayRoute
   '/admin/upload': typeof AuthenticatedAdminUploadRoute
   '/about/church/$id': typeof AboutChurchIdRoute
@@ -234,6 +249,7 @@ export interface FileRoutesByTo {
   '/almanac': typeof AlmanacRoute
   '/bookmarks': typeof BookmarksRoute
   '/diagnostics': typeof DiagnosticsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
@@ -248,6 +264,7 @@ export interface FileRoutesByTo {
   '/admin/manage': typeof AuthenticatedAdminManageRoute
   '/admin/notify': typeof AuthenticatedAdminNotifyRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsRoute
+  '/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/admin/today': typeof AuthenticatedAdminTodayRoute
   '/admin/upload': typeof AuthenticatedAdminUploadRoute
   '/about/church/$id': typeof AboutChurchIdRoute
@@ -267,6 +284,7 @@ export interface FileRoutesById {
   '/almanac': typeof AlmanacRoute
   '/bookmarks': typeof BookmarksRoute
   '/diagnostics': typeof DiagnosticsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
@@ -281,6 +299,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/manage': typeof AuthenticatedAdminManageRoute
   '/_authenticated/admin/notify': typeof AuthenticatedAdminNotifyRoute
   '/_authenticated/admin/requests': typeof AuthenticatedAdminRequestsRoute
+  '/_authenticated/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/_authenticated/admin/today': typeof AuthenticatedAdminTodayRoute
   '/_authenticated/admin/upload': typeof AuthenticatedAdminUploadRoute
   '/about/church/$id': typeof AboutChurchIdRoute
@@ -300,6 +319,7 @@ export interface FileRouteTypes {
     | '/almanac'
     | '/bookmarks'
     | '/diagnostics'
+    | '/reset-password'
     | '/search'
     | '/settings'
     | '/books/$slug'
@@ -314,6 +334,7 @@ export interface FileRouteTypes {
     | '/admin/manage'
     | '/admin/notify'
     | '/admin/requests'
+    | '/admin/security'
     | '/admin/today'
     | '/admin/upload'
     | '/about/church/$id'
@@ -331,6 +352,7 @@ export interface FileRouteTypes {
     | '/almanac'
     | '/bookmarks'
     | '/diagnostics'
+    | '/reset-password'
     | '/search'
     | '/settings'
     | '/books/$slug'
@@ -345,6 +367,7 @@ export interface FileRouteTypes {
     | '/admin/manage'
     | '/admin/notify'
     | '/admin/requests'
+    | '/admin/security'
     | '/admin/today'
     | '/admin/upload'
     | '/about/church/$id'
@@ -363,6 +386,7 @@ export interface FileRouteTypes {
     | '/almanac'
     | '/bookmarks'
     | '/diagnostics'
+    | '/reset-password'
     | '/search'
     | '/settings'
     | '/books/$slug'
@@ -377,6 +401,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/manage'
     | '/_authenticated/admin/notify'
     | '/_authenticated/admin/requests'
+    | '/_authenticated/admin/security'
     | '/_authenticated/admin/today'
     | '/_authenticated/admin/upload'
     | '/about/church/$id'
@@ -396,6 +421,7 @@ export interface RootRouteChildren {
   AlmanacRoute: typeof AlmanacRoute
   BookmarksRoute: typeof BookmarksRoute
   DiagnosticsRoute: typeof DiagnosticsRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
   BooksSlugRoute: typeof BooksSlugRoute
@@ -454,6 +480,13 @@ declare module '@tanstack/react-router' {
       path: '/diagnostics'
       fullPath: '/diagnostics'
       preLoaderRoute: typeof DiagnosticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/search': {
@@ -554,6 +587,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRequestsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/security': {
+      id: '/_authenticated/admin/security'
+      path: '/admin/security'
+      fullPath: '/admin/security'
+      preLoaderRoute: typeof AuthenticatedAdminSecurityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/today': {
       id: '/_authenticated/admin/today'
       path: '/admin/today'
@@ -636,6 +676,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminManageRoute: typeof AuthenticatedAdminManageRoute
   AuthenticatedAdminNotifyRoute: typeof AuthenticatedAdminNotifyRoute
   AuthenticatedAdminRequestsRoute: typeof AuthenticatedAdminRequestsRoute
+  AuthenticatedAdminSecurityRoute: typeof AuthenticatedAdminSecurityRoute
   AuthenticatedAdminTodayRoute: typeof AuthenticatedAdminTodayRoute
   AuthenticatedAdminUploadRoute: typeof AuthenticatedAdminUploadRoute
 }
@@ -649,6 +690,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminManageRoute: AuthenticatedAdminManageRoute,
   AuthenticatedAdminNotifyRoute: AuthenticatedAdminNotifyRoute,
   AuthenticatedAdminRequestsRoute: AuthenticatedAdminRequestsRoute,
+  AuthenticatedAdminSecurityRoute: AuthenticatedAdminSecurityRoute,
   AuthenticatedAdminTodayRoute: AuthenticatedAdminTodayRoute,
   AuthenticatedAdminUploadRoute: AuthenticatedAdminUploadRoute,
 }
@@ -663,6 +705,7 @@ const rootRouteChildren: RootRouteChildren = {
   AlmanacRoute: AlmanacRoute,
   BookmarksRoute: BookmarksRoute,
   DiagnosticsRoute: DiagnosticsRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
   BooksSlugRoute: BooksSlugRoute,

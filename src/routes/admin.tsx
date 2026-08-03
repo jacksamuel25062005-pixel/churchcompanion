@@ -7,6 +7,7 @@ import { useT } from "../lib/i18n";
 import { toast } from "sonner";
 import { Shield, UserPlus } from "lucide-react";
 import { firstNameFrom } from "@/lib/admin-name";
+import { PasswordField } from "@/components/security/PasswordField";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — Church Companion" }] }),
@@ -82,6 +83,21 @@ function LoginForm({ role }: { role: "super" | "admin" }) {
   const [password, setPassword] = useState("");
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [sendingReset, setSendingReset] = useState(false);
+
+  const sendReset = async () => {
+    if (!email.trim()) { toast.error("Enter your email first"); return; }
+    setSendingReset(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setSendingReset(false);
+    // Never reveal whether an account exists for this address.
+    if (error && !/rate/i.test(error.message)) toast.success("If that email has an account, a reset link is on its way.");
+    else if (error) toast.error(error.message);
+    else toast.success("If that email has an account, a reset link is on its way.");
+  };
+
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,17 +162,30 @@ function LoginForm({ role }: { role: "super" | "admin" }) {
         <Field label={t("admin.email")}>
           <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required autoComplete="email" className="input" />
         </Field>
-        <Field label={t("admin.password")}>
-          <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required minLength={6} autoComplete={mode === "signup" ? "new-password" : "current-password"} className="input" />
-        </Field>
+        <PasswordField
+          label={t("admin.password")}
+          value={password}
+          onChange={setPassword}
+          autoComplete={mode === "signup" ? "new-password" : "current-password"}
+        />
         {role === "admin" && mode === "signup" && (
           <Field label={t("admin.request_reason")}>
             <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} className="input" placeholder="Why do you need admin access?" />
           </Field>
         )}
-        <button disabled={submitting} className="w-full rounded-xl brand-bg py-2.5 text-sm font-medium disabled:opacity-50">
+        <button disabled={submitting} className="tap-card focus-ring w-full rounded-xl brand-bg py-2.5 text-sm font-medium disabled:opacity-50">
           {submitting ? "…" : mode === "login" ? t("admin.sign_in") : "Request access"}
         </button>
+        {mode === "login" && (
+          <button
+            type="button"
+            onClick={sendReset}
+            disabled={sendingReset}
+            className="w-full text-xs text-muted-foreground underline disabled:opacity-50"
+          >
+            {sendingReset ? "Sending reset link…" : "Forgot password?"}
+          </button>
+        )}
         {role === "admin" && (
           <button
             type="button"
