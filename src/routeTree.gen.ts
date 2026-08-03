@@ -19,9 +19,12 @@ import { Route as SearchRouteImport } from './routes/search'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as AboutIndexRouteImport } from './routes/about/index'
 import { Route as BooksSlugRouteImport } from './routes/books/$slug'
+import { Route as ChatIndexRouteImport } from './routes/chat/index'
+import { Route as ChatChannelRouteImport } from './routes/chat/$channel'
 import { Route as AuthenticatedAdminAnnouncementsRouteImport } from './routes/_authenticated/admin.announcements'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin.audit'
 import { Route as AuthenticatedAdminBookImportRouteImport } from './routes/_authenticated/admin.book-import'
+import { Route as AuthenticatedAdminChatRouteImport } from './routes/_authenticated/admin.chat'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated/admin.dashboard'
 import { Route as AuthenticatedAdminManageRouteImport } from './routes/_authenticated/admin.manage'
 import { Route as AuthenticatedAdminNotifyRouteImport } from './routes/_authenticated/admin.notify'
@@ -86,6 +89,16 @@ const BooksSlugRoute = BooksSlugRouteImport.update({
   path: '/books/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChatIndexRoute = ChatIndexRouteImport.update({
+  id: '/chat/',
+  path: '/chat/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatChannelRoute = ChatChannelRouteImport.update({
+  id: '/chat/$channel',
+  path: '/chat/$channel',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminAnnouncementsRoute =
   AuthenticatedAdminAnnouncementsRouteImport.update({
     id: '/admin/announcements',
@@ -103,6 +116,11 @@ const AuthenticatedAdminBookImportRoute =
     path: '/admin/book-import',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminChatRoute = AuthenticatedAdminChatRouteImport.update({
+  id: '/admin/chat',
+  path: '/admin/chat',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminDashboardRoute =
   AuthenticatedAdminDashboardRouteImport.update({
     id: '/admin/dashboard',
@@ -188,10 +206,13 @@ export interface FileRoutesByFullPath {
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
+  '/chat/$channel': typeof ChatChannelRoute
   '/about/': typeof AboutIndexRoute
+  '/chat/': typeof ChatIndexRoute
   '/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/book-import': typeof AuthenticatedAdminBookImportRoute
+  '/admin/chat': typeof AuthenticatedAdminChatRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/admin/manage': typeof AuthenticatedAdminManageRoute
   '/admin/notify': typeof AuthenticatedAdminNotifyRoute
@@ -216,10 +237,13 @@ export interface FileRoutesByTo {
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
+  '/chat/$channel': typeof ChatChannelRoute
   '/about': typeof AboutIndexRoute
+  '/chat': typeof ChatIndexRoute
   '/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/book-import': typeof AuthenticatedAdminBookImportRoute
+  '/admin/chat': typeof AuthenticatedAdminChatRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/admin/manage': typeof AuthenticatedAdminManageRoute
   '/admin/notify': typeof AuthenticatedAdminNotifyRoute
@@ -246,10 +270,13 @@ export interface FileRoutesById {
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/books/$slug': typeof BooksSlugRoute
+  '/chat/$channel': typeof ChatChannelRoute
   '/about/': typeof AboutIndexRoute
+  '/chat/': typeof ChatIndexRoute
   '/_authenticated/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/_authenticated/admin/book-import': typeof AuthenticatedAdminBookImportRoute
+  '/_authenticated/admin/chat': typeof AuthenticatedAdminChatRoute
   '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/_authenticated/admin/manage': typeof AuthenticatedAdminManageRoute
   '/_authenticated/admin/notify': typeof AuthenticatedAdminNotifyRoute
@@ -276,10 +303,13 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/books/$slug'
+    | '/chat/$channel'
     | '/about/'
+    | '/chat/'
     | '/admin/announcements'
     | '/admin/audit'
     | '/admin/book-import'
+    | '/admin/chat'
     | '/admin/dashboard'
     | '/admin/manage'
     | '/admin/notify'
@@ -304,10 +334,13 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/books/$slug'
+    | '/chat/$channel'
     | '/about'
+    | '/chat'
     | '/admin/announcements'
     | '/admin/audit'
     | '/admin/book-import'
+    | '/admin/chat'
     | '/admin/dashboard'
     | '/admin/manage'
     | '/admin/notify'
@@ -333,10 +366,13 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/books/$slug'
+    | '/chat/$channel'
     | '/about/'
+    | '/chat/'
     | '/_authenticated/admin/announcements'
     | '/_authenticated/admin/audit'
     | '/_authenticated/admin/book-import'
+    | '/_authenticated/admin/chat'
     | '/_authenticated/admin/dashboard'
     | '/_authenticated/admin/manage'
     | '/_authenticated/admin/notify'
@@ -363,7 +399,9 @@ export interface RootRouteChildren {
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
   BooksSlugRoute: typeof BooksSlugRoute
+  ChatChannelRoute: typeof ChatChannelRoute
   AboutIndexRoute: typeof AboutIndexRoute
+  ChatIndexRoute: typeof ChatIndexRoute
   AboutChurchIdRoute: typeof AboutChurchIdRoute
   AboutTimelineIdRoute: typeof AboutTimelineIdRoute
   BooksSongBookIdRoute: typeof BooksSongBookIdRoute
@@ -446,6 +484,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BooksSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/chat/': {
+      id: '/chat/'
+      path: '/chat'
+      fullPath: '/chat/'
+      preLoaderRoute: typeof ChatIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chat/$channel': {
+      id: '/chat/$channel'
+      path: '/chat/$channel'
+      fullPath: '/chat/$channel'
+      preLoaderRoute: typeof ChatChannelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/announcements': {
       id: '/_authenticated/admin/announcements'
       path: '/admin/announcements'
@@ -465,6 +517,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/book-import'
       fullPath: '/admin/book-import'
       preLoaderRoute: typeof AuthenticatedAdminBookImportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/chat': {
+      id: '/_authenticated/admin/chat'
+      path: '/admin/chat'
+      fullPath: '/admin/chat'
+      preLoaderRoute: typeof AuthenticatedAdminChatRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/dashboard': {
@@ -572,6 +631,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminAnnouncementsRoute: typeof AuthenticatedAdminAnnouncementsRoute
   AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
   AuthenticatedAdminBookImportRoute: typeof AuthenticatedAdminBookImportRoute
+  AuthenticatedAdminChatRoute: typeof AuthenticatedAdminChatRoute
   AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
   AuthenticatedAdminManageRoute: typeof AuthenticatedAdminManageRoute
   AuthenticatedAdminNotifyRoute: typeof AuthenticatedAdminNotifyRoute
@@ -584,6 +644,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminAnnouncementsRoute: AuthenticatedAdminAnnouncementsRoute,
   AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
   AuthenticatedAdminBookImportRoute: AuthenticatedAdminBookImportRoute,
+  AuthenticatedAdminChatRoute: AuthenticatedAdminChatRoute,
   AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
   AuthenticatedAdminManageRoute: AuthenticatedAdminManageRoute,
   AuthenticatedAdminNotifyRoute: AuthenticatedAdminNotifyRoute,
@@ -605,7 +666,9 @@ const rootRouteChildren: RootRouteChildren = {
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
   BooksSlugRoute: BooksSlugRoute,
+  ChatChannelRoute: ChatChannelRoute,
   AboutIndexRoute: AboutIndexRoute,
+  ChatIndexRoute: ChatIndexRoute,
   AboutChurchIdRoute: AboutChurchIdRoute,
   AboutTimelineIdRoute: AboutTimelineIdRoute,
   BooksSongBookIdRoute: BooksSongBookIdRoute,

@@ -68,7 +68,31 @@ const dict: Dict = {
   "upload.publish": { en: "Publish to library", hi: "लाइब्रेरी में प्रकाशित करें" },
   "upload.song": { en: "As a song", hi: "गीत के रूप में" },
   "upload.section": { en: "As book section", hi: "पुस्तक खंड के रूप में" },
+  "chat.title": { en: "Chat", hi: "चैट" },
+  "chat.congregation": { en: "Congregation Chat", hi: "मण्डली चैट" },
+  "chat.youth": { en: "Youth Chat", hi: "युवा चैट" },
+  "chat.locked": { en: "Locked — approved members only", hi: "लॉक — केवल स्वीकृत सदस्य" },
+  "chat.no_messages": { en: "No messages yet", hi: "अभी कोई संदेश नहीं" },
+  "chat.message_ph": { en: "Message…", hi: "संदेश…" },
+  "chat.send": { en: "Send", hi: "भेजें" },
+  "chat.join_title": { en: "Join the conversation", hi: "बातचीत में शामिल हों" },
+  "chat.join_hint": { en: "Your name is shown to others. Email and phone stay private.", hi: "आपका नाम दूसरों को दिखेगा। ईमेल और फ़ोन निजी रहेंगे।" },
+  "chat.name": { en: "Name", hi: "नाम" },
+  "chat.email": { en: "Email", hi: "ईमेल" },
+  "chat.phone": { en: "Phone", hi: "फ़ोन" },
+  "chat.continue": { en: "Continue", hi: "जारी रखें" },
+  "chat.youth_gate": { en: "Enter your phone number", hi: "अपना फ़ोन नंबर दर्ज करें" },
+  "chat.youth_denied": { en: "Not on the approved list — contact your church admin", hi: "स्वीकृत सूची में नहीं — अपने चर्च एडमिन से संपर्क करें" },
+  "chat.typing": { en: "is typing…", hi: "लिख रहे हैं…" },
+  "chat.online": { en: "online", hi: "ऑनलाइन" },
+  "chat.reconnecting": { en: "Reconnecting…", hi: "पुनः जुड़ रहे हैं…" },
+  "chat.queued": { en: "Queued — will send when back online", hi: "कतार में — ऑनलाइन होते ही भेजा जाएगा" },
+  "chat.report": { en: "Report", hi: "रिपोर्ट" },
+  "chat.reported": { en: "Reported to admins", hi: "एडमिन को रिपोर्ट किया गया" },
+  "chat.deleted": { en: "Message removed", hi: "संदेश हटाया गया" },
+  "chat.attach": { en: "Attach image", hi: "छवि जोड़ें" },
 };
+
 
 export function useT() {
   const { language } = useSettings();

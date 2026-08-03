@@ -4,6 +4,8 @@ import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from "reac
 import { motion, useReducedMotion } from "framer-motion";
 import { DOCK_SPRING, IOS_SPRING_SNAP } from "../lib/motion";
 import { useT } from "../lib/i18n";
+import { ChatFab } from "./chat/ChatFab";
+
 
 interface Props {
   children: ReactNode;
@@ -198,7 +200,9 @@ export function AppShell({ children, hideNav, title, left, right }: Props) {
 
 
 
+      {!hideNav && <ChatFab />}
       {!hideNav && <DockNav />}
     </div>
   );
 }
+

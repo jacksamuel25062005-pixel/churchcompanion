@@ -93,7 +93,16 @@ export interface CachedImageRow {
   source?: string;  // 'book-pages' | 'storage' | 'remote' | ...
 }
 
+export interface ChatOutboxRow {
+  id: string;
+  channel: "congregation" | "youth";
+  content: string | null;
+  media_url: string | null;
+  created_at: number;
+}
+
 export interface ImageBlobRow {
+
   key: string;      // `${bucket}/${path}`
   bucket: string;
   path: string;
@@ -114,6 +123,8 @@ export class ChurchDB extends Dexie {
   meta!: EntityTable<MetaRow, "key">;
   cached_images!: EntityTable<CachedImageRow, "url">;
   image_blobs!: EntityTable<ImageBlobRow, "key">;
+  chat_outbox!: EntityTable<ChatOutboxRow, "id">;
+
 
   constructor() {
     super("church-companion");
@@ -133,6 +144,10 @@ export class ChurchDB extends Dexie {
     this.version(3).stores({
       image_blobs: "key, bucket, cached_at",
     });
+    this.version(4).stores({
+      chat_outbox: "id, channel, created_at",
+    });
+
   }
 }
 

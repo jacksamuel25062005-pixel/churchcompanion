@@ -176,6 +176,30 @@ export type Database = {
         }
         Relationships: []
       }
+      approved_youth: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          id: string
+          name: string
+          phone: string
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          phone: string
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -330,6 +354,98 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_messages: {
+        Row: {
+          channel: string
+          content: string | null
+          created_at: string
+          deleted: boolean
+          id: string
+          media_url: string | null
+          sender_name: string
+          sender_ref: string
+        }
+        Insert: {
+          channel: string
+          content?: string | null
+          created_at?: string
+          deleted?: boolean
+          id?: string
+          media_url?: string | null
+          sender_name: string
+          sender_ref: string
+        }
+        Update: {
+          channel?: string
+          content?: string | null
+          created_at?: string
+          deleted?: boolean
+          id?: string
+          media_url?: string | null
+          sender_name?: string
+          sender_ref?: string
+        }
+        Relationships: []
+      }
+      chat_mutes: {
+        Row: {
+          created_at: string
+          id: string
+          muted_until: string
+          reason: string | null
+          sender_ref: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          muted_until: string
+          reason?: string | null
+          sender_ref: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          muted_until?: string
+          reason?: string | null
+          sender_ref?: string
+        }
+        Relationships: []
+      }
+      chat_reports: {
+        Row: {
+          created_at: string
+          id: string
+          message_id: string
+          reason: string | null
+          reporter_ref: string
+          resolved: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_id: string
+          reason?: string | null
+          reporter_ref: string
+          resolved?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: string
+          reason?: string | null
+          reporter_ref?: string
+          resolved?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_reports_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       church_timeline_articles: {
         Row: {
           article_date: string
@@ -371,6 +487,94 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      congregation_profiles: {
+        Row: {
+          created_at: string
+          device_session_id: string
+          email: string
+          id: string
+          name: string
+          phone: string
+        }
+        Insert: {
+          created_at?: string
+          device_session_id: string
+          email: string
+          id?: string
+          name: string
+          phone: string
+        }
+        Update: {
+          created_at?: string
+          device_session_id?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string
+        }
+        Relationships: []
+      }
+      message_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          message_id: string
+          sender_ref: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          id?: string
+          message_id: string
+          sender_ref: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          message_id?: string
+          sender_ref?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_receipts: {
+        Row: {
+          id: string
+          message_id: string
+          read_at: string
+          reader_ref: string
+        }
+        Insert: {
+          id?: string
+          message_id: string
+          read_at?: string
+          reader_ref: string
+        }
+        Update: {
+          id?: string
+          message_id?: string
+          read_at?: string
+          reader_ref?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_receipts_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -598,11 +802,53 @@ export type Database = {
         }
         Relationships: []
       }
+      youth_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          token: string
+          youth_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token: string
+          youth_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token?: string
+          youth_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "youth_sessions_youth_id_fkey"
+            columns: ["youth_id"]
+            isOneToOne: false
+            referencedRelation: "approved_youth"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      can_read_message: { Args: { _id: string }; Returns: boolean }
+      congregation_register: {
+        Args: { _email: string; _name: string; _phone: string }
+        Returns: string
+      }
+      congregation_session_exists: { Args: { _sid: string }; Returns: boolean }
+      current_youth_id: { Args: never; Returns: string }
+      current_youth_token: { Args: never; Returns: string }
+      is_chat_admin: { Args: { _uid: string }; Returns: boolean }
+      is_super_admin: { Args: { _uid: string }; Returns: boolean }
       search_content: {
         Args: { q: string }
         Returns: {
@@ -619,6 +865,14 @@ export type Database = {
       unlike_timeline_article: {
         Args: { p_article_id: string; p_client_id: string }
         Returns: undefined
+      }
+      youth_check_phone: {
+        Args: { _phone: string }
+        Returns: {
+          name: string
+          token: string
+          youth_id: string
+        }[]
       }
     }
     Enums: {
