@@ -91,8 +91,8 @@
   /* iOS-reference Liquid Glass tokens (T1) */
   --glass-bg:          rgba(255, 248, 240, 0.50);
   --glass-bg-deep:     rgba(107,  63,  30, 0.50);
-  --glass-blur:        20px;
-  --glass-blur-heavy:  32px;
+  --glass-blur:        42px;
+  --glass-blur-heavy:  56px;
   --glass-border:      rgba(255, 255, 255, 0.30);
   --glass-shadow:      0 8px 32px rgba(107, 63, 30, 0.18),
                        0 1px 0    rgba(255,255,255, 0.60) inset;
@@ -196,7 +196,7 @@
    them to their own layer instead of repainting on scroll. */
 @utility glass {
   background: color-mix(in oklab, var(--color-card) 60%, transparent);
-  backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(42px) saturate(180%);
   border: 1px solid color-mix(in oklab, var(--color-foreground) 10%, transparent);
   box-shadow:
     0 1px 0 0 color-mix(in oklab, white 35%, transparent) inset,
@@ -211,13 +211,13 @@
 }
 @utility glass-strong {
   background: color-mix(in oklab, var(--color-card) 75%, transparent);
-  backdrop-filter: blur(22px) saturate(160%);
+  backdrop-filter: blur(48px) saturate(180%);
   border: 1px solid color-mix(in oklab, var(--color-foreground) 12%, transparent);
   will-change: backdrop-filter;
 }
 @utility glass-chip {
   background: color-mix(in oklab, var(--color-card) 65%, transparent);
-  backdrop-filter: blur(12px) saturate(150%);
+  backdrop-filter: blur(40px) saturate(170%);
   border: 1px solid color-mix(in oklab, var(--color-foreground) 10%, transparent);
 }
 @utility font-display { font-family: var(--font-display); letter-spacing: -0.011em; }
@@ -235,8 +235,8 @@
   .animate-fade-up, .cc-screen-enter { animation: none !important; }
 }
 @media (max-width: 380px) {
-  .glass { backdrop-filter: blur(14px) saturate(150%); }
-  .glass-strong { backdrop-filter: blur(18px) saturate(150%); }
+  .glass { backdrop-filter: blur(40px) saturate(170%); }
+  .glass-strong { backdrop-filter: blur(42px) saturate(170%); }
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -248,8 +248,7 @@
 @utility glass-dark {
   position: relative;
   background:        var(--glass-bg-deep);
-  backdrop-filter:   blur(var(--glass-blur)) saturate(160%) brightness(0.92);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%) brightness(0.92);
+  backdrop-filter:   blur(var(--glass-blur)) saturate(180%) brightness(0.92);
   border:            1px solid rgba(255, 255, 255, 0.18);
   box-shadow:        var(--glass-shadow);
   will-change:       transform;
@@ -261,8 +260,7 @@
 @utility glass-card {
   position: relative;
   background:        rgba(255, 255, 255, 0.50);
-  backdrop-filter:   blur(12px) saturate(160%) brightness(1.05);
-  -webkit-backdrop-filter: blur(12px) saturate(160%) brightness(1.05);
+  backdrop-filter:   blur(44px) saturate(180%) brightness(1.05);
   border:            1px solid rgba(255, 255, 255, 0.45);
   border-radius:     16px;
   box-shadow:        0 4px 16px rgba(107, 63, 30, 0.10),
@@ -277,7 +275,6 @@
   position: relative;
   background:        rgba(255, 248, 240, 0.72);
   backdrop-filter:   blur(var(--glass-blur-heavy)) saturate(200%) brightness(1.06);
-  -webkit-backdrop-filter: blur(var(--glass-blur-heavy)) saturate(200%) brightness(1.06);
   border-top:        1px solid rgba(255, 255, 255, 0.40);
   border-left:       1px solid rgba(255, 255, 255, 0.25);
   border-right:      1px solid rgba(255, 255, 255, 0.25);
@@ -290,8 +287,7 @@
 
 @utility glass-scrim {
   background:        rgba(44, 26, 14, 0.32);
-  backdrop-filter:   blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter:   blur(10px);
 }
 
 /* Specular highlight pseudo-element */
