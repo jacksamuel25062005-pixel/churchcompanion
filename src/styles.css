@@ -287,8 +287,7 @@
 
 @utility glass-scrim {
   background:        rgba(44, 26, 14, 0.32);
-  backdrop-filter:   blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter:   blur(10px);
 }
 
 /* Specular highlight pseudo-element */
