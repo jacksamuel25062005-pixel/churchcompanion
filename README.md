@@ -172,7 +172,7 @@ Build a mobile app: Here is the same prompt restructured into clear points:
 
   - Email: emanualmridha2@gmail.com
 
-  - Password: emanual@67
+  - Password: ********
 
 - Super Admin is pre-configured in Supabase Auth, no registration or approval needed
 
