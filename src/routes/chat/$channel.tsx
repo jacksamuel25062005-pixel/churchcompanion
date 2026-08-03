@@ -143,14 +143,21 @@ function YouthGate({ onDone }: { onDone: () => void }) {
   const [busy, setBusy] = useState(false);
   const [denied, setDenied] = useState(false);
 
-  const submit = async () => {
+  const submit = useCallback(async () => {
     if (!phone.trim()) return;
     setBusy(true); setDenied(false);
     try {
       const y = await checkYouthPhone(phone);
       if (y) onDone(); else setDenied(true);
     } catch { setDenied(true); } finally { setBusy(false); }
-  };
+  }, [phone, onDone]);
+
+  // A denied number is retried automatically the moment an admin approves it.
+  useEffect(() => {
+    if (!denied || !phone.trim()) return;
+    return onYouthRosterChange(() => { void submit(); });
+  }, [denied, phone, submit]);
+
 
   return (
     <Card className="mt-6 space-y-3 p-5">
