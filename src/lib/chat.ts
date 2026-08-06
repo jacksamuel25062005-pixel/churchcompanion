@@ -256,7 +256,9 @@ export async function listMessages(
     if (error) throw error;
     const rows = ((data ?? []) as DbRow[]).map((r) => mapRow(channel, r)).reverse();
     void cacheMessages(channel, rows);
+    if (!opts.before) void reconcileCache(channel, rows);
     return rows;
+
   } catch (err) {
     if (!opts.before) {
       const cached = await cachedMessages(channel, limit);
