@@ -267,9 +267,10 @@ export async function uploadChatImage(channel: ChatChannel, file: File): Promise
   return path;
 }
 
-export async function signChatMedia(paths: string[]): Promise<Record<string, string>> {
+export async function signChatMedia(channel: ChatChannel, paths: string[]): Promise<Record<string, string>> {
   if (!paths.length) return {};
-  const { data } = await supabase.storage.from("chat-media").createSignedUrls(paths, 60 * 60 * 6);
+  const db = clientFor(channel);
+  const { data } = await db.storage.from("chat-media").createSignedUrls(paths, 60 * 60 * 6);
   const out: Record<string, string> = {};
   for (const r of data ?? []) if (r.path && r.signedUrl) out[r.path] = r.signedUrl;
   return out;
