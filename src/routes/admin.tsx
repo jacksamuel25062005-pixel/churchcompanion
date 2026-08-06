@@ -2,7 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../components/AppShell";
-import { Card, BackButton } from "../components/ui-bits";
+import { BackButton } from "../components/ui-bits";
+import { SettingsGroup, SettingsRow, RowIcon, Segmented } from "../components/settings/SettingsUI";
 import { useT } from "../lib/i18n";
 import { toast } from "sonner";
 import { Shield, UserPlus } from "lucide-react";
@@ -58,18 +59,28 @@ function AdminTabs() {
   const [tab, setTab] = useState<Tab>("super");
   return (
     <AppShell title={t("admin.title")} left={<BackButton to="/" />} hideNav>
-      <div className="pt-4">
-        <div className="grid grid-cols-2 rounded-xl bg-secondary p-1 text-sm font-medium">
-          <button onClick={() => setTab("super")} className={`flex items-center justify-center gap-1.5 rounded-lg py-2 ${tab === "super" ? "bg-card shadow" : ""}`}>
-            <Shield className="h-4 w-4" /> {t("admin.super_login")}
-          </button>
-          <button onClick={() => setTab("admin")} className={`flex items-center justify-center gap-1.5 rounded-lg py-2 ${tab === "admin" ? "bg-card shadow" : ""}`}>
-            <UserPlus className="h-4 w-4" /> {t("admin.admin_login")}
-          </button>
+      <div className="space-y-6 pt-4">
+        <div className="flex flex-col items-center gap-3 pt-2 text-center">
+          <span className="grid h-14 w-14 place-items-center rounded-3xl brand-bg elev-1">
+            <Shield className="h-6 w-6" />
+          </span>
+          <div>
+            <h1 className="text-[20px] font-semibold tracking-tight">Admin access</h1>
+            <p className="mt-1 text-[13px] text-muted-foreground">Sign in to manage church content</p>
+          </div>
         </div>
-        <div className="mt-4">
-          {tab === "super" ? <LoginForm role="super" /> : <LoginForm role="admin" />}
-        </div>
+
+        <Segmented
+          value={tab}
+          onChange={setTab}
+          ariaLabel="Admin login type"
+          options={[
+            { value: "super", label: <span className="inline-flex items-center gap-1.5"><Shield className="h-3.5 w-3.5" /> {t("admin.super_login")}</span> },
+            { value: "admin", label: <span className="inline-flex items-center gap-1.5"><UserPlus className="h-3.5 w-3.5" /> {t("admin.admin_login")}</span> },
+          ]}
+        />
+
+        {tab === "super" ? <LoginForm role="super" /> : <LoginForm role="admin" />}
       </div>
     </AppShell>
   );
@@ -149,16 +160,16 @@ function LoginForm({ role }: { role: "super" | "admin" }) {
     }
   };
 
+  const hint =
+    role === "super"
+      ? "Sign in as the Super Admin."
+      : mode === "login"
+        ? "Sign in if you are already an approved admin."
+        : "Create an account and request admin access. The Super Admin must approve before you can sign in.";
+
   return (
-    <Card className="p-5">
-      <p className="text-sm text-muted-foreground mb-4">
-        {role === "super"
-          ? "Sign in as the Super Admin."
-          : mode === "login"
-            ? "Sign in if you are already an approved admin."
-            : "Create an account and request admin access. The Super Admin must approve before you can sign in."}
-      </p>
-      <form onSubmit={submit} className="space-y-3">
+    <SettingsGroup label={mode === "login" ? "Sign in" : "Request access"} hint={hint}>
+      <form onSubmit={submit} className="space-y-3.5 p-4">
         <Field label={t("admin.email")}>
           <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required autoComplete="email" className="input" />
         </Field>
@@ -173,39 +184,44 @@ function LoginForm({ role }: { role: "super" | "admin" }) {
             <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} className="input" placeholder="Why do you need admin access?" />
           </Field>
         )}
-        <button disabled={submitting} className="tap-card focus-ring w-full rounded-xl brand-bg py-2.5 text-sm font-medium disabled:opacity-50">
+        <button
+          disabled={submitting}
+          className="tap-card focus-ring min-h-11 w-full rounded-full brand-bg text-[14px] font-semibold elev-1 disabled:opacity-50"
+        >
           {submitting ? "…" : mode === "login" ? t("admin.sign_in") : "Request access"}
         </button>
-        {mode === "login" && (
-          <button
-            type="button"
-            onClick={sendReset}
-            disabled={sendingReset}
-            className="w-full text-xs text-muted-foreground underline disabled:opacity-50"
-          >
-            {sendingReset ? "Sending reset link…" : "Forgot password?"}
-          </button>
-        )}
-        {role === "admin" && (
-          <button
-            type="button"
-            onClick={() => setMode(mode === "login" ? "signup" : "login")}
-            className="w-full text-xs text-muted-foreground underline"
-          >
-            {mode === "login" ? "Create account & request access" : "Have an approved account? Sign in"}
-          </button>
-        )}
+        <div className="flex flex-col items-center gap-2 pt-0.5">
+          {mode === "login" && (
+            <button
+              type="button"
+              onClick={sendReset}
+              disabled={sendingReset}
+              className="focus-ring rounded-full px-2 py-1 text-[12px] font-medium text-muted-foreground underline-offset-4 hover:underline disabled:opacity-50"
+            >
+              {sendingReset ? "Sending reset link…" : "Forgot password?"}
+            </button>
+          )}
+          {role === "admin" && (
+            <button
+              type="button"
+              onClick={() => setMode(mode === "login" ? "signup" : "login")}
+              className="focus-ring rounded-full px-2 py-1 text-[12px] font-semibold brand-text underline-offset-4 hover:underline"
+            >
+              {mode === "login" ? "Create account & request access" : "Have an approved account? Sign in"}
+            </button>
+          )}
+        </div>
       </form>
-      <style>{`.input{width:100%;border-radius:0.75rem;border:1px solid var(--color-border);background:var(--color-secondary);padding:0.65rem 0.85rem;font-size:0.875rem;outline:none}.input:focus{box-shadow:0 0 0 2px var(--brand)}`}</style>
-    </Card>
+      <style>{`.input{width:100%;border-radius:0.9rem;border:1px solid var(--color-border);background:var(--color-secondary);padding:0.7rem 0.9rem;font-size:0.9rem;outline:none}.input:focus{box-shadow:0 0 0 2px var(--brand)}`}</style>
+    </SettingsGroup>
   );
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      <div className="mt-1">{children}</div>
+      <span className="text-[12px] font-semibold text-muted-foreground">{label}</span>
+      <div className="mt-1.5">{children}</div>
     </label>
   );
 }
@@ -237,37 +253,77 @@ function RequestAdminAccess({ email, userId }: { email: string; userId: string }
 
   const signOut = async () => { await supabase.auth.signOut(); window.location.reload(); };
 
+  const statusTone =
+    existing?.status === "approved" ? "brand" : existing?.status === "rejected" ? "danger" : "muted";
+
   return (
     <AppShell title={t("admin.title")} left={<BackButton to="/" />} hideNav>
-      <div className="pt-4 space-y-4">
-        <Card className="p-5">
-          <p className="text-xs text-muted-foreground">Signed in as</p>
-          <p className="font-medium">{firstNameFrom({ email })}</p>
-        </Card>
+      <div className="space-y-6 pt-4">
+        <SettingsGroup label="Account">
+          <SettingsRow
+            icon={<RowIcon><UserPlus /></RowIcon>}
+            title={firstNameFrom({ email })}
+            subtitle={email}
+          />
+        </SettingsGroup>
 
         {existing ? (
-          <Card className="p-5">
-            <p className="text-sm font-medium">Request status: <span className="brand-text uppercase">{existing.status}</span></p>
-            {existing.status === "pending" && <p className="text-xs text-muted-foreground mt-1">Wait for an admin or the Super Admin to approve.</p>}
-            {existing.status === "rejected" && <p className="text-xs text-muted-foreground mt-1">Your previous request was rejected. You can submit a new one below.</p>}
+          <SettingsGroup
+            label="Request status"
+            hint={
+              existing.status === "pending"
+                ? "Wait for an admin or the Super Admin to approve."
+                : existing.status === "rejected"
+                  ? "Your previous request was rejected. You can submit a new one below."
+                  : undefined
+            }
+          >
+            <SettingsRow
+              icon={<RowIcon tone={statusTone as any}><Shield /></RowIcon>}
+              title={<span className="capitalize">{existing.status}</span>}
+              subtitle={existing.created_at ? new Date(existing.created_at).toLocaleString() : undefined}
+            />
             {existing.status === "approved" && (
-              <Link to="/admin/dashboard" className="mt-3 inline-flex rounded-xl brand-bg px-4 py-2 text-sm font-medium">Open dashboard</Link>
+              <div className="p-4">
+                <Link
+                  to="/admin/dashboard"
+                  className="tap-card focus-ring flex min-h-11 items-center justify-center rounded-full brand-bg text-[14px] font-semibold elev-1"
+                >
+                  Open dashboard
+                </Link>
+              </div>
             )}
-          </Card>
+          </SettingsGroup>
         ) : null}
 
         {(!existing || existing.status === "rejected") && (
-          <Card className="p-5">
-            <form onSubmit={submit} className="space-y-3">
+          <SettingsGroup label="Request admin access">
+            <form onSubmit={submit} className="space-y-3.5 p-4">
               <Field label={t("admin.request_reason")}>
-                <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={4} className="w-full rounded-xl border bg-secondary p-3 text-sm" required />
+                <textarea
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  rows={4}
+                  required
+                  className="w-full rounded-[0.9rem] border border-border bg-secondary p-3 text-sm outline-none focus:shadow-[0_0_0_2px_var(--brand)]"
+                />
               </Field>
-              <button disabled={loading} className="w-full rounded-xl brand-bg py-2.5 text-sm font-medium disabled:opacity-50">{t("admin.request_submit")}</button>
+              <button
+                disabled={loading}
+                className="tap-card focus-ring min-h-11 w-full rounded-full brand-bg text-[14px] font-semibold elev-1 disabled:opacity-50"
+              >
+                {t("admin.request_submit")}
+              </button>
             </form>
-          </Card>
+          </SettingsGroup>
         )}
 
-        <button onClick={signOut} className="w-full text-xs text-muted-foreground underline">{t("admin.sign_out")}</button>
+        <button
+          onClick={signOut}
+          className="focus-ring mx-auto block rounded-full px-3 py-1.5 text-[12px] font-medium text-muted-foreground underline-offset-4 hover:underline"
+        >
+          {t("admin.sign_out")}
+        </button>
       </div>
     </AppShell>
   );

@@ -273,9 +273,11 @@ function NotificationsSection() {
 function OfflineSection() {
   const entries = useOfflineIndex();
   const [busy, setBusy] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [progress, setProgress] = useState<FullDownloadProgress | null>(null);
+  useEffect(() => { setMounted(true); }, []);
   const totalBytes = entries.reduce((a, e) => a + e.bytes, 0);
-  const hasAny = entries.length > 0;
+  const hasAny = mounted && entries.length > 0;
 
   const downloadAll = async () => {
     if (busy) return;
