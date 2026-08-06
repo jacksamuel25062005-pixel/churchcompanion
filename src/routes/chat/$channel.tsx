@@ -513,19 +513,31 @@ function Thread({ channel, title, onLeave }: { channel: ChatChannel; title: stri
   );
 }
 
+function dayLabel(iso: string) {
+  const d = new Date(iso);
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) return "Today";
+  const y = new Date(now.getTime() - 86400000);
+  if (d.toDateString() === y.toDateString()) return "Yesterday";
+  return d.toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" });
+}
+
 function MessageBubble({
-  message, mine, showName, reactions, readBy, mediaUrl, open, isAdmin,
-  onOpen, onReact, onReport, onDelete, onExpand,
+  message, mine, showName, endsRun, replyTarget, reactions, readBy, mediaUrl, open, isAdmin,
+  onOpen, onReply, onReact, onReport, onDelete, onExpand,
 }: {
   message: ChatMessage;
   mine: boolean;
   showName: boolean;
+  endsRun: boolean;
+  replyTarget: ChatMessage | null;
   reactions: { emoji: string }[];
   readBy: number;
   mediaUrl?: string;
   open: boolean;
   isAdmin: boolean;
   onOpen: () => void;
+  onReply: () => void;
   onReact: (emoji: string) => void;
   onReport: () => void;
   onDelete: () => void;
@@ -533,11 +545,8 @@ function MessageBubble({
 }) {
   const { t } = useT();
   const pressTimer = useRef<number | null>(null);
-  const [showTime, setShowTime] = useState(false);
 
-  const startPress = () => {
-    pressTimer.current = window.setTimeout(() => { onOpen(); setShowTime(true); }, 420);
-  };
+  const startPress = () => { pressTimer.current = window.setTimeout(onOpen, 420); };
   const endPress = () => { if (pressTimer.current) window.clearTimeout(pressTimer.current); };
 
   const grouped = reactions.reduce<Record<string, number>>((acc, r) => {
@@ -545,39 +554,80 @@ function MessageBubble({
     return acc;
   }, {});
 
+  const time = new Date(message.created_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
   return (
-    <div className={`flex flex-col ${mine ? "items-end" : "items-start"}`}>
-      {showName && <span className="px-2 pb-0.5 text-[11px] font-medium text-muted-foreground font-hi">{message.sender_name}</span>}
+    <motion.div
+      layout="position"
+      initial={{ opacity: 0, y: 12, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.97 }}
+      transition={{ type: "spring", stiffness: 460, damping: 34, mass: 0.7 }}
+      className={`flex flex-col ${mine ? "items-end" : "items-start"} ${endsRun ? "mb-2" : "mb-0.5"}`}
+    >
+      {showName && (
+        <span className="px-3 pb-0.5 text-[11px] font-semibold brand-text font-hi">{message.sender_name}</span>
+      )}
+
       <motion.div
-        initial={{ opacity: 0, y: 8, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ type: "spring", stiffness: 420, damping: 32 }}
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.2}
+        dragSnapToOrigin
+        onDragEnd={(_, info) => { if (Math.abs(info.offset.x) > 56) onReply(); }}
         onPointerDown={startPress}
         onPointerUp={endPress}
+        onPointerCancel={endPress}
         onPointerLeave={endPress}
         onContextMenu={(e) => { e.preventDefault(); onOpen(); }}
-        className={`max-w-[82%] rounded-2xl px-3 py-2 text-sm ${
+        className={`relative max-w-[82%] touch-pan-y px-3 py-2 text-sm shadow-[0_2px_10px_rgba(0,0,0,0.18)] ${
           mine
-            ? "bg-[var(--brand)] text-white rounded-br-md"
-            : "glass rounded-bl-md"
+            ? `bg-[var(--brand)] text-white rounded-2xl ${endsRun ? "rounded-br-md" : ""}`
+            : `glass rounded-2xl ${endsRun ? "rounded-bl-md" : ""}`
         }`}
       >
+        {replyTarget && (
+          <div
+            className={`mb-1.5 rounded-xl border-l-2 px-2 py-1 ${mine ? "bg-white/15 border-white/60" : "bg-foreground/5"}`}
+            style={mine ? undefined : { borderColor: "var(--brand)" }}
+          >
+            <p className={`truncate text-[11px] font-semibold font-hi ${mine ? "text-white/90" : "brand-text"}`}>
+              {replyTarget.sender_name}
+            </p>
+            <p className={`truncate text-[11px] font-hi ${mine ? "text-white/75" : "text-muted-foreground"}`}>
+              {replyTarget.content || (replyTarget.media_url ? "Photo" : "")}
+            </p>
+          </div>
+        )}
+
         {mediaUrl && (
           <button type="button" onClick={() => onExpand(mediaUrl)} className="mb-1 block overflow-hidden rounded-xl">
             <img src={mediaUrl} alt="" className="max-h-64 w-full object-cover" loading="lazy" />
           </button>
         )}
+
         {message.content && <p className="whitespace-pre-wrap break-words font-hi">{message.content}</p>}
+
         <div className={`mt-0.5 flex items-center justify-end gap-1 text-[10px] ${mine ? "text-white/70" : "text-muted-foreground"}`}>
-          {showTime && <span>{new Date(message.created_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</span>}
-          {mine && (readBy > 0 ? <CheckCheck className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />)}
+          <span className="tabular-nums">{time}</span>
+          {mine && (readBy > 0
+            ? <span className="flex items-center gap-0.5"><CheckCheck className="h-3.5 w-3.5" />{readBy > 1 ? readBy : ""}</span>
+            : <Check className="h-3.5 w-3.5" />)}
         </div>
       </motion.div>
 
       {Object.keys(grouped).length > 0 && (
-        <div className="-mt-1 flex gap-1 px-1">
+        <div className="-mt-1.5 flex gap-1 px-2">
           {Object.entries(grouped).map(([emoji, count]) => (
-            <span key={emoji} className="glass rounded-full px-1.5 py-0.5 text-[11px]">{emoji} {count}</span>
+            <motion.span
+              key={emoji}
+              initial={{ scale: 0.6, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 500, damping: 26 }}
+              className="glass rounded-full px-1.5 py-0.5 text-[11px]"
+            >
+              {emoji} {count}
+            </motion.span>
           ))}
         </div>
       )}
@@ -588,11 +638,14 @@ function MessageBubble({
             initial={{ opacity: 0, scale: 0.9, y: -4 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="glass mt-1 flex items-center gap-1 rounded-full px-2 py-1"
+            className="glass-strong mt-1 flex items-center gap-1 rounded-full px-2 py-1"
           >
             {REACTION_EMOJIS.map((e) => (
               <button key={e} onClick={() => onReact(e)} className="px-1 text-base active:scale-90 transition">{e}</button>
             ))}
+            <button onClick={onReply} aria-label="Reply" className="px-1 text-muted-foreground">
+              <CornerUpLeft className="h-4 w-4" />
+            </button>
             <button onClick={onReport} aria-label={t("chat.report")} className="px-1 text-muted-foreground">
               <AlertTriangle className="h-4 w-4" />
             </button>
@@ -604,6 +657,6 @@ function MessageBubble({
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }
