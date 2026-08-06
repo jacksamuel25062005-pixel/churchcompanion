@@ -611,6 +611,12 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
           const newDay = !prev || dayLabel(prev.created_at) !== dayLabel(m.created_at);
           const mine = m.sender_ref === me?.ref;
           const grouped = !!prev && !newDay && prev.sender_ref === m.sender_ref;
+          const rs = reactionsFor(m.id);
+          const grouping = new Map<string, { count: number; mine: boolean }>();
+          rs.forEach((r) => {
+            const cur = grouping.get(r.emoji) ?? { count: 0, mine: false };
+            grouping.set(r.emoji, { count: cur.count + 1, mine: cur.mine || r.sender_ref === me?.ref });
+          });
           return (
             <div key={m.id}>
               {newDay && (
@@ -624,26 +630,50 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.18 }}
-                className={cn("flex", mine ? "justify-end" : "justify-start", grouped ? "mt-0.5" : "mt-2")}
+                className={cn("flex flex-col", mine ? "items-end" : "items-start", grouped ? "mt-0.5" : "mt-2")}
               >
-                <div
+                <motion.div
+                  {...longPress(m)}
+                  whileTap={{ scale: 0.985 }}
                   className={cn(
-                    "max-w-[80%] rounded-2xl px-3.5 py-2 text-[15px] leading-snug shadow-sm",
+                    "max-w-[80%] select-none rounded-2xl px-3.5 py-2 text-[15px] leading-snug shadow-sm",
                     mine ? "bg-primary text-primary-foreground rounded-br-md" : "bg-card rounded-bl-md",
+                    editing?.id === m.id && "ring-2 ring-primary/60",
                   )}
                 >
                   {!mine && !grouped && (
                     <p className="mb-0.5 text-xs font-semibold text-primary">{m.sender_name}</p>
                   )}
                   <p className="whitespace-pre-wrap break-words">{m.content}</p>
-                  <p className={cn("mt-1 text-[10px] tabular-nums", mine ? "text-primary-foreground/70" : "text-muted-foreground")}>
+                  <p className={cn("mt-1 flex items-center gap-1 text-[10px] tabular-nums", mine ? "text-primary-foreground/70" : "text-muted-foreground")}>
+                    {m.is_edited && <span className="italic">edited</span>}
                     {timeLabel(m.created_at)}
                   </p>
-                </div>
+                </motion.div>
+
+                {grouping.size > 0 && (
+                  <div className={cn("mt-1 flex flex-wrap gap-1", mine ? "justify-end" : "justify-start")}>
+                    {Array.from(grouping.entries()).map(([emoji, info]) => (
+                      <motion.button
+                        key={emoji}
+                        whileTap={{ scale: 0.88 }}
+                        onClick={() => void react(m, emoji)}
+                        className={cn(
+                          "flex items-center gap-1 rounded-full border px-2 py-0.5 text-[12px] leading-none",
+                          info.mine ? "border-primary/60 bg-primary/15" : "border-border bg-card",
+                        )}
+                      >
+                        <span>{emoji}</span>
+                        {info.count > 1 && <span className="tabular-nums text-[11px]">{info.count}</span>}
+                      </motion.button>
+                    ))}
+                  </div>
+                )}
               </motion.div>
             </div>
           );
         })}
+
 
         <AnimatePresence>
           {typingNames.length > 0 && (
