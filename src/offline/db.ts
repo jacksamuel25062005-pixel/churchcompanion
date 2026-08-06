@@ -101,7 +101,17 @@ export interface ChatOutboxRow {
   created_at: number;
 }
 
+export interface ChatCacheRow {
+  id: string;
+  channel: "congregation" | "youth";
+  sender_name: string;
+  sender_ref: string;
+  content: string | null;
+  created_at: string; // ISO
+}
+
 export interface ImageBlobRow {
+
 
   key: string;      // `${bucket}/${path}`
   bucket: string;
