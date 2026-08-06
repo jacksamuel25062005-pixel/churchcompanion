@@ -132,8 +132,6 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const router = useRouter();
-
   useEffect(() => {
     initDiagnostics();
     initOneSignal();
@@ -145,7 +143,7 @@ function RootComponent() {
         if (!already) navigator.storage.persist().catch(() => {});
       }).catch(() => {});
     }
-  }, [router]);
+  }, []);
 
 
 
