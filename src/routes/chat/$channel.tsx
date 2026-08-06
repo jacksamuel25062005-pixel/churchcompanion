@@ -303,6 +303,75 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
     });
   }, []);
 
+  // ---- Reactions ------------------------------------------------------
+  const idsKey = messages.map((m) => m.id).join(",");
+  const idsRef = useRef<string[]>([]);
+  idsRef.current = messages.map((m) => m.id);
+
+  const refreshReactions = useCallback(async () => {
+    const rows = await listReactions(channel, idsRef.current);
+    setReactions(rows);
+  }, [channel]);
+
+  useEffect(() => {
+    if (!idsKey) { setReactions([]); return; }
+    void refreshReactions();
+  }, [idsKey, refreshReactions]);
+
+  const reactionsFor = useCallback(
+    (id: string) => reactions.filter((r) => r.message_id === id),
+    [reactions],
+  );
+
+  const react = async (message: ChatMessage, emoji: string) => {
+    setSheetFor(null);
+    try {
+      await toggleReaction(channel, message.id, emoji);
+      await refreshReactions();
+      room.current?.broadcastReaction();
+      haptic.light();
+    } catch (err) {
+      setError((err as Error).message || "Could not react");
+    }
+  };
+
+  const copyMessage = async (m: ChatMessage) => {
+    setSheetFor(null);
+    try { await navigator.clipboard.writeText(m.content ?? ""); } catch { /* ignore */ }
+  };
+
+  const removeMessage = async (m: ChatMessage) => {
+    setSheetFor(null);
+    try {
+      await deleteMessage(channel, m.id);
+      setMessages((prev) => prev.filter((x) => x.id !== m.id));
+      room.current?.broadcastDelete(m.id);
+      haptic.success();
+    } catch (err) {
+      setError((err as Error).message || "Could not delete");
+    }
+  };
+
+  const startEdit = (m: ChatMessage) => {
+    setSheetFor(null);
+    setEditing(m);
+    setText(m.content ?? "");
+  };
+
+  const cancelEdit = () => { setEditing(null); setText(""); };
+
+  const longPress = (m: ChatMessage) => ({
+    onContextMenu: (e: React.MouseEvent) => { e.preventDefault(); haptic.medium(); setSheetFor(m); },
+    onPointerDown: () => {
+      if (pressTimer.current) clearTimeout(pressTimer.current);
+      pressTimer.current = setTimeout(() => { haptic.medium(); setSheetFor(m); }, 420);
+    },
+    onPointerUp: () => { if (pressTimer.current) clearTimeout(pressTimer.current); },
+    onPointerLeave: () => { if (pressTimer.current) clearTimeout(pressTimer.current); },
+    onPointerCancel: () => { if (pressTimer.current) clearTimeout(pressTimer.current); },
+  });
+
+
   // Initial load
   useEffect(() => {
     let alive = true;
