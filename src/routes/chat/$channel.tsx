@@ -221,6 +221,7 @@ function Thread({ channel, title, onLeave }: { channel: ChatChannel; title: stri
   });
   const messages = useMemo(() => messagesQ.data ?? [], [messagesQ.data]);
   const ids = useMemo(() => messages.map((m) => m.id), [messages]);
+  const byId = useMemo(() => new Map(messages.map((m) => [m.id, m])), [messages]);
 
   const reactionsQ = useQuery({
     queryKey: ["chat-reactions", channel, ids.length, ids[ids.length - 1] ?? ""],
