@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../components/AppShell";
 import { Card, BackButton } from "../components/ui-bits";
+import { SettingsGroup, SettingsRow, RowIcon, Segmented } from "../components/settings/SettingsUI";
 import { useT } from "../lib/i18n";
 import { toast } from "sonner";
 import { Shield, UserPlus } from "lucide-react";
