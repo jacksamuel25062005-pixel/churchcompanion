@@ -118,7 +118,16 @@ function Dashboard() {
             title="Chat moderation"
             subtitle="Reports & mutes"
           />
+          {role === "super_admin" && (
+            <SettingsLinkRow
+              to="/admin/congregation"
+              icon={<RowIcon><Users /></RowIcon>}
+              title="Manage congregation chat"
+              subtitle="Edit or remove chat members"
+            />
+          )}
         </SettingsGroup>
+
 
         <SettingsGroup label="People & access">
           <SettingsLinkRow
