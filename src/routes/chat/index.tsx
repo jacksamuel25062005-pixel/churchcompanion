@@ -3,8 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
-  Archive, Bell, BellOff, Camera, Check, CheckCheck, FileText, Image as ImageIcon,
-  Lock, MessagesSquare, Mic, MoreVertical, Pin, PinOff, Search, Sparkles, Star, Users, X,
+  Archive, Bell, BellOff, Check, CheckCheck, FileText, Image as ImageIcon,
+  Lock, MessagesSquare, Mic, Pin, PinOff, Search, Star, Users, X,
 } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { BackButton } from "../../components/ui-bits";
@@ -67,13 +67,11 @@ function previewOf(m: ChatMessage | null | undefined) {
 
 function ChatHome() {
   const { t } = useT();
-  const navigate = useNavigate();
   const reduce = useReducedMotion();
 
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FilterKey>("all");
   const [selected, setSelected] = useState<ChatChannel[]>([]);
-  const [menu, setMenu] = useState(false);
   const [prefsTick, setPrefsTick] = useState(0);
 
   useEffect(() => onPrefsChange(() => setPrefsTick((n) => n + 1)), []);
