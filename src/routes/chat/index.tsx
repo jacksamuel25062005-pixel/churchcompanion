@@ -129,17 +129,6 @@ function ChatHome() {
               <p className="truncate text-[11px] text-muted-foreground">Church Companion messaging</p>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-1">
-            <IconButton label="Camera" onClick={() => navigate({ to: "/chat/$channel", params: { channel: "congregation" } })}>
-              <Camera className="h-[18px] w-[18px]" />
-            </IconButton>
-            <IconButton label="AI assistant" onClick={() => setMenu(false)}>
-              <Sparkles className="h-[18px] w-[18px]" />
-            </IconButton>
-            <IconButton label="More options" onClick={() => setMenu((m) => !m)}>
-              <MoreVertical className="h-[18px] w-[18px]" />
-            </IconButton>
-          </div>
         </header>
       ) : (
         <header className="flex items-center justify-between gap-2 pt-4">
