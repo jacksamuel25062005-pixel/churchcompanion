@@ -18,3 +18,20 @@ export function useIsAdmin() {
   }, []);
   return isAdmin;
 }
+
+/** Read-only super-admin flag (no redirect). Server still enforces the rule. */
+export function useIsSuperAdmin() {
+  const [isSuper, setIsSuper] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { if (!cancelled) setIsSuper(false); return; }
+      const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+      if (cancelled) return;
+      setIsSuper((data ?? []).some((r) => r.role === "super_admin"));
+    })();
+    return () => { cancelled = true; };
+  }, []);
+  return isSuper;
+}
