@@ -61,7 +61,7 @@ function AdminTabs() {
     <AppShell title={t("admin.title")} left={<BackButton to="/" />} hideNav>
       <div className="space-y-6 pt-4">
         <div className="flex flex-col items-center gap-3 pt-2 text-center">
-          <span className="grid h-14 w-14 place-items-center rounded-[20px] brand-bg elev-1">
+          <span className="grid h-14 w-14 place-items-center rounded-3xl brand-bg elev-1">
             <Shield className="h-6 w-6" />
           </span>
           <div>
