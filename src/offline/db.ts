@@ -101,7 +101,17 @@ export interface ChatOutboxRow {
   created_at: number;
 }
 
+export interface ChatCacheRow {
+  id: string;
+  channel: "congregation" | "youth";
+  sender_name: string;
+  sender_ref: string;
+  content: string | null;
+  created_at: string; // ISO
+}
+
 export interface ImageBlobRow {
+
 
   key: string;      // `${bucket}/${path}`
   bucket: string;
@@ -124,6 +134,8 @@ export class ChurchDB extends Dexie {
   cached_images!: EntityTable<CachedImageRow, "url">;
   image_blobs!: EntityTable<ImageBlobRow, "key">;
   chat_outbox!: EntityTable<ChatOutboxRow, "id">;
+  chat_cache!: EntityTable<ChatCacheRow, "id">;
+
 
 
   constructor() {
@@ -147,6 +159,10 @@ export class ChurchDB extends Dexie {
     this.version(4).stores({
       chat_outbox: "id, channel, created_at",
     });
+    this.version(5).stores({
+      chat_cache: "id, channel, created_at",
+    });
+
 
   }
 }

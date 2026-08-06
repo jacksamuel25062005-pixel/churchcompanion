@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { broadcastYouthRoster } from "@/lib/chat";
 
 import { AppShell } from "../../components/AppShell";
 import { BackButton, Card } from "../../components/ui-bits";
@@ -12,9 +11,9 @@ export const Route = createFileRoute("/_authenticated/admin/chat")({
   head: () => ({
     meta: [
       { title: "Chat moderation · Church Companion" },
-      { name: "description", content: "Moderate congregation and youth chat: reports, mutes and the approved youth list." },
+      { name: "description", content: "Moderate congregation and youth chat: reports and mutes." },
       { property: "og:title", content: "Chat moderation · Church Companion" },
-      { property: "og:description", content: "Moderate congregation and youth chat: reports, mutes and the approved youth list." },
+      { property: "og:description", content: "Moderate congregation and youth chat: reports and mutes." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -23,7 +22,6 @@ export const Route = createFileRoute("/_authenticated/admin/chat")({
 
 function AdminChat() {
   const qc = useQueryClient();
-  const [youthForm, setYouthForm] = useState({ name: "", phone: "" });
   const [mute, setMute] = useState({ ref: "", minutes: "60" });
 
   const reportsQ = useQuery({
@@ -39,15 +37,6 @@ function AdminChat() {
     },
   });
 
-  const youthQ = useQuery({
-    queryKey: ["admin-approved-youth"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("approved_youth").select("*").order("name");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
   const mutesQ = useQuery({
     queryKey: ["admin-chat-mutes"],
     queryFn: async () => {
@@ -56,34 +45,6 @@ function AdminChat() {
       return data ?? [];
     },
   });
-
-  // Live-refresh the roster for every admin device.
-  useEffect(() => {
-    const ch = supabase
-      .channel("admin-approved-youth")
-      .on("postgres_changes", { event: "*", schema: "public", table: "approved_youth" }, () => {
-        void qc.invalidateQueries({ queryKey: ["admin-approved-youth"] });
-      })
-      .subscribe();
-    return () => { void supabase.removeChannel(ch); };
-  }, [qc]);
-
-  const addYouth = async () => {
-
-    if (!youthForm.name.trim() || !youthForm.phone.trim()) return;
-    const { error } = await supabase.from("approved_youth").insert({ name: youthForm.name.trim(), phone: youthForm.phone.trim() });
-    if (error) { window.alert(error.message); return; }
-    setYouthForm({ name: "", phone: "" });
-    broadcastYouthRoster();
-    void qc.invalidateQueries({ queryKey: ["admin-approved-youth"] });
-  };
-
-  const removeYouth = async (id: string) => {
-    await supabase.from("approved_youth").delete().eq("id", id);
-    broadcastYouthRoster();
-    void qc.invalidateQueries({ queryKey: ["admin-approved-youth"] });
-  };
-
 
   const addMute = async (ref?: string) => {
     const target = (ref ?? mute.ref).trim();
@@ -126,23 +87,6 @@ function AdminChat() {
               </div>
             </div>
           ))}
-        </Card>
-
-        <Card className="space-y-3 p-4">
-          <h2 className="font-display text-base font-bold">Approved youth / स्वीकृत युवा</h2>
-          <div className="flex gap-2">
-            <input className={input} placeholder="Name" value={youthForm.name} onChange={(e) => setYouthForm({ ...youthForm, name: e.target.value })} />
-            <input className={input} placeholder="Phone" value={youthForm.phone} onChange={(e) => setYouthForm({ ...youthForm, phone: e.target.value })} />
-            <button className={btn} onClick={addYouth}>Add</button>
-          </div>
-          <ul className="space-y-1 text-xs">
-            {(youthQ.data ?? []).map((y: any) => (
-              <li key={y.id} className="flex items-center justify-between rounded-lg border px-3 py-2">
-                <span>{y.name} · {y.phone}</span>
-                <button className="text-destructive" onClick={() => removeYouth(y.id)}>Remove</button>
-              </li>
-            ))}
-          </ul>
         </Card>
 
         <Card className="space-y-3 p-4">

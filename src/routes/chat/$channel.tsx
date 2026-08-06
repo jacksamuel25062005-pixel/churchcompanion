@@ -1,39 +1,31 @@
-import { createFileRoute, useParams, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Check, CheckCheck, CornerUpLeft, ImagePlus, Send, Trash2, WifiOff, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
+import { Loader2, Send, Users, WifiOff } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { BackButton, Card } from "../../components/ui-bits";
-import { ImageLightbox } from "../../components/ImageLightbox";
 import { useT } from "../../lib/i18n";
-import { useIsAdmin } from "../../lib/use-admin";
 import { flushChatOutbox, pendingMessages, queueMessage } from "../../lib/chat-outbox";
 import {
-  REACTION_EMOJIS,
-  checkYouthPhone,
-  getCongregationIdentity,
-  getYouthIdentity,
-  refreshYouthSession,
+  PAGE_SIZE,
+  getIdentity,
+  joinCongregation,
+  joinRoom,
+  joinYouth,
   listMessages,
-  listReactions,
-  markRead,
-  onYouthRosterChange,
-  presenceChannelName,
-
-  readCounts,
-  registerCongregation,
-  reportMessage,
-  sendMessage,
+  heartbeat,
+  refreshSession,
+  requestYouthAccess,
   senderFor,
+  sendMessage,
   setLastSeen,
-  signChatMedia,
-  toggleReaction,
-  uploadChatImage,
+  onYouthRosterChange,
+  youthRequestStatus,
   type ChatChannel,
   type ChatMessage,
+  type OnlineUser,
 } from "../../lib/chat";
+import { cn } from "../../lib/utils";
 
 export const Route = createFileRoute("/chat/$channel")({
   component: ChatThread,
@@ -49,470 +41,6 @@ export const Route = createFileRoute("/chat/$channel")({
   }),
 });
 
-function ChatThread() {
-  const { channel: raw } = useParams({ from: "/chat/$channel" });
-  const channel: ChatChannel = raw === "youth" ? "youth" : "congregation";
-  const navigate = useNavigate();
-  const { t } = useT();
-  const [identityTick, setIdentityTick] = useState(0);
-
-  // Keep an already-approved youth session alive silently — never re-ask.
-  // Re-validate instantly whenever an admin edits the approved list, and on focus.
-  useEffect(() => {
-    if (channel !== "youth") return;
-    const revalidate = () => void refreshYouthSession().then(() => setIdentityTick((n) => n + 1));
-    revalidate();
-    const off = onYouthRosterChange(revalidate);
-    window.addEventListener("focus", revalidate);
-    return () => { off(); window.removeEventListener("focus", revalidate); };
-  }, [channel]);
-
-
-  const identity = useMemo(() => {
-    void identityTick;
-    if (typeof window === "undefined") return null;
-    return senderFor(channel);
-  }, [channel, identityTick]);
-
-
-  const title = channel === "youth" ? `${t("chat.youth")} / युवा चैट` : `${t("chat.congregation")} / मण्डली चैट`;
-
-  if (!identity) {
-    return (
-      <AppShell title={title} left={<BackButton to="/chat" />}>
-        {channel === "youth" ? (
-          <YouthGate onDone={() => setIdentityTick((n) => n + 1)} />
-        ) : (
-          <CongregationGate onDone={() => setIdentityTick((n) => n + 1)} />
-        )}
-      </AppShell>
-    );
-  }
-
-  return <Thread channel={channel} title={title} onLeave={() => navigate({ to: "/chat" })} />;
-}
-
-// ---------------- Identity gates ----------------
-
-function CongregationGate({ onDone }: { onDone: () => void }) {
-  const { t } = useT();
-  const [form, setForm] = useState({ name: "", email: "", phone: "" });
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-
-  const submit = async () => {
-    if (!form.name.trim() || !form.email.trim() || !form.phone.trim()) return;
-    setBusy(true); setErr(null);
-    try {
-      await registerCongregation(form.name, form.email, form.phone);
-      onDone();
-    } catch (e) {
-      setErr((e as Error).message);
-    } finally { setBusy(false); }
-  };
-
-  return (
-    <Card className="mt-6 space-y-3 p-5">
-      <h2 className="font-display text-lg font-bold">{t("chat.join_title")}</h2>
-      <p className="text-xs text-muted-foreground font-hi">{t("chat.join_hint")}</p>
-      {(["name", "email", "phone"] as const).map((k) => (
-        <input
-          key={k}
-          value={form[k]}
-          onChange={(e) => setForm({ ...form, [k]: e.target.value })}
-          placeholder={t(`chat.${k}`)}
-          type={k === "email" ? "email" : k === "phone" ? "tel" : "text"}
-          className="w-full rounded-xl border bg-background px-3 py-2.5 text-sm outline-none focus-visible:ring-2 brand-ring"
-        />
-      ))}
-      {err && <p className="text-xs text-destructive">{err}</p>}
-      <button
-        onClick={submit}
-        disabled={busy}
-        className="w-full rounded-xl bg-[var(--brand)] px-4 py-2.5 text-sm font-semibold text-white active:scale-[0.98] transition disabled:opacity-60"
-      >
-        {t("chat.continue")}
-      </button>
-    </Card>
-  );
-}
-
-function YouthGate({ onDone }: { onDone: () => void }) {
-  const { t } = useT();
-  const [phone, setPhone] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [denied, setDenied] = useState(false);
-
-  const submit = useCallback(async () => {
-    if (!phone.trim()) return;
-    setBusy(true); setDenied(false);
-    try {
-      const y = await checkYouthPhone(phone);
-      if (y) onDone(); else setDenied(true);
-    } catch { setDenied(true); } finally { setBusy(false); }
-  }, [phone, onDone]);
-
-  // A denied number is retried automatically the moment an admin approves it.
-  useEffect(() => {
-    if (!denied || !phone.trim()) return;
-    return onYouthRosterChange(() => { void submit(); });
-  }, [denied, phone, submit]);
-
-
-  return (
-    <Card className="mt-6 space-y-3 p-5">
-      <h2 className="font-display text-lg font-bold">{t("chat.youth_gate")}</h2>
-      <input
-        value={phone}
-        onChange={(e) => setPhone(e.target.value)}
-        type="tel"
-        placeholder="+91…"
-        className="w-full rounded-xl border bg-background px-3 py-2.5 text-sm outline-none focus-visible:ring-2 brand-ring"
-      />
-      {denied && <p className="text-xs text-destructive font-hi">{t("chat.youth_denied")}</p>}
-      <button
-        onClick={submit}
-        disabled={busy}
-        className="w-full rounded-xl bg-[var(--brand)] px-4 py-2.5 text-sm font-semibold text-white active:scale-[0.98] transition disabled:opacity-60"
-      >
-        {t("chat.continue")}
-      </button>
-    </Card>
-  );
-}
-
-// ---------------- Thread ----------------
-
-function Thread({ channel, title, onLeave }: { channel: ChatChannel; title: string; onLeave: () => void }) {
-  const { t } = useT();
-  const qc = useQueryClient();
-  const isAdmin = useIsAdmin();
-  const me = senderFor(channel)!;
-  const bottomRef = useRef<HTMLDivElement | null>(null);
-  const [draft, setDraft] = useState("");
-  const [online, setOnline] = useState(true);
-  const [connected, setConnected] = useState(false);
-  const [typers, setTypers] = useState<string[]>([]);
-  const [present, setPresent] = useState(0);
-  const [picker, setPicker] = useState<string | null>(null);
-  const [lightbox, setLightbox] = useState<string | null>(null);
-  const [queued, setQueued] = useState(0);
-  const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
-  const [pad, setPad] = useState(96);
-  const composerRef = useRef<HTMLDivElement | null>(null);
-  const roomRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  const lastTypingRef = useRef(0);
-
-  // Keep the transcript clear of the floating composer at every size.
-  useEffect(() => {
-    const el = composerRef.current;
-    if (!el) return;
-    const measure = () => setPad(el.offsetHeight + 28);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  const messagesQ = useQuery({
-    queryKey: ["chat-messages", channel],
-    queryFn: () => listMessages(channel),
-    refetchInterval: channel === "youth" ? 6000 : 20000,
-  });
-  const messages = useMemo(() => messagesQ.data ?? [], [messagesQ.data]);
-  const ids = useMemo(() => messages.map((m) => m.id), [messages]);
-  const byId = useMemo(() => new Map(messages.map((m) => [m.id, m])), [messages]);
-
-  const reactionsQ = useQuery({
-    queryKey: ["chat-reactions", channel, ids.length, ids[ids.length - 1] ?? ""],
-    enabled: ids.length > 0,
-    queryFn: () => listReactions(channel, ids),
-  });
-
-  const receiptsQ = useQuery({
-    queryKey: ["chat-receipts", channel, ids.length, ids[ids.length - 1] ?? ""],
-    enabled: ids.length > 0,
-    refetchInterval: 5000,
-    queryFn: () => readCounts(channel, ids),
-  });
-
-  const mediaPaths = useMemo(() => messages.map((m) => m.media_url).filter(Boolean) as string[], [messages]);
-  const mediaQ = useQuery({
-    queryKey: ["chat-media", channel, mediaPaths.join("|")],
-    enabled: mediaPaths.length > 0,
-    queryFn: () => signChatMedia(channel, mediaPaths),
-  });
-
-  const refresh = useCallback(() => {
-    void qc.invalidateQueries({ queryKey: ["chat-messages", channel] });
-  }, [qc, channel]);
-
-  // Connectivity + queued sends
-  useEffect(() => {
-    const sync = async () => {
-      setOnline(navigator.onLine);
-      if (navigator.onLine) {
-        const sent = await flushChatOutbox(channel);
-        if (sent) refresh();
-      }
-      setQueued((await pendingMessages(channel)).length);
-    };
-    void sync();
-    window.addEventListener("online", sync);
-    window.addEventListener("offline", sync);
-    return () => { window.removeEventListener("online", sync); window.removeEventListener("offline", sync); };
-  }, [channel, refresh]);
-
-  // Realtime: message stream, typing broadcast, presence
-  useEffect(() => {
-    const room = supabase.channel(presenceChannelName(channel), {
-      config: { presence: { key: me.ref } },
-    });
-    room
-      .on("postgres_changes",
-        { event: "*", schema: "public", table: "chat_messages", filter: `channel=eq.${channel}` },
-        () => refresh())
-      .on("broadcast", { event: "new-message" }, () => refresh())
-      .on("broadcast", { event: "typing" }, ({ payload }) => {
-        const p = payload as { ref: string; name: string };
-        if (p.ref === me.ref) return;
-        setTypers((prev) => (prev.includes(p.name) ? prev : [...prev, p.name]));
-        window.setTimeout(() => setTypers((prev) => prev.filter((n) => n !== p.name)), 3000);
-      })
-      .on("presence", { event: "sync" }, () => {
-        setPresent(Object.keys(room.presenceState()).length);
-      })
-      .subscribe(async (status) => {
-        setConnected(status === "SUBSCRIBED");
-        if (status === "SUBSCRIBED") await room.track({ name: me.name, at: Date.now() });
-      });
-    roomRef.current = room;
-    return () => { roomRef.current = null; void supabase.removeChannel(room); };
-  }, [channel, me.ref, me.name, refresh]);
-
-  // Read receipts + last-seen
-  useEffect(() => {
-    if (!messages.length) return;
-    void markRead(channel, messages);
-    setLastSeen(channel, messages[messages.length - 1].created_at);
-    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages, channel]);
-
-  const onType = (value: string) => {
-    setDraft(value);
-    const now = Date.now();
-    if (now - lastTypingRef.current > 1000 && roomRef.current) {
-      lastTypingRef.current = now;
-      void roomRef.current.send({ type: "broadcast", event: "typing", payload: { ref: me.ref, name: me.name } });
-    }
-  };
-
-  const send = async (media_url?: string) => {
-    const content = draft.trim();
-    if (!content && !media_url) return;
-    const reply_to = replyTo?.id ?? null;
-    setDraft("");
-    setReplyTo(null);
-    try {
-      await sendMessage(channel, { content: content || null, media_url: media_url ?? null, reply_to });
-      void roomRef.current?.send({ type: "broadcast", event: "new-message", payload: {} });
-      refresh();
-    } catch (e) {
-      const msg = (e as Error).message || "";
-      if (!navigator.onLine || msg.includes("Failed to fetch")) {
-        await queueMessage(channel, content || null, media_url ?? null);
-        setQueued((n) => n + 1);
-      } else {
-        window.alert(msg);
-      }
-    }
-  };
-
-  const attach = async (file: File) => {
-    try {
-      const path = await uploadChatImage(channel, file);
-      await send(path);
-    } catch (e) { window.alert((e as Error).message); }
-  };
-
-  const react = async (id: string, emoji: string) => {
-    setPicker(null);
-    await toggleReaction(channel, id, emoji);
-    void qc.invalidateQueries({ queryKey: ["chat-reactions", channel] });
-  };
-
-  const report = async (id: string) => {
-    setPicker(null);
-    await reportMessage(channel, id, "Reported from chat");
-    window.alert(t("chat.reported"));
-  };
-
-  const adminDelete = async (id: string) => {
-    await supabase.from("chat_messages").update({ deleted: true }).eq("id", id);
-    refresh();
-  };
-
-  const reactionsFor = (id: string) => (reactionsQ.data ?? []).filter((r) => r.message_id === id);
-
-  return (
-    <AppShell
-      title={title}
-      hideNav
-      left={<BackButton to="/chat" />}
-      right={<span className="shrink-0 text-[11px] text-muted-foreground">{present} {t("chat.online")}</span>}
-    >
-      {(!online || !connected) && (
-        <div className="sticky top-0 z-10 mt-2 flex items-center gap-2 rounded-xl bg-destructive/15 px-3 py-2 text-xs text-destructive">
-          <WifiOff className="h-4 w-4" /> {t("chat.reconnecting")}
-        </div>
-      )}
-      {queued > 0 && (
-        <p className="mt-2 text-[11px] text-muted-foreground font-hi">{t("chat.queued")} ({queued})</p>
-      )}
-
-      <div className="space-y-1 pt-3" style={{ paddingBottom: pad }}>
-        {messagesQ.isLoading ? (
-          <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-        ) : messages.length === 0 ? (
-          <p className="py-10 text-center text-sm text-muted-foreground font-hi">{t("chat.no_messages")}</p>
-        ) : (
-          <AnimatePresence initial={false}>
-            {messages.map((m, i) => {
-              const mine = m.sender_ref === me.ref;
-              const prev = messages[i - 1];
-              const next = messages[i + 1];
-              const startsRun = !prev || prev.sender_ref !== m.sender_ref;
-              const endsRun = !next || next.sender_ref !== m.sender_ref;
-              const showDay = !prev || new Date(prev.created_at).toDateString() !== new Date(m.created_at).toDateString();
-              return (
-                <div key={m.id}>
-                  {showDay && (
-                    <div className="flex justify-center py-3">
-                      <span className="glass rounded-full px-3 py-1 text-[11px] text-muted-foreground">
-                        {dayLabel(m.created_at)}
-                      </span>
-                    </div>
-                  )}
-                  <MessageBubble
-                    message={m}
-                    mine={mine}
-                    showName={startsRun && !mine}
-                    endsRun={endsRun}
-                    replyTarget={m.reply_to ? byId.get(m.reply_to) ?? null : null}
-                    reactions={reactionsFor(m.id)}
-                    readBy={receiptsQ.data?.[m.id] ?? 0}
-                    mediaUrl={m.media_url ? mediaQ.data?.[m.media_url] : undefined}
-                    open={picker === m.id}
-                    isAdmin={isAdmin}
-                    onOpen={() => setPicker(picker === m.id ? null : m.id)}
-                    onReply={() => { setPicker(null); setReplyTo(m); }}
-                    onReact={(e) => react(m.id, e)}
-                    onReport={() => report(m.id)}
-                    onDelete={() => adminDelete(m.id)}
-                    onExpand={(url) => setLightbox(url)}
-                  />
-                </div>
-              );
-            })}
-          </AnimatePresence>
-        )}
-
-        <AnimatePresence>
-          {typers.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 6 }}
-              className="flex items-center gap-2 px-1 pt-1 text-xs text-muted-foreground"
-            >
-              <span className="flex gap-0.5">
-                {[0, 1, 2].map((d) => (
-                  <motion.span
-                    key={d}
-                    className="h-1.5 w-1.5 rounded-full bg-current"
-                    animate={{ opacity: [0.3, 1, 0.3] }}
-                    transition={{ duration: 1, repeat: Infinity, delay: d * 0.15 }}
-                  />
-                ))}
-              </span>
-              <span className="font-hi">{typers.join(", ")} {t("chat.typing")}</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        <div ref={bottomRef} />
-      </div>
-
-      {/* Composer */}
-      <div
-        ref={composerRef}
-        className="fixed inset-x-0 z-30 flex justify-center"
-        style={{
-          bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)",
-          paddingLeft: "calc(var(--app-gutter) + var(--sal))",
-          paddingRight: "calc(var(--app-gutter) + var(--sar))",
-        }}
-      >
-        <div className="w-full max-w-[min(100%,var(--app-max-w))]">
-          <AnimatePresence>
-            {replyTo && (
-              <motion.div
-                initial={{ opacity: 0, y: 10, height: 0 }}
-                animate={{ opacity: 1, y: 0, height: "auto" }}
-                exit={{ opacity: 0, y: 10, height: 0 }}
-                transition={{ type: "spring", stiffness: 420, damping: 34 }}
-                className="overflow-hidden"
-              >
-                <div className="glass-strong mb-1.5 flex items-start gap-2 rounded-2xl border-l-2 px-3 py-2" style={{ borderColor: "var(--brand)" }}>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[11px] font-semibold brand-text font-hi">{replyTo.sender_name}</p>
-                    <p className="truncate text-xs text-muted-foreground font-hi">
-                      {replyTo.content || (replyTo.media_url ? "Photo" : "")}
-                    </p>
-                  </div>
-                  <button onClick={() => setReplyTo(null)} aria-label="Cancel reply" className="shrink-0 text-muted-foreground">
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <div className="dock-pill flex items-center gap-2 rounded-full px-2 py-1.5">
-            <label className="grid h-10 w-10 shrink-0 cursor-pointer place-items-center rounded-full text-muted-foreground active:scale-95 transition">
-              <ImagePlus className="h-5 w-5" />
-              <span className="sr-only">{t("chat.attach")}</span>
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) void attach(f); e.currentTarget.value = ""; }}
-              />
-            </label>
-            <input
-              value={draft}
-              onChange={(e) => onType(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); } }}
-              placeholder={t("chat.message_ph")}
-              className="min-w-0 flex-1 bg-transparent px-1 text-sm outline-none font-hi"
-            />
-            <button
-              onClick={() => void send()}
-              aria-label={t("chat.send")}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--brand)] text-white active:scale-95 transition"
-            >
-              <Send className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-
-      {lightbox && (
-        <ImageLightbox images={[lightbox]} index={0} onClose={() => setLightbox(null)} />
-      )}
-      <button className="sr-only" onClick={onLeave}>{t("common.back")}</button>
-    </AppShell>
-  );
-}
-
 function dayLabel(iso: string) {
   const d = new Date(iso);
   const now = new Date();
@@ -521,142 +49,537 @@ function dayLabel(iso: string) {
   if (d.toDateString() === y.toDateString()) return "Yesterday";
   return d.toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" });
 }
+const timeLabel = (iso: string) =>
+  new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
-function MessageBubble({
-  message, mine, showName, endsRun, replyTarget, reactions, readBy, mediaUrl, open, isAdmin,
-  onOpen, onReply, onReact, onReport, onDelete, onExpand,
-}: {
-  message: ChatMessage;
-  mine: boolean;
-  showName: boolean;
-  endsRun: boolean;
-  replyTarget: ChatMessage | null;
-  reactions: { emoji: string }[];
-  readBy: number;
-  mediaUrl?: string;
-  open: boolean;
-  isAdmin: boolean;
-  onOpen: () => void;
-  onReply: () => void;
-  onReact: (emoji: string) => void;
-  onReport: () => void;
-  onDelete: () => void;
-  onExpand: (url: string) => void;
-}) {
+function ChatThread() {
+  const { channel: raw } = useParams({ from: "/chat/$channel" });
+  const channel: ChatChannel = raw === "youth" ? "youth" : "congregation";
   const { t } = useT();
-  const pressTimer = useRef<number | null>(null);
+  const [tick, setTick] = useState(0);
 
-  const startPress = () => { pressTimer.current = window.setTimeout(onOpen, 420); };
-  const endPress = () => { if (pressTimer.current) window.clearTimeout(pressTimer.current); };
+  useEffect(() => {
+    void refreshSession(channel).then(() => setTick((n) => n + 1));
+    const off = channel === "youth"
+      ? onYouthRosterChange(() => void refreshSession(channel).then(() => setTick((n) => n + 1)))
+      : () => {};
+    return off;
+  }, [channel]);
 
-  const grouped = reactions.reduce<Record<string, number>>((acc, r) => {
-    acc[r.emoji] = (acc[r.emoji] ?? 0) + 1;
-    return acc;
-  }, {});
+  const identity = useMemo(() => {
+    void tick;
+    if (typeof window === "undefined") return null;
+    return getIdentity(channel);
+  }, [channel, tick]);
 
-  const time = new Date(message.created_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const title = channel === "youth"
+    ? `${t("chat.youth")} / युवा चैट`
+    : `${t("chat.congregation")} / मण्डली चैट`;
+
+  if (!identity) {
+    return (
+      <AppShell left={<BackButton to="/chat" />}>
+        <h1 className="pt-4 text-2xl font-semibold tracking-tight">{title}</h1>
+        <Gate channel={channel} onJoined={() => setTick((n) => n + 1)} />
+      </AppShell>
+    );
+  }
+
+  return <Room channel={channel} title={title} />;
+}
+
+/* ------------------------------------------------------------------ */
+/* Entry gates                                                         */
+/* ------------------------------------------------------------------ */
+
+function Gate({ channel, onJoined }: { channel: ChatChannel; onJoined: () => void }) {
+  return channel === "youth"
+    ? <YouthGate onJoined={onJoined} />
+    : <CongregationGate onJoined={onJoined} />;
+}
+
+function Field(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <input
+      {...props}
+      className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-base outline-none focus:ring-2 focus:ring-primary/40"
+    />
+  );
+}
+
+function CongregationGate({ onJoined }: { onJoined: () => void }) {
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true); setError(null);
+    try {
+      await joinCongregation(name, phone);
+      onJoined();
+    } catch (err) {
+      setError((err as Error).message || "Could not join");
+    } finally { setBusy(false); }
+  };
 
   return (
-    <motion.div
-      layout="position"
-      initial={{ opacity: 0, y: 12, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.97 }}
-      transition={{ type: "spring", stiffness: 460, damping: 34, mass: 0.7 }}
-      className={`flex flex-col ${mine ? "items-end" : "items-start"} ${endsRun ? "mb-2" : "mb-0.5"}`}
+    <Card className="mt-5 p-5">
+      <h2 className="text-lg font-semibold">Join the congregation chat</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Enter your name and phone number once. We remember you on this device.
+      </p>
+      <form onSubmit={submit} className="mt-4 space-y-3">
+        <Field placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} maxLength={50} required />
+        <Field placeholder="Phone number" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <button
+          type="submit"
+          disabled={busy}
+          className="w-full rounded-2xl bg-primary px-4 py-3 font-semibold text-primary-foreground transition active:scale-[0.98] disabled:opacity-50"
+        >
+          {busy ? "Joining…" : "Enter chat"}
+        </button>
+      </form>
+    </Card>
+  );
+}
+
+function YouthGate({ onJoined }: { onJoined: () => void }) {
+  const [phone, setPhone] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [denied, setDenied] = useState(false);
+  const [status, setStatus] = useState<{ status: string; rejection_reason: string | null } | null>(null);
+
+  const [reqName, setReqName] = useState("");
+  const [reqMessage, setReqMessage] = useState("");
+  const [sent, setSent] = useState(false);
+
+  const check = useCallback(async (silent = false) => {
+    if (!phone.trim()) return;
+    setBusy(true); setError(null);
+    try {
+      const id = await joinYouth(phone);
+      if (id) { onJoined(); return; }
+      setDenied(true);
+      setStatus(await youthRequestStatus(phone));
+    } catch (err) {
+      if (!silent) setError((err as Error).message || "Could not verify");
+    } finally { setBusy(false); }
+  }, [phone, onJoined]);
+
+  // An admin approval should let the member in without re-typing anything.
+  useEffect(() => {
+    if (!denied) return;
+    return onYouthRosterChange(() => void check(true));
+  }, [denied, check]);
+
+  const submitRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true); setError(null);
+    try {
+      await requestYouthAccess(reqName, phone, reqMessage);
+      setSent(true);
+      setStatus({ status: "pending", rejection_reason: null });
+    } catch (err) {
+      setError((err as Error).message || "Could not send request");
+    } finally { setBusy(false); }
+  };
+
+  return (
+    <Card className="mt-5 p-5">
+      <h2 className="text-lg font-semibold">Youth chat access</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Enter the phone number registered with the youth group.
+      </p>
+      <form onSubmit={(e) => { e.preventDefault(); void check(); }} className="mt-4 space-y-3">
+        <Field placeholder="Phone number" inputMode="tel" value={phone} onChange={(e) => { setPhone(e.target.value); setDenied(false); setSent(false); }} required />
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <button
+          type="submit"
+          disabled={busy}
+          className="w-full rounded-2xl bg-primary px-4 py-3 font-semibold text-primary-foreground transition active:scale-[0.98] disabled:opacity-50"
+        >
+          {busy ? "Checking…" : "Continue"}
+        </button>
+      </form>
+
+      {denied && (
+        <div className="mt-5 rounded-2xl border border-border p-4">
+          {status?.status === "pending" || sent ? (
+            <p className="text-sm">
+              Your request is <span className="font-semibold">pending</span>. You will be let in
+              automatically once an admin approves it.
+            </p>
+          ) : status?.status === "rejected" ? (
+            <div className="space-y-2 text-sm">
+              <p>Your last request was <span className="font-semibold">rejected</span>.</p>
+              {status.rejection_reason && (
+                <p className="text-muted-foreground">Reason: {status.rejection_reason}</p>
+              )}
+            </div>
+          ) : (
+            <>
+              <p className="text-sm font-semibold">This number is not on the approved list.</p>
+              <form onSubmit={submitRequest} className="mt-3 space-y-3">
+                <Field placeholder="Your name" value={reqName} onChange={(e) => setReqName(e.target.value)} maxLength={50} required />
+                <textarea
+                  placeholder="Message to the admin (optional)"
+                  value={reqMessage}
+                  onChange={(e) => setReqMessage(e.target.value)}
+                  maxLength={500}
+                  rows={3}
+                  className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-base outline-none focus:ring-2 focus:ring-primary/40"
+                />
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="w-full rounded-2xl border border-primary px-4 py-3 font-semibold text-primary transition active:scale-[0.98] disabled:opacity-50"
+                >
+                  Request access
+                </button>
+              </form>
+            </>
+          )}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Room                                                                */
+/* ------------------------------------------------------------------ */
+
+function Room({ channel, title }: { channel: ChatChannel; title: string }) {
+  const me = senderFor(channel);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [exhausted, setExhausted] = useState(false);
+  const [online, setOnline] = useState<OnlineUser[]>([]);
+  const [typing, setTyping] = useState<Record<string, string>>({});
+  const [showOnline, setShowOnline] = useState(false);
+  const [text, setText] = useState("");
+  const [offline, setOffline] = useState(typeof navigator !== "undefined" && !navigator.onLine);
+  const [queued, setQueued] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+
+  const scroller = useRef<HTMLDivElement | null>(null);
+  const room = useRef<ReturnType<typeof joinRoom> | null>(null);
+  const typingTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const typingSent = useRef(false);
+  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const merge = useCallback((incoming: ChatMessage[]) => {
+    setMessages((prev) => {
+      const map = new Map(prev.map((m) => [m.id, m]));
+      incoming.forEach((m) => map.set(m.id, m));
+      return Array.from(map.values()).sort((a, b) => a.created_at.localeCompare(b.created_at));
+    });
+  }, []);
+
+  const scrollToEnd = useCallback((smooth = false) => {
+    requestAnimationFrame(() => {
+      const el = scroller.current;
+      if (el) el.scrollTo({ top: el.scrollHeight, behavior: smooth ? "smooth" : "auto" });
+    });
+  }, []);
+
+  // Initial load
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    listMessages(channel)
+      .then((rows) => {
+        if (!alive) return;
+        setMessages(rows);
+        setExhausted(rows.length < PAGE_SIZE);
+        scrollToEnd();
+      })
+      .catch(() => { /* offline with empty cache */ })
+      .finally(() => alive && setLoading(false));
+    return () => { alive = false; };
+  }, [channel, scrollToEnd]);
+
+  // Realtime room: presence, typing, message fan-out
+  useEffect(() => {
+    const r = joinRoom(channel, {
+      onMessage: (m) => {
+        if (m.sender_ref === me?.ref) return;
+        merge([m]);
+        setTyping((prev) => { const next = { ...prev }; delete next[m.sender_ref]; return next; });
+        const el = scroller.current;
+        const nearBottom = !el || el.scrollHeight - el.scrollTop - el.clientHeight < 200;
+        if (nearBottom) scrollToEnd(true);
+      },
+      onTyping: (p) => {
+        if (p.phone_number === me?.ref) return;
+        setTyping((prev) => {
+          const next = { ...prev };
+          if (p.is_typing) next[p.phone_number] = p.sender_name;
+          else delete next[p.phone_number];
+          return next;
+        });
+        clearTimeout(typingTimers.current[p.phone_number]);
+        if (p.is_typing) {
+          typingTimers.current[p.phone_number] = setTimeout(() => {
+            setTyping((prev) => { const next = { ...prev }; delete next[p.phone_number]; return next; });
+          }, 3000);
+        }
+      },
+      onPresence: setOnline,
+    });
+    room.current = r;
+    return () => { r.leave(); room.current = null; };
+  }, [channel, me?.ref, merge, scrollToEnd]);
+
+  // Presence heartbeat
+  useEffect(() => {
+    void heartbeat(channel);
+    const id = setInterval(() => void heartbeat(channel), 30000);
+    return () => clearInterval(id);
+  }, [channel]);
+
+  // Connectivity + outbox drain
+  useEffect(() => {
+    const refresh = async () => {
+      setQueued((await pendingMessages(channel)).length);
+    };
+    void refresh();
+    const onOnline = async () => {
+      setOffline(false);
+      await flushChatOutbox(channel);
+      await refresh();
+      try { merge(await listMessages(channel)); } catch { /* ignore */ }
+    };
+    const onOff = () => setOffline(true);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOff);
+    return () => {
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOff);
+    };
+  }, [channel, merge]);
+
+  // Mark read
+  useEffect(() => {
+    const last = messages[messages.length - 1];
+    if (last) setLastSeen(channel, last.created_at);
+  }, [channel, messages]);
+
+  const loadOlder = useCallback(async () => {
+    if (loadingMore || exhausted || !messages.length) return;
+    setLoadingMore(true);
+    const el = scroller.current;
+    const before = el?.scrollHeight ?? 0;
+    try {
+      const older = await listMessages(channel, { before: messages[0].created_at });
+      if (older.length < PAGE_SIZE) setExhausted(true);
+      merge(older);
+      requestAnimationFrame(() => {
+        if (el) el.scrollTop = el.scrollHeight - before;
+      });
+    } catch { setExhausted(true); }
+    finally { setLoadingMore(false); }
+  }, [channel, exhausted, loadingMore, merge, messages]);
+
+  const onScroll = useCallback(() => {
+    const el = scroller.current;
+    if (el && el.scrollTop < 80) void loadOlder();
+  }, [loadOlder]);
+
+  const onType = (value: string) => {
+    setText(value);
+    if (!typingSent.current) {
+      typingSent.current = true;
+      room.current?.sendTyping(true);
+    }
+    if (idleTimer.current) clearTimeout(idleTimer.current);
+    idleTimer.current = setTimeout(() => {
+      typingSent.current = false;
+      room.current?.sendTyping(false);
+    }, 500 + 2500);
+  };
+
+  const send = async () => {
+    const body = text.trim();
+    if (!body) return;
+    setText(""); setError(null);
+    typingSent.current = false;
+    room.current?.sendTyping(false);
+    try {
+      const msg = await sendMessage(channel, { content: body });
+      merge([msg]);
+      room.current?.broadcastMessage(msg);
+      scrollToEnd(true);
+    } catch (err) {
+      const message = (err as Error).message || "";
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        await queueMessage(channel, body, null);
+        setQueued((n) => n + 1);
+      } else {
+        setError(message.includes("Slow down") ? "Slow down — one message per second." : message);
+      }
+    }
+  };
+
+  const typingNames = Object.values(typing);
+
+  return (
+    <AppShell
+      left={<BackButton to="/chat" />}
+      right={
+        <button
+          onClick={() => setShowOnline((v) => !v)}
+          aria-label="Online members"
+          className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold"
+        >
+          <Users className="h-4 w-4" />
+          {online.length}
+        </button>
+      }
     >
-      {showName && (
-        <span className="px-3 pb-0.5 text-[11px] font-semibold brand-text font-hi">{message.sender_name}</span>
-      )}
-
-      <motion.div
-        drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.2}
-        dragSnapToOrigin
-        onDragEnd={(_, info) => { if (Math.abs(info.offset.x) > 56) onReply(); }}
-        onPointerDown={startPress}
-        onPointerUp={endPress}
-        onPointerCancel={endPress}
-        onPointerLeave={endPress}
-        onContextMenu={(e) => { e.preventDefault(); onOpen(); }}
-        className={`relative max-w-[82%] touch-pan-y px-3 py-2 text-sm shadow-[0_2px_10px_rgba(0,0,0,0.18)] ${
-          mine
-            ? `bg-[var(--brand)] text-white rounded-2xl ${endsRun ? "rounded-br-md" : ""}`
-            : `glass rounded-2xl ${endsRun ? "rounded-bl-md" : ""}`
-        }`}
-      >
-        {replyTarget && (
-          <div
-            className={`mb-1.5 rounded-xl border-l-2 px-2 py-1 ${mine ? "bg-white/15 border-white/60" : "bg-foreground/5"}`}
-            style={mine ? undefined : { borderColor: "var(--brand)" }}
-          >
-            <p className={`truncate text-[11px] font-semibold font-hi ${mine ? "text-white/90" : "brand-text"}`}>
-              {replyTarget.sender_name}
-            </p>
-            <p className={`truncate text-[11px] font-hi ${mine ? "text-white/75" : "text-muted-foreground"}`}>
-              {replyTarget.content || (replyTarget.media_url ? "Photo" : "")}
-            </p>
-          </div>
-        )}
-
-        {mediaUrl && (
-          <button type="button" onClick={() => onExpand(mediaUrl)} className="mb-1 block overflow-hidden rounded-xl">
-            <img src={mediaUrl} alt="" className="max-h-64 w-full object-cover" loading="lazy" />
-          </button>
-        )}
-
-        {message.content && <p className="whitespace-pre-wrap break-words font-hi">{message.content}</p>}
-
-        <div className={`mt-0.5 flex items-center justify-end gap-1 text-[10px] ${mine ? "text-white/70" : "text-muted-foreground"}`}>
-          <span className="tabular-nums">{time}</span>
-          {mine && (readBy > 0
-            ? <span className="flex items-center gap-0.5"><CheckCheck className="h-3.5 w-3.5" />{readBy > 1 ? readBy : ""}</span>
-            : <Check className="h-3.5 w-3.5" />)}
-        </div>
-      </motion.div>
-
-      {Object.keys(grouped).length > 0 && (
-        <div className="-mt-1.5 flex gap-1 px-2">
-          {Object.entries(grouped).map(([emoji, count]) => (
-            <motion.span
-              key={emoji}
-              initial={{ scale: 0.6, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 500, damping: 26 }}
-              className="glass rounded-full px-1.5 py-0.5 text-[11px]"
-            >
-              {emoji} {count}
-            </motion.span>
-          ))}
-        </div>
-      )}
+      <header className="pt-4">
+        <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
+        <p className="text-xs text-muted-foreground">
+          {online.length} online
+          {offline && " · offline"}
+          {queued > 0 && ` · ${queued} queued`}
+        </p>
+      </header>
 
       <AnimatePresence>
-        {open && (
+        {showOnline && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: -4 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="glass-strong mt-1 flex items-center gap-1 rounded-full px-2 py-1"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
           >
-            {REACTION_EMOJIS.map((e) => (
-              <button key={e} onClick={() => onReact(e)} className="px-1 text-base active:scale-90 transition">{e}</button>
-            ))}
-            <button onClick={onReply} aria-label="Reply" className="px-1 text-muted-foreground">
-              <CornerUpLeft className="h-4 w-4" />
-            </button>
-            <button onClick={onReport} aria-label={t("chat.report")} className="px-1 text-muted-foreground">
-              <AlertTriangle className="h-4 w-4" />
-            </button>
-            {isAdmin && (
-              <button onClick={onDelete} aria-label="Delete" className="px-1 text-destructive">
-                <Trash2 className="h-4 w-4" />
-              </button>
-            )}
+            <Card className="mt-3 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Online now</p>
+              <ul className="mt-2 space-y-1.5 text-sm">
+                {online.length === 0 && <li className="text-muted-foreground">Nobody else right now.</li>}
+                {online.map((u) => (
+                  <li key={u.phone} className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                    {u.name}
+                  </li>
+                ))}
+              </ul>
+            </Card>
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+
+      {offline && (
+        <div className="mt-3 flex items-center gap-2 rounded-2xl border border-border px-3 py-2 text-xs text-muted-foreground">
+          <WifiOff className="h-4 w-4" /> You are offline — messages will send when you reconnect.
+        </div>
+      )}
+
+      <div
+        ref={scroller}
+        onScroll={onScroll}
+        className="mt-3 flex-1 space-y-1 overflow-y-auto pb-40"
+        style={{ maxHeight: "calc(100dvh - 15rem)" }}
+      >
+        {loadingMore && (
+          <div className="flex justify-center py-2 text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+          </div>
+        )}
+        {loading && (
+          <div className="flex justify-center py-8 text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin" />
+          </div>
+        )}
+        {!loading && messages.length === 0 && (
+          <p className="py-10 text-center text-sm text-muted-foreground">No messages yet. Say hello.</p>
+        )}
+
+        {messages.map((m, i) => {
+          const prev = messages[i - 1];
+          const newDay = !prev || dayLabel(prev.created_at) !== dayLabel(m.created_at);
+          const mine = m.sender_ref === me?.ref;
+          const grouped = !!prev && !newDay && prev.sender_ref === m.sender_ref;
+          return (
+            <div key={m.id}>
+              {newDay && (
+                <div className="my-3 flex justify-center">
+                  <span className="rounded-full border border-border px-3 py-1 text-[11px] text-muted-foreground">
+                    {dayLabel(m.created_at)}
+                  </span>
+                </div>
+              )}
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.18 }}
+                className={cn("flex", mine ? "justify-end" : "justify-start", grouped ? "mt-0.5" : "mt-2")}
+              >
+                <div
+                  className={cn(
+                    "max-w-[80%] rounded-2xl px-3.5 py-2 text-[15px] leading-snug shadow-sm",
+                    mine ? "bg-primary text-primary-foreground rounded-br-md" : "bg-card rounded-bl-md",
+                  )}
+                >
+                  {!mine && !grouped && (
+                    <p className="mb-0.5 text-xs font-semibold text-primary">{m.sender_name}</p>
+                  )}
+                  <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                  <p className={cn("mt-1 text-[10px] tabular-nums", mine ? "text-primary-foreground/70" : "text-muted-foreground")}>
+                    {timeLabel(m.created_at)}
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+          );
+        })}
+
+        <AnimatePresence>
+          {typingNames.length > 0 && (
+            <motion.p
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="pt-2 text-xs italic text-muted-foreground"
+            >
+              {typingNames.length === 1 ? `${typingNames[0]} is typing…` : `${typingNames.length} people are typing…`}
+            </motion.p>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {error && <p className="pt-2 text-xs text-destructive">{error}</p>}
+
+      <div
+        className="fixed inset-x-0 z-40 flex items-end gap-2 px-4"
+        style={{ bottom: "calc(var(--dock-space) + 0.75rem)" }}
+      >
+        <div className="glass mx-auto flex w-full max-w-screen-sm items-end gap-2 rounded-3xl p-2">
+          <textarea
+            value={text}
+            rows={1}
+            maxLength={500}
+            onChange={(e) => onType(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); }
+            }}
+            placeholder="Message"
+            className="max-h-28 flex-1 resize-none bg-transparent px-3 py-2 text-[15px] outline-none"
+          />
+          <button
+            onClick={() => void send()}
+            disabled={!text.trim()}
+            aria-label="Send"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground transition active:scale-95 disabled:opacity-40"
+          >
+            <Send className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+    </AppShell>
   );
 }

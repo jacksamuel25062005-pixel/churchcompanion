@@ -1,11 +1,17 @@
 // Chat module — identity, data access and realtime helpers.
 //
-// Chat is the one module that requires a live connection: it is deliberately
-// NOT part of the offline-first sync engine. Failed sends are queued in Dexie
-// and retried on reconnect.
+// Two rooms: Congregation (name + phone, open to all) and Youth (phone must be
+// on the approved whitelist). Identity is a device-held `session_id` sent as the
+// `x-chat-session` request header — never a client-supplied phone number.
+//
+// Realtime uses a Supabase channel per room:
+//   • presence  → who is online
+//   • broadcast `user_typing`   → typing indicator (no DB write)
+//   • broadcast `new_message`   → instant fan-out of an inserted message
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { getDB, type ChatCacheRow } from "@/offline/db";
 
 export type ChatChannel = "congregation" | "youth";
 
@@ -13,30 +19,35 @@ export interface ChatMessage {
   id: string;
   channel: ChatChannel;
   sender_name: string;
-  sender_ref: string;
+  sender_ref: string;          // phone_number
   content: string | null;
-  media_url: string | null;
+  media_url: string | null;    // reserved; the new schema is text-only
   created_at: string;
-  deleted: boolean;
-  reply_to?: string | null;
+  is_edited?: boolean;
 }
 
-export interface Reaction {
-  id: string;
-  message_id: string;
-  sender_ref: string;
-  emoji: string;
+export interface ChatIdentity {
+  sessionId: string;
+  name: string;
+  phone: string;
 }
 
-export const REACTION_EMOJIS = ["🙏", "❤️", "🙌", "😊", "🕊️", "👍"];
+export interface OnlineUser {
+  phone: string;
+  name: string;
+}
+
+const TABLES: Record<ChatChannel, string> = {
+  congregation: "congregation_chat_messages",
+  youth: "youth_chat_messages",
+};
 
 // ---------------- Identity (device-local) ----------------
 
-const CONG_KEY = "cc.chat.congregation";
-const YOUTH_KEY = "cc.chat.youth";
-
-export interface CongregationIdentity { sessionId: string; name: string }
-export interface YouthIdentity { token: string; youthId: string; name: string }
+const KEYS: Record<ChatChannel, string> = {
+  congregation: "cc.chat.congregation.v2",
+  youth: "cc.chat.youth.v2",
+};
 
 function read<T>(key: string): T | null {
   if (typeof window === "undefined") return null;
@@ -49,233 +60,227 @@ function write(key: string, value: unknown) {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* ignore */ }
 }
 
-export function getCongregationIdentity() { return read<CongregationIdentity>(CONG_KEY); }
-export function getYouthIdentity() { return read<YouthIdentity>(YOUTH_KEY); }
-export function clearYouthIdentity() {
-  try { window.localStorage.removeItem(YOUTH_KEY); } catch { /* ignore */ }
+export function getIdentity(channel: ChatChannel): ChatIdentity | null {
+  return read<ChatIdentity>(KEYS[channel]);
+}
+export function getCongregationIdentity() { return getIdentity("congregation"); }
+export function getYouthIdentity() { return getIdentity("youth"); }
+export function clearIdentity(channel: ChatChannel) {
+  try { window.localStorage.removeItem(KEYS[channel]); } catch { /* ignore */ }
+}
+export function clearYouthIdentity() { clearIdentity("youth"); }
+
+export function senderFor(channel: ChatChannel): { ref: string; name: string } | null {
+  const id = getIdentity(channel);
+  return id ? { ref: id.phone, name: id.name } : null;
 }
 
-export async function registerCongregation(name: string, email: string, phone: string): Promise<CongregationIdentity> {
-  const { data, error } = await supabase.rpc("congregation_register", {
-    _name: name.trim(), _email: email.trim(), _phone: phone.trim(),
-  });
+type JoinRow = { session_id: string; name: string; phone_number: string };
+
+/** Congregation entry: name + phone, one time, session persists forever. */
+export async function joinCongregation(name: string, phone: string): Promise<ChatIdentity> {
+  const { data, error } = await supabase.rpc("congregation_join" as never, {
+    _name: name.trim(), _phone: phone.trim(),
+  } as never);
   if (error) throw error;
-  const identity: CongregationIdentity = { sessionId: data as unknown as string, name: name.trim() };
-  write(CONG_KEY, identity);
+  const row = (data as unknown as JoinRow[])?.[0];
+  if (!row) throw new Error("Could not join the chat");
+  const identity: ChatIdentity = { sessionId: row.session_id, name: row.name, phone: row.phone_number };
+  write(KEYS.congregation, identity);
   return identity;
 }
 
-/** Phone-gate for youth chat. Returns null when the number is not approved. */
-export async function checkYouthPhone(phone: string): Promise<YouthIdentity | null> {
-  const { data, error } = await supabase.rpc("youth_check_phone", { _phone: phone.trim() });
+/** Youth entry: phone must be on the approved whitelist. Null = not approved. */
+export async function joinYouth(phone: string): Promise<ChatIdentity | null> {
+  const { data, error } = await supabase.rpc("youth_join" as never, { _phone: phone.trim() } as never);
   if (error) throw error;
-  const row = (data as unknown as Array<{ token: string; name: string; youth_id: string }>)?.[0];
+  const row = (data as unknown as JoinRow[])?.[0];
   if (!row) return null;
-  const identity: YouthIdentity = { token: row.token, youthId: row.youth_id, name: row.name };
-  write(YOUTH_KEY, identity);
+  const identity: ChatIdentity = { sessionId: row.session_id, name: row.name, phone: row.phone_number };
+  write(KEYS.youth, identity);
   return identity;
 }
 
-/**
- * Keeps a saved youth session alive so an approved member is never asked for
- * their number again. Returns null only when the session is truly revoked.
- */
-export async function refreshYouthSession(): Promise<YouthIdentity | null> {
-  const current = getYouthIdentity();
+/** Re-validate a stored session; keeps it when offline, clears it when revoked. */
+export async function refreshSession(channel: ChatChannel): Promise<ChatIdentity | null> {
+  const current = getIdentity(channel);
   if (!current) return null;
   try {
-    const { data, error } = await supabase.rpc("youth_refresh_session" as never, { _token: current.token } as never);
-    if (error) return current; // offline / transient — keep the device session
-    const row = (data as unknown as Array<{ token: string; name: string; youth_id: string }>)?.[0];
-    if (!row) { clearYouthIdentity(); return null; }
-    const identity: YouthIdentity = { token: row.token, youthId: row.youth_id, name: row.name };
-    write(YOUTH_KEY, identity);
-    return identity;
-  } catch {
-    return current;
-  }
+    const { data, error } = await supabase.rpc("chat_session_info" as never, {
+      _chat: channel, _session: current.sessionId,
+    } as never);
+    if (error) return current;
+    const row = (data as unknown as Array<{ name: string; phone_number: string }>)?.[0];
+    if (!row) { clearIdentity(channel); return null; }
+    const next: ChatIdentity = { ...current, name: row.name, phone: row.phone_number };
+    write(KEYS[channel], next);
+    return next;
+  } catch { return current; }
+}
+export const refreshYouthSession = () => refreshSession("youth");
+
+// ---------------- Access requests ----------------
+
+export type RequestStatus = "pending" | "approved" | "rejected";
+
+export async function requestYouthAccess(name: string, phone: string, message?: string) {
+  const { data, error } = await supabase.rpc("youth_request_access" as never, {
+    _name: name.trim(), _phone: phone.trim(), _message: message?.trim() || null,
+  } as never);
+  if (error) throw error;
+  return data as unknown as string; // 'pending' | 'already_approved'
 }
 
+export async function youthRequestStatus(phone: string): Promise<
+  { status: RequestStatus; rejection_reason: string | null; created_at: string } | null
+> {
+  const { data, error } = await supabase.rpc("youth_request_status" as never, { _phone: phone.trim() } as never);
+  if (error) return null;
+  const row = (data as unknown as Array<{ status: RequestStatus; rejection_reason: string | null; created_at: string }>)?.[0];
+  return row ?? null;
+}
 
-// ---------------- Clients ----------------
+// ---------------- Session-scoped client ----------------
 
-const _tokenClients = new Map<string, SupabaseClient>();
+const _clients = new Map<string, SupabaseClient>();
 
-/**
- * Channel identity is proven with a device-held token sent as a request header
- * (`x-youth-token` / `x-congregation-token`) — never a raw client-supplied
- * sender_ref, which anyone could guess.
- */
-function tokenClient(header: string, token: string): SupabaseClient {
-  const cacheKey = `${header}:${token}`;
-  const existing = _tokenClients.get(cacheKey);
+function sessionClient(sessionId: string): SupabaseClient {
+  const existing = _clients.get(sessionId);
   if (existing) return existing;
   const url = import.meta.env.VITE_SUPABASE_URL as string;
   const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
   const client = createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
     global: {
-      headers: { [header]: token },
+      headers: { "x-chat-session": sessionId },
       fetch: (input, init) => {
         const headers = new Headers(init?.headers);
         headers.delete("Authorization");
         headers.set("apikey", key);
-        headers.set(header, token);
+        headers.set("x-chat-session", sessionId);
         return fetch(input, { ...init, headers });
       },
     },
   });
-  _tokenClients.set(cacheKey, client);
+  _clients.set(sessionId, client);
   return client;
 }
 
 export function clientFor(channel: ChatChannel): SupabaseClient {
-  if (channel === "youth") {
-    const y = getYouthIdentity();
-    if (!y) throw new Error("Youth access required");
-    return tokenClient("x-youth-token", y.token);
-  }
-  const c = getCongregationIdentity();
-  if (c) return tokenClient("x-congregation-token", c.sessionId);
-  return supabase as unknown as SupabaseClient;
+  const id = getIdentity(channel);
+  if (!id) throw new Error("No chat session");
+  return sessionClient(id.sessionId);
 }
 
-export function senderFor(channel: ChatChannel): { ref: string; name: string } | null {
-  if (channel === "youth") {
-    const y = getYouthIdentity();
-    return y ? { ref: y.youthId, name: y.name } : null;
-  }
-  const c = getCongregationIdentity();
-  return c ? { ref: c.sessionId, name: c.name } : null;
+// ---------------- Offline message cache (Dexie) ----------------
+
+function toRow(channel: ChatChannel, m: ChatMessage): ChatCacheRow {
+  return {
+    id: m.id, channel, sender_name: m.sender_name, sender_ref: m.sender_ref,
+    content: m.content, created_at: m.created_at,
+  };
+}
+function fromRow(r: ChatCacheRow): ChatMessage {
+  return {
+    id: r.id, channel: r.channel, sender_name: r.sender_name, sender_ref: r.sender_ref,
+    content: r.content, media_url: null, created_at: r.created_at,
+  };
+}
+
+export async function cacheMessages(channel: ChatChannel, messages: ChatMessage[]) {
+  try { await getDB().chat_cache.bulkPut(messages.map((m) => toRow(channel, m))); } catch { /* ignore */ }
+}
+
+export async function cachedMessages(channel: ChatChannel, limit = 100): Promise<ChatMessage[]> {
+  try {
+    const rows = await getDB().chat_cache.where("channel").equals(channel).sortBy("created_at");
+    return rows.slice(-limit).map(fromRow);
+  } catch { return []; }
 }
 
 // ---------------- Data access ----------------
 
-export async function listMessages(channel: ChatChannel, limit = 200): Promise<ChatMessage[]> {
-  const db = clientFor(channel);
-  const { data, error } = await db
-    .from("chat_messages")
-    .select("*")
-    .eq("channel", channel)
-    .eq("deleted", false)
-    .order("created_at", { ascending: true })
-    .limit(limit);
-  if (error) throw error;
-  return (data ?? []) as ChatMessage[];
+type DbRow = {
+  id: string; phone_number: string; sender_name: string; message_content: string;
+  created_at: string; is_edited: boolean;
+};
+
+function mapRow(channel: ChatChannel, r: DbRow): ChatMessage {
+  return {
+    id: r.id, channel, sender_name: r.sender_name, sender_ref: r.phone_number,
+    content: r.message_content, media_url: null, created_at: r.created_at, is_edited: r.is_edited,
+  };
+}
+
+export const PAGE_SIZE = 40;
+
+/**
+ * Newest-last page of messages. `before` loads the previous page (infinite
+ * scroll upwards). Results are cached in Dexie for offline reads.
+ */
+export async function listMessages(
+  channel: ChatChannel,
+  opts: { before?: string; limit?: number } = {},
+): Promise<ChatMessage[]> {
+  const limit = opts.limit ?? PAGE_SIZE;
+  try {
+    const db = clientFor(channel);
+    let q = db.from(TABLES[channel]).select("*").order("created_at", { ascending: false }).limit(limit);
+    if (opts.before) q = q.lt("created_at", opts.before);
+    const { data, error } = await q;
+    if (error) throw error;
+    const rows = ((data ?? []) as DbRow[]).map((r) => mapRow(channel, r)).reverse();
+    void cacheMessages(channel, rows);
+    return rows;
+  } catch (err) {
+    if (!opts.before) {
+      const cached = await cachedMessages(channel, limit);
+      if (cached.length) return cached;
+    }
+    throw err;
+  }
 }
 
 export async function lastMessage(channel: ChatChannel): Promise<ChatMessage | null> {
   try {
     const db = clientFor(channel);
-    const { data } = await db
-      .from("chat_messages")
-      .select("*")
-      .eq("channel", channel)
-      .eq("deleted", false)
-      .order("created_at", { ascending: false })
-      .limit(1);
-    return ((data ?? [])[0] as ChatMessage) ?? null;
-  } catch { return null; }
-}
-
-export async function sendMessage(
-  channel: ChatChannel,
-  payload: { content?: string | null; media_url?: string | null; reply_to?: string | null },
-): Promise<ChatMessage> {
-  const sender = senderFor(channel);
-  if (!sender) throw new Error("No identity");
-  const db = clientFor(channel);
-  const { data, error } = await db
-    .from("chat_messages")
-    .insert({
-      channel,
-      sender_name: sender.name,
-      sender_ref: sender.ref,
-      content: payload.content ?? null,
-      media_url: payload.media_url ?? null,
-      reply_to: payload.reply_to ?? null,
-    })
-    .select("*")
-    .single();
-  if (error) throw error;
-  return data as ChatMessage;
-}
-
-export async function listReactions(channel: ChatChannel, messageIds: string[]): Promise<Reaction[]> {
-  if (!messageIds.length) return [];
-  const db = clientFor(channel);
-  const { data, error } = await db.from("message_reactions").select("*").in("message_id", messageIds);
-  if (error) throw error;
-  return (data ?? []) as Reaction[];
-}
-
-export async function toggleReaction(channel: ChatChannel, messageId: string, emoji: string) {
-  const sender = senderFor(channel);
-  if (!sender) return;
-  const db = clientFor(channel);
-  const { data } = await db
-    .from("message_reactions")
-    .select("id")
-    .eq("message_id", messageId)
-    .eq("sender_ref", sender.ref)
-    .eq("emoji", emoji)
-    .maybeSingle();
-  if (data?.id) {
-    await db.from("message_reactions").delete().eq("id", data.id);
-  } else {
-    await db.from("message_reactions").insert({ message_id: messageId, sender_ref: sender.ref, emoji });
+    const { data } = await db.from(TABLES[channel]).select("*")
+      .order("created_at", { ascending: false }).limit(1);
+    const row = ((data ?? []) as DbRow[])[0];
+    return row ? mapRow(channel, row) : null;
+  } catch {
+    const cached = await cachedMessages(channel, 1);
+    return cached[0] ?? null;
   }
 }
 
-export async function markRead(channel: ChatChannel, messages: ChatMessage[]) {
+/** Send through the rate-limited server function; identity comes from the header. */
+export async function sendMessage(
+  channel: ChatChannel,
+  payload: { content?: string | null; media_url?: string | null },
+): Promise<ChatMessage> {
   const sender = senderFor(channel);
-  if (!sender) return;
-  const rows = messages
-    .filter((m) => m.sender_ref !== sender.ref)
-    .map((m) => ({ message_id: m.id, reader_ref: sender.ref }));
-  if (!rows.length) return;
+  if (!sender) throw new Error("No identity");
+  const text = (payload.content ?? "").trim();
+  if (!text) throw new Error("Empty message");
   const db = clientFor(channel);
-  await db.from("message_receipts").upsert(rows, { onConflict: "message_id,reader_ref", ignoreDuplicates: true });
-}
-
-export async function readCounts(channel: ChatChannel, messageIds: string[]): Promise<Record<string, number>> {
-  if (!messageIds.length) return {};
-  const db = clientFor(channel);
-  const { data } = await db.from("message_receipts").select("message_id").in("message_id", messageIds);
-  const out: Record<string, number> = {};
-  for (const r of (data ?? []) as { message_id: string }[]) out[r.message_id] = (out[r.message_id] ?? 0) + 1;
-  return out;
-}
-
-export async function reportMessage(channel: ChatChannel, messageId: string, reason: string) {
-  const sender = senderFor(channel);
-  const db = clientFor(channel);
-  await db.from("chat_reports").insert({
-    message_id: messageId,
-    reporter_ref: sender?.ref ?? "anonymous",
-    reason,
-  });
-}
-
-export async function uploadChatImage(channel: ChatChannel, file: File): Promise<string> {
-  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-  const path = `${channel}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-  const db = clientFor(channel);
-  const { error } = await db.storage.from("chat-media").upload(path, file, {
-    contentType: file.type || undefined,
-    cacheControl: "31536000",
-  });
+  const { data, error } = await db.rpc("chat_send", { _chat: channel, _content: text });
   if (error) throw error;
-  return path;
+  const message: ChatMessage = {
+    id: data as unknown as string,
+    channel,
+    sender_name: sender.name,
+    sender_ref: sender.ref,
+    content: text,
+    media_url: null,
+    created_at: new Date().toISOString(),
+  };
+  void cacheMessages(channel, [message]);
+  return message;
 }
 
-export async function signChatMedia(channel: ChatChannel, paths: string[]): Promise<Record<string, string>> {
-  if (!paths.length) return {};
-  const db = clientFor(channel);
-  const { data } = await db.storage.from("chat-media").createSignedUrls(paths, 60 * 60 * 6);
-  const out: Record<string, string> = {};
-  for (const r of data ?? []) if (r.path && r.signedUrl) out[r.path] = r.signedUrl;
-  return out;
+export async function heartbeat(channel: ChatChannel) {
+  try { await clientFor(channel).rpc("chat_heartbeat", { _chat: channel }); } catch { /* ignore */ }
 }
 
 // ---------------- Unread tracking (device-local) ----------------
@@ -293,32 +298,88 @@ export async function unreadCount(channel: ChatChannel): Promise<number> {
   try {
     const since = getLastSeen()[channel];
     const db = clientFor(channel);
-    let q = db
-      .from("chat_messages")
-      .select("id", { count: "exact", head: true })
-      .eq("channel", channel)
-      .eq("deleted", false);
+    let q = db.from(TABLES[channel]).select("id", { count: "exact", head: true });
     if (since) q = q.gt("created_at", since);
     const { count } = await q;
     return count ?? 0;
   } catch { return 0; }
 }
 
-// ---------------- Realtime helpers ----------------
+// ---------------- Realtime ----------------
 
-export function presenceChannelName(channel: ChatChannel) {
+export function roomName(channel: ChatChannel) {
   return `chat-room:${channel}`;
+}
+export const presenceChannelName = roomName;
+
+export interface TypingPayload {
+  chat_type: ChatChannel;
+  phone_number: string;
+  sender_name: string;
+  is_typing: boolean;
+}
+
+export interface RoomHandlers {
+  onMessage?: (m: ChatMessage) => void;
+  onTyping?: (p: TypingPayload) => void;
+  onPresence?: (users: OnlineUser[]) => void;
+}
+
+/**
+ * Join a chat room: tracks presence, relays typing pings and broadcast message
+ * fan-out. Returns helpers plus an unsubscribe function.
+ */
+export function joinRoom(channel: ChatChannel, handlers: RoomHandlers) {
+  const me = senderFor(channel);
+  const ch = supabase.channel(roomName(channel), {
+    config: { presence: { key: me?.ref ?? `guest-${Math.random().toString(36).slice(2)}` } },
+  });
+
+  ch.on("broadcast", { event: "new_message" }, ({ payload }) => {
+    handlers.onMessage?.(payload as ChatMessage);
+  });
+  ch.on("broadcast", { event: "user_typing" }, ({ payload }) => {
+    handlers.onTyping?.(payload as TypingPayload);
+  });
+  ch.on("presence", { event: "sync" }, () => {
+    const state = ch.presenceState<{ phone: string; name: string }>();
+    const users: OnlineUser[] = [];
+    for (const list of Object.values(state)) {
+      const entry = list[0];
+      if (entry?.phone) users.push({ phone: entry.phone, name: entry.name });
+    }
+    handlers.onPresence?.(users);
+  });
+
+  void ch.subscribe((status) => {
+    if (status === "SUBSCRIBED" && me) {
+      void ch.track({ phone: me.ref, name: me.name });
+    }
+  });
+
+  return {
+    broadcastMessage: (m: ChatMessage) => {
+      void ch.send({ type: "broadcast", event: "new_message", payload: m });
+    },
+    sendTyping: (isTyping: boolean) => {
+      if (!me) return;
+      void ch.send({
+        type: "broadcast",
+        event: "user_typing",
+        payload: { chat_type: channel, phone_number: me.ref, sender_name: me.name, is_typing: isTyping },
+      });
+    },
+    leave: () => { void supabase.removeChannel(ch); },
+  };
 }
 
 // ---------------- Approved-youth roster sync ----------------
 //
-// The roster itself is admin-only, so clients cannot subscribe to the table.
-// Instead admins broadcast a lightweight "changed" ping on a realtime channel
-// and every device re-validates its own youth session immediately.
+// The whitelist is admin-only, so clients cannot subscribe to the table.
+// Admins broadcast a lightweight "changed" ping and every device retries.
 
 const ROSTER_CHANNEL = "youth-roster";
 
-/** Tell every connected device that the approved youth list changed. */
 export function broadcastYouthRoster() {
   const ch = supabase.channel(ROSTER_CHANNEL);
   ch.subscribe((status) => {
@@ -329,7 +390,6 @@ export function broadcastYouthRoster() {
   });
 }
 
-/** Listen for roster changes. Returns an unsubscribe function. */
 export function onYouthRosterChange(cb: () => void) {
   const ch = supabase
     .channel(ROSTER_CHANNEL)
