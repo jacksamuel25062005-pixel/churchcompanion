@@ -275,12 +275,18 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
   const [offline, setOffline] = useState(typeof navigator !== "undefined" && !navigator.onLine);
   const [queued, setQueued] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [reactions, setReactions] = useState<ChatReaction[]>([]);
+  const [sheetFor, setSheetFor] = useState<ChatMessage | null>(null);
+  const [editing, setEditing] = useState<ChatMessage | null>(null);
+  const isSuper = useIsSuperAdmin();
 
   const scroller = useRef<HTMLDivElement | null>(null);
   const room = useRef<ReturnType<typeof joinRoom> | null>(null);
   const typingTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const typingSent = useRef(false);
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
 
   const merge = useCallback((incoming: ChatMessage[]) => {
     setMessages((prev) => {
