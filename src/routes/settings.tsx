@@ -1,21 +1,53 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Bell, BellOff, Download, Loader2, CheckCircle2, Trash2, HardDrive, Shield, ChevronRight } from "lucide-react";
+import {
+  Bell,
+  BellOff,
+  Download,
+  Loader2,
+  CheckCircle2,
+  Trash2,
+  HardDrive,
+  Shield,
+  Type,
+  Palette,
+  SunMoon,
+  Languages,
+  Sparkles,
+  Stethoscope,
+  Info,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../components/AppShell";
-import { Card } from "../components/ui-bits";
 import { Switch } from "../components/ui/switch";
 import { Slider } from "../components/ui/slider";
+import {
+  SettingsGroup,
+  SettingsRow,
+  SettingsLinkRow,
+  SettingsButtonRow,
+  RowIcon,
+  RowValue,
+  Segmented,
+} from "../components/settings/SettingsUI";
 
 import { useT } from "../lib/i18n";
 import { ACCENT_PRESETS, useSettings, type FontSize, type ThemeMode, type Language } from "../lib/settings";
 import { getPushPermission, promptForPush, setPushOptIn, getPushOptedIn } from "../lib/onesignal";
 import { downloadEntireApp, removeAllOffline, useOfflineIndex, formatBytes, type FullDownloadProgress } from "../lib/offline";
 
-
 export const Route = createFileRoute("/settings")({
-  head: () => ({ meta: [{ title: "Settings — Church Companion" }] }),
+  head: () => ({
+    meta: [
+      { title: "Settings — Church Companion" },
+      { name: "description", content: "Personalise Church Companion: text size, theme, accent colour, language, notifications and offline downloads." },
+      { property: "og:title", content: "Settings — Church Companion" },
+      { property: "og:description", content: "Personalise appearance, language, notifications and offline access." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: SettingsPage,
 });
 
@@ -25,68 +57,81 @@ function SettingsPage() {
 
   return (
     <AppShell title={t("nav.settings")}>
-      <div className="space-y-5 pt-4">
-        <Section label="Admin">
-          <Link
+      <div className="space-y-6 pt-4">
+        <SettingsGroup label="Admin">
+          <SettingsLinkRow
             to="/admin"
-            className="premium-card tap-card focus-ring flex items-center gap-3 hover:bg-secondary/50 transition-colors"
-          >
-            <span className="grid place-items-center h-11 w-11 rounded-2xl brand-bg elev-1 shrink-0">
-              <Shield className="h-5 w-5" />
-            </span>
-            <span className="flex-1 min-w-0">
-              <span className="block text-sm font-semibold">Admin Login</span>
-              <span className="block text-xs text-muted-foreground">Sign in or request admin access</span>
-            </span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          </Link>
-        </Section>
+            icon={<RowIcon><Shield /></RowIcon>}
+            title="Admin login"
+            subtitle="Sign in or request admin access"
+          />
+        </SettingsGroup>
 
-
-        <Section label={t("settings.font_size")}>
-
-          <div className="grid grid-cols-4 gap-2">
-            {(["s","m","l","xl"] as FontSize[]).map((sz) => (
-              <SegButton key={sz} active={s.fontSize === sz} onClick={() => s.setFontSize(sz)}>
-                {t(`fs.${sz}`)}
-              </SegButton>
-            ))}
+        <SettingsGroup label="Appearance">
+          <SettingsRow
+            icon={<RowIcon><Type /></RowIcon>}
+            title={t("settings.font_size")}
+            subtitle="Reading size across books and songs"
+          />
+          <div className="px-4 pb-4">
+            <Segmented<FontSize>
+              ariaLabel={t("settings.font_size")}
+              value={s.fontSize}
+              onChange={s.setFontSize}
+              options={(["s", "m", "l", "xl"] as FontSize[]).map((sz) => ({ value: sz, label: t(`fs.${sz}`) }))}
+            />
           </div>
-        </Section>
 
-        <Section label={t("settings.theme")}>
-          <div className="grid grid-cols-3 gap-2">
-            {(["light","dark","system"] as ThemeMode[]).map((m) => (
-              <SegButton key={m} active={s.theme === m} onClick={() => s.setTheme(m)}>
-                {t(`settings.${m}`)}
-              </SegButton>
-            ))}
+          <SettingsRow
+            icon={<RowIcon><SunMoon /></RowIcon>}
+            title={t("settings.theme")}
+            subtitle="Light, dark, or follow the device"
+          />
+          <div className="px-4 pb-4">
+            <Segmented<ThemeMode>
+              ariaLabel={t("settings.theme")}
+              value={s.theme}
+              onChange={s.setTheme}
+              options={(["light", "dark", "system"] as ThemeMode[]).map((m) => ({ value: m, label: t(`settings.${m}`) }))}
+            />
           </div>
-        </Section>
 
-        <Section label={t("settings.accent")}>
-          <div className="grid grid-cols-6 gap-2">
-            {ACCENT_PRESETS.map((a) => (
-              <button
-                key={a.id}
-                aria-label={a.name}
-                onClick={() => s.setAccent(a.value)}
-                className={`focus-ring relative h-11 w-11 min-w-11 rounded-2xl transition-all ${s.accent === a.value ? "elev-1 ring-2 ring-offset-2 ring-offset-background" : ""}`}
-                style={{ backgroundColor: a.value, boxShadow: s.accent === a.value ? undefined : "inset 0 0 0 1px color-mix(in oklab, black 10%, transparent)", ...(s.accent === a.value ? { ["--tw-ring-color" as any]: a.value } : {}) }}
-              />
-            ))}
+          <SettingsRow
+            icon={<RowIcon><Palette /></RowIcon>}
+            title={t("settings.accent")}
+            subtitle="Highlight colour for buttons and tabs"
+          />
+          <div className="flex flex-wrap gap-3 px-4 pb-4">
+            {ACCENT_PRESETS.map((a) => {
+              const active = s.accent === a.value;
+              return (
+                <button
+                  key={a.id}
+                  aria-label={a.name}
+                  aria-pressed={active}
+                  onClick={() => s.setAccent(a.value)}
+                  className={`focus-ring relative grid h-10 w-10 place-items-center rounded-full transition-transform duration-200 active:scale-90 ${active ? "scale-105" : ""}`}
+                  style={{
+                    backgroundColor: a.value,
+                    boxShadow: active
+                      ? `0 0 0 2px var(--background), 0 0 0 4px ${a.value}, var(--elev-1)`
+                      : "inset 0 0 0 1px color-mix(in oklab, black 12%, transparent)",
+                  }}
+                >
+                  {active && <CheckCircle2 className="h-4 w-4 text-white drop-shadow" />}
+                </button>
+              );
+            })}
           </div>
-        </Section>
 
-
-        <Section label="Dock glass blur">
-          <Card className="p-4">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-medium">Blur strength</p>
-              <span className="text-xs tabular-nums text-muted-foreground">{Math.round(s.dockBlur)}px</span>
-            </div>
+          <SettingsRow
+            icon={<RowIcon><Sparkles /></RowIcon>}
+            title="Dock glass blur"
+            subtitle="Lower is solid, higher is more frosted"
+            trailing={<RowValue>{Math.round(s.dockBlur)}px</RowValue>}
+          />
+          <div className="px-4 pb-5">
             <Slider
-              className="mt-4"
               min={0}
               max={60}
               step={1}
@@ -94,65 +139,53 @@ function SettingsPage() {
               onValueChange={(v) => s.setDockBlur(v[0] ?? 45)}
               aria-label="Home dock blur strength"
             />
-            <p className="mt-3 text-xs text-muted-foreground">
-              Lower values make the bottom dock more solid, higher values more frosted.
-            </p>
-          </Card>
-        </Section>
-
-        <Section label={t("settings.language")}>
-          <div className="grid grid-cols-2 gap-2">
-            {(["en","hi"] as Language[]).map((l) => (
-              <SegButton key={l} active={s.language === l} onClick={() => s.setLanguage(l)}>
-                {l === "en" ? "English" : "हिन्दी"}
-              </SegButton>
-            ))}
           </div>
-        </Section>
+        </SettingsGroup>
 
-
+        <SettingsGroup label={t("settings.language")}>
+          <SettingsRow
+            icon={<RowIcon><Languages /></RowIcon>}
+            title={t("settings.language")}
+            subtitle="App text and labels"
+          />
+          <div className="px-4 pb-4">
+            <Segmented<Language>
+              ariaLabel={t("settings.language")}
+              value={s.language}
+              onChange={s.setLanguage}
+              options={[
+                { value: "en", label: "English" },
+                { value: "hi", label: "हिन्दी" },
+              ]}
+            />
+          </div>
+        </SettingsGroup>
 
         <NotificationsSection />
 
         <OfflineSection />
 
+        <SettingsGroup label="About this device">
+          <SettingsLinkRow
+            to="/diagnostics"
+            icon={<RowIcon tone="muted"><Stethoscope /></RowIcon>}
+            title="Diagnostics"
+            subtitle="Sync status, storage and logs"
+          />
+          <SettingsRow
+            icon={<RowIcon tone="muted"><Info /></RowIcon>}
+            title="Stored on this device"
+            subtitle="Bookmarks and preferences never leave your phone"
+          />
+        </SettingsGroup>
 
-
-
-
-        <Card className="p-4 text-xs text-muted-foreground space-y-2">
-          <p>Bookmarks and preferences are stored on this device only.</p>
-          <Link to="/diagnostics" className="inline-block text-foreground font-medium underline-offset-2 hover:underline">Open diagnostics →</Link>
-        </Card>
+        <p className="px-1 pb-2 text-center text-[11px] text-muted-foreground">
+          Church Companion · <Link to="/diagnostics" className="underline-offset-2 hover:underline">diagnostics</Link>
+        </p>
       </div>
     </AppShell>
   );
 }
-
-function Section({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">{label}</p>
-      {children}
-    </div>
-  );
-}
-
-function SegButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`focus-ring rounded-xl py-2.5 min-h-11 text-sm font-medium tap-card transition-all ${
-        active
-          ? "brand-bg elev-1 ring-2 brand-ring ring-offset-2 ring-offset-background"
-          : "glass-chip hover:bg-secondary/50"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
 
 function NotificationsSection() {
   const [perm, setPerm] = useState<"granted" | "denied" | "default" | "unsupported">("default");
@@ -187,39 +220,44 @@ function NotificationsSection() {
   };
 
   return (
-    <Section label="Notifications">
-      <Card className="p-4">
-        {perm === "unsupported" ? (
-          <p className="text-xs text-muted-foreground">Push notifications aren't supported on this device or browser.</p>
-        ) : perm === "granted" ? (
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 text-sm">
-              <span className="grid place-items-center h-9 w-9 rounded-xl brand-bg elev-1 shrink-0">
-                {optedIn ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
-              </span>
-              <span className="font-medium">{optedIn ? "Push notifications on" : "Push notifications off"}</span>
-            </div>
+    <SettingsGroup
+      label="Notifications"
+      hint={perm === "denied" ? "Open browser settings for this site, allow notifications, then reload." : undefined}
+    >
+      {perm === "unsupported" ? (
+        <SettingsRow
+          icon={<RowIcon tone="muted"><BellOff /></RowIcon>}
+          title="Not supported"
+          subtitle="This device or browser can't receive push notifications"
+        />
+      ) : perm === "granted" ? (
+        <SettingsRow
+          icon={<RowIcon>{optedIn ? <Bell /> : <BellOff />}</RowIcon>}
+          title="Push notifications"
+          subtitle={optedIn ? "You'll hear about new announcements" : "Currently turned off"}
+          trailing={
             <Switch checked={optedIn} onCheckedChange={toggle} disabled={busy} aria-label="Toggle push notifications" />
-          </div>
-        ) : perm === "denied" ? (
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-sm"><BellOff className="h-4 w-4 text-muted-foreground" /> Notifications are blocked.</div>
-            <p className="text-xs text-muted-foreground">Open browser settings for this site and allow notifications, then reload.</p>
-          </div>
-        ) : (
-          <button
-            onClick={enable}
-            disabled={busy}
-            className="tap-card focus-ring w-full inline-flex items-center justify-center gap-2 rounded-xl brand-bg py-3 min-h-11 text-sm font-semibold elev-1 disabled:opacity-50"
-          >
-            <Bell className="h-4 w-4" /> {busy ? "Please wait…" : "Enable notifications"}
-          </button>
-        )}
-      </Card>
-    </Section>
+          }
+        />
+      ) : perm === "denied" ? (
+        <SettingsRow
+          icon={<RowIcon tone="danger"><BellOff /></RowIcon>}
+          title="Notifications are blocked"
+          subtitle="Permission was denied for this site"
+        />
+      ) : (
+        <SettingsButtonRow
+          onClick={enable}
+          disabled={busy}
+          icon={<RowIcon><Bell /></RowIcon>}
+          title={busy ? "Please wait…" : "Enable notifications"}
+          subtitle="Get announcements and today's songs"
+          trailing={busy ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : undefined}
+        />
+      )}
+    </SettingsGroup>
   );
 }
-
 
 function OfflineSection() {
   const entries = useOfflineIndex();
@@ -257,60 +295,51 @@ function OfflineSection() {
   const pct = progress && progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
 
   return (
-    <Section label="Offline access">
-      <Card className="p-4 space-y-3">
-        <div className="flex items-center gap-2 text-sm">
-          <HardDrive className="h-4 w-4 brand-text" />
-          <span className="font-medium">Whole app offline</span>
-          {hasAny && (
-            <span className="ml-auto text-xs text-muted-foreground">
-              {entries.length} packs · {formatBytes(totalBytes)}
-            </span>
-          )}
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Download every book, song, and today's set to this device. Once saved, the app opens and reads without internet.
-        </p>
+    <SettingsGroup
+      label="Offline access"
+      hint="Every book, song and today's set is stored on this device so the app opens without internet."
+    >
+      <SettingsRow
+        icon={<RowIcon><HardDrive /></RowIcon>}
+        title="Whole app offline"
+        subtitle={hasAny ? `${entries.length} packs · ${formatBytes(totalBytes)} saved` : "Nothing downloaded yet"}
+        trailing={hasAny ? <CheckCircle2 className="h-5 w-5 brand-text" /> : undefined}
+      />
 
-        {busy && progress && (
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground truncate">{progress.step}</span>
-              <span className="tabular-nums">{pct}%</span>
-            </div>
-            <div className="h-2 w-full rounded-full bg-secondary overflow-hidden">
-              <div
-                className="h-full transition-all"
-                style={{
-                  width: `${pct}%`,
-                  background: "linear-gradient(90deg, var(--brand), var(--gold, var(--brand)))",
-                }}
-              />
-            </div>
+      {busy && progress && (
+        <div className="space-y-2 px-4 py-3">
+          <div className="flex items-center justify-between text-[12px]">
+            <span className="truncate text-muted-foreground">{progress.step}</span>
+            <span className="tabular-nums">{pct}%</span>
           </div>
-        )}
-
-        <div className="flex gap-2">
-          <button
-            onClick={downloadAll}
-            disabled={busy}
-            className="tap-card focus-ring flex-1 inline-flex items-center justify-center gap-2 rounded-xl brand-bg py-3 min-h-11 text-sm font-semibold elev-1 disabled:opacity-50"
-          >
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : hasAny ? <CheckCircle2 className="h-4 w-4" /> : <Download className="h-4 w-4" />}
-            {busy ? "Downloading…" : hasAny ? "Refresh offline copy" : "Download everything"}
-          </button>
-          {hasAny && !busy && (
-            <button
-              onClick={removeAll}
-              className="tap-card focus-ring inline-flex items-center justify-center gap-1.5 rounded-xl glass-chip px-3.5 min-h-11 text-sm font-medium"
-              aria-label="Remove all offline content"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          )}
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+            <div
+              className="h-full rounded-full transition-[width] duration-300"
+              style={{ width: `${pct}%`, background: "linear-gradient(90deg, var(--brand), var(--gold, var(--brand)))" }}
+            />
+          </div>
         </div>
-      </Card>
-    </Section>
+      )}
+
+      <div className="flex gap-2 p-3">
+        <button
+          onClick={downloadAll}
+          disabled={busy}
+          className="tap-card focus-ring inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full brand-bg text-[14px] font-semibold elev-1 disabled:opacity-50"
+        >
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : hasAny ? <CheckCircle2 className="h-4 w-4" /> : <Download className="h-4 w-4" />}
+          {busy ? "Downloading…" : hasAny ? "Refresh offline copy" : "Download everything"}
+        </button>
+        {hasAny && !busy && (
+          <button
+            onClick={removeAll}
+            aria-label="Remove all offline content"
+            className="tap-card focus-ring inline-flex min-h-11 items-center justify-center rounded-full glass-chip px-4 text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+    </SettingsGroup>
   );
 }
-
