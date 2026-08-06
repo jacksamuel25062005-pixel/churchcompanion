@@ -356,35 +356,51 @@ function Thread({ channel, title, onLeave }: { channel: ChatChannel; title: stri
         <p className="mt-2 text-[11px] text-muted-foreground font-hi">{t("chat.queued")} ({queued})</p>
       )}
 
-      <div className="space-y-1.5 pb-32 pt-3">
+      <div className="space-y-1 pt-3" style={{ paddingBottom: pad }}>
         {messagesQ.isLoading ? (
           <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
         ) : messages.length === 0 ? (
           <p className="py-10 text-center text-sm text-muted-foreground font-hi">{t("chat.no_messages")}</p>
         ) : (
-          messages.map((m, i) => {
-            const mine = m.sender_ref === me.ref;
-            const prev = messages[i - 1];
-            const startsRun = !prev || prev.sender_ref !== m.sender_ref;
-            return (
-              <MessageBubble
-                key={m.id}
-                message={m}
-                mine={mine}
-                showName={startsRun && !mine}
-                reactions={reactionsFor(m.id)}
-                readBy={receiptsQ.data?.[m.id] ?? 0}
-                mediaUrl={m.media_url ? mediaQ.data?.[m.media_url] : undefined}
-                open={picker === m.id}
-                isAdmin={isAdmin}
-                onOpen={() => setPicker(picker === m.id ? null : m.id)}
-                onReact={(e) => react(m.id, e)}
-                onReport={() => report(m.id)}
-                onDelete={() => adminDelete(m.id)}
-                onExpand={(url) => setLightbox(url)}
-              />
-            );
-          })
+          <AnimatePresence initial={false}>
+            {messages.map((m, i) => {
+              const mine = m.sender_ref === me.ref;
+              const prev = messages[i - 1];
+              const next = messages[i + 1];
+              const startsRun = !prev || prev.sender_ref !== m.sender_ref;
+              const endsRun = !next || next.sender_ref !== m.sender_ref;
+              const showDay = !prev || new Date(prev.created_at).toDateString() !== new Date(m.created_at).toDateString();
+              return (
+                <div key={m.id}>
+                  {showDay && (
+                    <div className="flex justify-center py-3">
+                      <span className="glass rounded-full px-3 py-1 text-[11px] text-muted-foreground">
+                        {dayLabel(m.created_at)}
+                      </span>
+                    </div>
+                  )}
+                  <MessageBubble
+                    message={m}
+                    mine={mine}
+                    showName={startsRun && !mine}
+                    endsRun={endsRun}
+                    replyTarget={m.reply_to ? byId.get(m.reply_to) ?? null : null}
+                    reactions={reactionsFor(m.id)}
+                    readBy={receiptsQ.data?.[m.id] ?? 0}
+                    mediaUrl={m.media_url ? mediaQ.data?.[m.media_url] : undefined}
+                    open={picker === m.id}
+                    isAdmin={isAdmin}
+                    onOpen={() => setPicker(picker === m.id ? null : m.id)}
+                    onReply={() => { setPicker(null); setReplyTo(m); }}
+                    onReact={(e) => react(m.id, e)}
+                    onReport={() => report(m.id)}
+                    onDelete={() => adminDelete(m.id)}
+                    onExpand={(url) => setLightbox(url)}
+                  />
+                </div>
+              );
+            })}
+          </AnimatePresence>
         )}
 
         <AnimatePresence>
@@ -412,6 +428,7 @@ function Thread({ channel, title, onLeave }: { channel: ChatChannel; title: stri
 
       {/* Composer */}
       <div
+        ref={composerRef}
         className="fixed inset-x-0 z-30 flex justify-center"
         style={{
           bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)",
@@ -419,33 +436,60 @@ function Thread({ channel, title, onLeave }: { channel: ChatChannel; title: stri
           paddingRight: "calc(var(--app-gutter) + var(--sar))",
         }}
       >
-        <div className="dock-pill flex w-full max-w-[min(100%,var(--app-max-w))] items-center gap-2 rounded-full px-2 py-1.5">
-          <label className="grid h-10 w-10 shrink-0 cursor-pointer place-items-center rounded-full text-muted-foreground active:scale-95 transition">
-            <ImagePlus className="h-5 w-5" />
-            <span className="sr-only">{t("chat.attach")}</span>
+        <div className="w-full max-w-[min(100%,var(--app-max-w))]">
+          <AnimatePresence>
+            {replyTo && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: "auto" }}
+                exit={{ opacity: 0, y: 10, height: 0 }}
+                transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                className="overflow-hidden"
+              >
+                <div className="glass-strong mb-1.5 flex items-start gap-2 rounded-2xl border-l-2 px-3 py-2" style={{ borderColor: "var(--brand)" }}>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[11px] font-semibold brand-text font-hi">{replyTo.sender_name}</p>
+                    <p className="truncate text-xs text-muted-foreground font-hi">
+                      {replyTo.content || (replyTo.media_url ? "Photo" : "")}
+                    </p>
+                  </div>
+                  <button onClick={() => setReplyTo(null)} aria-label="Cancel reply" className="shrink-0 text-muted-foreground">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="dock-pill flex items-center gap-2 rounded-full px-2 py-1.5">
+            <label className="grid h-10 w-10 shrink-0 cursor-pointer place-items-center rounded-full text-muted-foreground active:scale-95 transition">
+              <ImagePlus className="h-5 w-5" />
+              <span className="sr-only">{t("chat.attach")}</span>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) void attach(f); e.currentTarget.value = ""; }}
+              />
+            </label>
             <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) void attach(f); e.currentTarget.value = ""; }}
+              value={draft}
+              onChange={(e) => onType(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); } }}
+              placeholder={t("chat.message_ph")}
+              className="min-w-0 flex-1 bg-transparent px-1 text-sm outline-none font-hi"
             />
-          </label>
-          <input
-            value={draft}
-            onChange={(e) => onType(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); } }}
-            placeholder={t("chat.message_ph")}
-            className="min-w-0 flex-1 bg-transparent px-1 text-sm outline-none font-hi"
-          />
-          <button
-            onClick={() => void send()}
-            aria-label={t("chat.send")}
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--brand)] text-white active:scale-95 transition"
-          >
-            <Send className="h-4 w-4" />
-          </button>
+            <button
+              onClick={() => void send()}
+              aria-label={t("chat.send")}
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--brand)] text-white active:scale-95 transition"
+            >
+              <Send className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
+
 
       {lightbox && (
         <ImageLightbox images={[lightbox]} index={0} onClose={() => setLightbox(null)} />
