@@ -5,7 +5,7 @@ import { AppShell } from "../../components/AppShell";
 import { BackButton } from "../../components/ui-bits";
 import {
   Upload, ListMusic, UserCheck, LogOut, Shield, Database, Bell, Megaphone,
-  BookImage, History, MessagesSquare, KeyRound,
+  BookImage, History, MessagesSquare, KeyRound, Users,
 } from "lucide-react";
 import { SettingsGroup, SettingsLinkRow, SettingsButtonRow, RowIcon } from "../../components/settings/SettingsUI";
 import { adminDisplayName } from "@/lib/admin-name";
@@ -118,7 +118,16 @@ function Dashboard() {
             title="Chat moderation"
             subtitle="Reports & mutes"
           />
+          {role === "super_admin" && (
+            <SettingsLinkRow
+              to="/admin/congregation"
+              icon={<RowIcon><Users /></RowIcon>}
+              title="Manage congregation chat"
+              subtitle="Edit or remove chat members"
+            />
+          )}
         </SettingsGroup>
+
 
         <SettingsGroup label="People & access">
           <SettingsLinkRow

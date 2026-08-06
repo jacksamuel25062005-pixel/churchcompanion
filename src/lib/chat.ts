@@ -283,6 +283,89 @@ export async function heartbeat(channel: ChatChannel) {
   try { await clientFor(channel).rpc("chat_heartbeat", { _chat: channel }); } catch { /* ignore */ }
 }
 
+// ---------------- Message actions (edit / delete / react) ----------------
+
+export interface ChatReaction {
+  id: string;
+  message_id: string;
+  sender_ref: string;
+  sender_name: string;
+  emoji: string;
+}
+
+export const QUICK_EMOJIS = ["👍", "❤️", "😂", "😮", "🙏", "🎉"] as const;
+
+/** Edit a message. Sender uses their chat session; a super admin uses their login. */
+export async function editMessage(channel: ChatChannel, id: string, content: string) {
+  const args = { _chat: channel, _id: id, _content: content.trim() };
+  let db;
+  try { db = clientFor(channel); } catch { db = supabase; }
+  const { error } = await (db as SupabaseClient).rpc("chat_edit_message", args);
+  if (error) {
+    // Fall back to the signed-in (super admin) client.
+    const { error: e2 } = await supabase.rpc("chat_edit_message" as never, args as never);
+    if (e2) throw e2;
+  }
+}
+
+/** Delete a message — super admin only (enforced in the database). */
+export async function deleteMessage(channel: ChatChannel, id: string) {
+  const { error } = await supabase.rpc("chat_delete_message" as never, { _chat: channel, _id: id } as never);
+  if (error) throw error;
+}
+
+/** Toggle an emoji reaction for the current chat session. */
+export async function toggleReaction(channel: ChatChannel, messageId: string, emoji: string) {
+  const db = clientFor(channel);
+  const { data, error } = await db.rpc("chat_react", { _chat: channel, _message_id: messageId, _emoji: emoji });
+  if (error) throw error;
+  return data as unknown as "added" | "removed";
+}
+
+export async function listReactions(channel: ChatChannel, messageIds: string[]): Promise<ChatReaction[]> {
+  if (!messageIds.length) return [];
+  try {
+    const db = clientFor(channel);
+    const { data, error } = await db
+      .from("chat_message_reactions")
+      .select("id, message_id, sender_ref, sender_name, emoji")
+      .eq("chat", channel)
+      .in("message_id", messageIds);
+    if (error) throw error;
+    return (data ?? []) as ChatReaction[];
+  } catch { return []; }
+}
+
+// ---------------- Congregation member admin (super admin) ----------------
+
+export interface CongregationMember {
+  phone_number: string;
+  name: string;
+  is_online: boolean;
+  last_seen: string;
+  joined_at: string;
+  message_count: number;
+}
+
+export async function listCongregationMembers(): Promise<CongregationMember[]> {
+  const { data, error } = await supabase.rpc("congregation_admin_users" as never);
+  if (error) throw error;
+  return (data ?? []) as unknown as CongregationMember[];
+}
+
+export async function updateCongregationMember(phone: string, name: string) {
+  const { error } = await supabase.rpc("congregation_admin_update_user" as never, {
+    _phone: phone, _name: name.trim(),
+  } as never);
+  if (error) throw error;
+}
+
+export async function removeCongregationMember(phone: string) {
+  const { error } = await supabase.rpc("congregation_admin_remove_user" as never, { _phone: phone } as never);
+  if (error) throw error;
+}
+
+
 // ---------------- Unread tracking (device-local) ----------------
 
 const SEEN_KEY = "cc.chat.lastSeen";
@@ -323,6 +406,9 @@ export interface RoomHandlers {
   onMessage?: (m: ChatMessage) => void;
   onTyping?: (p: TypingPayload) => void;
   onPresence?: (users: OnlineUser[]) => void;
+  onEdited?: (p: { id: string; content: string }) => void;
+  onDeleted?: (p: { id: string }) => void;
+  onReaction?: () => void;
 }
 
 /**
@@ -337,6 +423,15 @@ export function joinRoom(channel: ChatChannel, handlers: RoomHandlers) {
 
   ch.on("broadcast", { event: "new_message" }, ({ payload }) => {
     handlers.onMessage?.(payload as ChatMessage);
+  });
+  ch.on("broadcast", { event: "message_edited" }, ({ payload }) => {
+    handlers.onEdited?.(payload as { id: string; content: string });
+  });
+  ch.on("broadcast", { event: "message_deleted" }, ({ payload }) => {
+    handlers.onDeleted?.(payload as { id: string });
+  });
+  ch.on("broadcast", { event: "reaction" }, () => {
+    handlers.onReaction?.();
   });
   ch.on("broadcast", { event: "user_typing" }, ({ payload }) => {
     handlers.onTyping?.(payload as TypingPayload);
@@ -361,6 +456,15 @@ export function joinRoom(channel: ChatChannel, handlers: RoomHandlers) {
     broadcastMessage: (m: ChatMessage) => {
       void ch.send({ type: "broadcast", event: "new_message", payload: m });
     },
+    broadcastEdit: (id: string, content: string) => {
+      void ch.send({ type: "broadcast", event: "message_edited", payload: { id, content } });
+    },
+    broadcastDelete: (id: string) => {
+      void ch.send({ type: "broadcast", event: "message_deleted", payload: { id } });
+    },
+    broadcastReaction: () => {
+      void ch.send({ type: "broadcast", event: "reaction", payload: {} });
+    },
     sendTyping: (isTyping: boolean) => {
       if (!me) return;
       void ch.send({
@@ -372,6 +476,7 @@ export function joinRoom(channel: ChatChannel, handlers: RoomHandlers) {
     leave: () => { void supabase.removeChannel(ch); },
   };
 }
+
 
 // ---------------- Approved-youth roster sync ----------------
 //

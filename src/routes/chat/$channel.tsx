@@ -1,10 +1,13 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Loader2, Send, Users, WifiOff } from "lucide-react";
+import { Check, Loader2, Send, Users, WifiOff, X } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { BackButton, Card } from "../../components/ui-bits";
+import { MessageActionSheet } from "../../components/chat/MessageActionSheet";
 import { useT } from "../../lib/i18n";
+import { haptic } from "../../lib/haptics";
+import { useIsSuperAdmin } from "../../lib/use-admin";
 import { flushChatOutbox, pendingMessages, queueMessage } from "../../lib/chat-outbox";
 import {
   PAGE_SIZE,
@@ -13,6 +16,10 @@ import {
   joinRoom,
   joinYouth,
   listMessages,
+  listReactions,
+  editMessage,
+  deleteMessage,
+  toggleReaction,
   heartbeat,
   refreshSession,
   requestYouthAccess,
@@ -23,9 +30,11 @@ import {
   youthRequestStatus,
   type ChatChannel,
   type ChatMessage,
+  type ChatReaction,
   type OnlineUser,
 } from "../../lib/chat";
 import { cn } from "../../lib/utils";
+
 
 export const Route = createFileRoute("/chat/$channel")({
   component: ChatThread,
@@ -266,12 +275,18 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
   const [offline, setOffline] = useState(typeof navigator !== "undefined" && !navigator.onLine);
   const [queued, setQueued] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [reactions, setReactions] = useState<ChatReaction[]>([]);
+  const [sheetFor, setSheetFor] = useState<ChatMessage | null>(null);
+  const [editing, setEditing] = useState<ChatMessage | null>(null);
+  const isSuper = useIsSuperAdmin();
 
   const scroller = useRef<HTMLDivElement | null>(null);
   const room = useRef<ReturnType<typeof joinRoom> | null>(null);
   const typingTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const typingSent = useRef(false);
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
 
   const merge = useCallback((incoming: ChatMessage[]) => {
     setMessages((prev) => {
@@ -287,6 +302,75 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
       if (el) el.scrollTo({ top: el.scrollHeight, behavior: smooth ? "smooth" : "auto" });
     });
   }, []);
+
+  // ---- Reactions ------------------------------------------------------
+  const idsKey = messages.map((m) => m.id).join(",");
+  const idsRef = useRef<string[]>([]);
+  idsRef.current = messages.map((m) => m.id);
+
+  const refreshReactions = useCallback(async () => {
+    const rows = await listReactions(channel, idsRef.current);
+    setReactions(rows);
+  }, [channel]);
+
+  useEffect(() => {
+    if (!idsKey) { setReactions([]); return; }
+    void refreshReactions();
+  }, [idsKey, refreshReactions]);
+
+  const reactionsFor = useCallback(
+    (id: string) => reactions.filter((r) => r.message_id === id),
+    [reactions],
+  );
+
+  const react = async (message: ChatMessage, emoji: string) => {
+    setSheetFor(null);
+    try {
+      await toggleReaction(channel, message.id, emoji);
+      await refreshReactions();
+      room.current?.broadcastReaction();
+      haptic.light();
+    } catch (err) {
+      setError((err as Error).message || "Could not react");
+    }
+  };
+
+  const copyMessage = async (m: ChatMessage) => {
+    setSheetFor(null);
+    try { await navigator.clipboard.writeText(m.content ?? ""); } catch { /* ignore */ }
+  };
+
+  const removeMessage = async (m: ChatMessage) => {
+    setSheetFor(null);
+    try {
+      await deleteMessage(channel, m.id);
+      setMessages((prev) => prev.filter((x) => x.id !== m.id));
+      room.current?.broadcastDelete(m.id);
+      haptic.success();
+    } catch (err) {
+      setError((err as Error).message || "Could not delete");
+    }
+  };
+
+  const startEdit = (m: ChatMessage) => {
+    setSheetFor(null);
+    setEditing(m);
+    setText(m.content ?? "");
+  };
+
+  const cancelEdit = () => { setEditing(null); setText(""); };
+
+  const longPress = (m: ChatMessage) => ({
+    onContextMenu: (e: React.MouseEvent) => { e.preventDefault(); haptic.medium(); setSheetFor(m); },
+    onPointerDown: () => {
+      if (pressTimer.current) clearTimeout(pressTimer.current);
+      pressTimer.current = setTimeout(() => { haptic.medium(); setSheetFor(m); }, 420);
+    },
+    onPointerUp: () => { if (pressTimer.current) clearTimeout(pressTimer.current); },
+    onPointerLeave: () => { if (pressTimer.current) clearTimeout(pressTimer.current); },
+    onPointerCancel: () => { if (pressTimer.current) clearTimeout(pressTimer.current); },
+  });
+
 
   // Initial load
   useEffect(() => {
@@ -331,10 +415,15 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
         }
       },
       onPresence: setOnline,
+      onEdited: ({ id, content }) =>
+        setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, content, is_edited: true } : m))),
+      onDeleted: ({ id }) => setMessages((prev) => prev.filter((m) => m.id !== id)),
+      onReaction: () => { void refreshReactions(); },
     });
     room.current = r;
     return () => { r.leave(); room.current = null; };
-  }, [channel, me?.ref, merge, scrollToEnd]);
+  }, [channel, me?.ref, merge, scrollToEnd, refreshReactions]);
+
 
   // Presence heartbeat
   useEffect(() => {
@@ -407,9 +496,25 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
   const send = async () => {
     const body = text.trim();
     if (!body) return;
+
+    if (editing) {
+      const target = editing;
+      setText(""); setEditing(null); setError(null);
+      try {
+        await editMessage(channel, target.id, body);
+        setMessages((prev) => prev.map((m) => (m.id === target.id ? { ...m, content: body, is_edited: true } : m)));
+        room.current?.broadcastEdit(target.id, body);
+        haptic.success();
+      } catch (err) {
+        setError((err as Error).message || "Could not edit");
+      }
+      return;
+    }
+
     setText(""); setError(null);
     typingSent.current = false;
     room.current?.sendTyping(false);
+
     try {
       const msg = await sendMessage(channel, { content: body });
       merge([msg]);
@@ -506,6 +611,12 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
           const newDay = !prev || dayLabel(prev.created_at) !== dayLabel(m.created_at);
           const mine = m.sender_ref === me?.ref;
           const grouped = !!prev && !newDay && prev.sender_ref === m.sender_ref;
+          const rs = reactionsFor(m.id);
+          const grouping = new Map<string, { count: number; mine: boolean }>();
+          rs.forEach((r) => {
+            const cur = grouping.get(r.emoji) ?? { count: 0, mine: false };
+            grouping.set(r.emoji, { count: cur.count + 1, mine: cur.mine || r.sender_ref === me?.ref });
+          });
           return (
             <div key={m.id}>
               {newDay && (
@@ -519,26 +630,50 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.18 }}
-                className={cn("flex", mine ? "justify-end" : "justify-start", grouped ? "mt-0.5" : "mt-2")}
+                className={cn("flex flex-col", mine ? "items-end" : "items-start", grouped ? "mt-0.5" : "mt-2")}
               >
-                <div
+                <motion.div
+                  {...longPress(m)}
+                  whileTap={{ scale: 0.985 }}
                   className={cn(
-                    "max-w-[80%] rounded-2xl px-3.5 py-2 text-[15px] leading-snug shadow-sm",
+                    "max-w-[80%] select-none rounded-2xl px-3.5 py-2 text-[15px] leading-snug shadow-sm",
                     mine ? "bg-primary text-primary-foreground rounded-br-md" : "bg-card rounded-bl-md",
+                    editing?.id === m.id && "ring-2 ring-primary/60",
                   )}
                 >
                   {!mine && !grouped && (
                     <p className="mb-0.5 text-xs font-semibold text-primary">{m.sender_name}</p>
                   )}
                   <p className="whitespace-pre-wrap break-words">{m.content}</p>
-                  <p className={cn("mt-1 text-[10px] tabular-nums", mine ? "text-primary-foreground/70" : "text-muted-foreground")}>
+                  <p className={cn("mt-1 flex items-center gap-1 text-[10px] tabular-nums", mine ? "text-primary-foreground/70" : "text-muted-foreground")}>
+                    {m.is_edited && <span className="italic">edited</span>}
                     {timeLabel(m.created_at)}
                   </p>
-                </div>
+                </motion.div>
+
+                {grouping.size > 0 && (
+                  <div className={cn("mt-1 flex flex-wrap gap-1", mine ? "justify-end" : "justify-start")}>
+                    {Array.from(grouping.entries()).map(([emoji, info]) => (
+                      <motion.button
+                        key={emoji}
+                        whileTap={{ scale: 0.88 }}
+                        onClick={() => void react(m, emoji)}
+                        className={cn(
+                          "flex items-center gap-1 rounded-full border px-2 py-0.5 text-[12px] leading-none",
+                          info.mine ? "border-primary/60 bg-primary/15" : "border-border bg-card",
+                        )}
+                      >
+                        <span>{emoji}</span>
+                        {info.count > 1 && <span className="tabular-nums text-[11px]">{info.count}</span>}
+                      </motion.button>
+                    ))}
+                  </div>
+                )}
               </motion.div>
             </div>
           );
         })}
+
 
         <AnimatePresence>
           {typingNames.length > 0 && (
@@ -558,28 +693,69 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
         className="fixed inset-x-0 z-40 flex items-end gap-2 px-4"
         style={{ bottom: "calc(var(--dock-space) + 0.75rem)" }}
       >
-        <div className="glass mx-auto flex w-full max-w-screen-sm items-end gap-2 rounded-3xl p-2">
-          <textarea
-            value={text}
-            rows={1}
-            maxLength={500}
-            onChange={(e) => onType(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); }
-            }}
-            placeholder="Message"
-            className="max-h-28 flex-1 resize-none bg-transparent px-3 py-2 text-[15px] outline-none"
-          />
-          <button
-            onClick={() => void send()}
-            disabled={!text.trim()}
-            aria-label="Send"
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground transition active:scale-95 disabled:opacity-40"
-          >
-            <Send className="h-5 w-5" />
-          </button>
+        <div className="glass mx-auto w-full max-w-screen-sm rounded-3xl p-2">
+          <AnimatePresence>
+            {editing && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="mb-1.5 flex items-center gap-2 rounded-2xl bg-card/70 px-3 py-2">
+                  <Check className="h-4 w-4 shrink-0 text-primary" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-semibold text-primary">Editing message</p>
+                    <p className="truncate text-xs text-muted-foreground">{editing.content}</p>
+                  </div>
+                  <button onClick={cancelEdit} aria-label="Cancel edit" className="rounded-full p-1 hover:bg-accent">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="flex items-end gap-2">
+            <textarea
+              value={text}
+              rows={1}
+              maxLength={500}
+              onChange={(e) => onType(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); }
+              }}
+              placeholder={editing ? "Edit your message" : "Message"}
+              className="max-h-28 flex-1 resize-none bg-transparent px-3 py-2 text-[15px] outline-none"
+            />
+            <button
+              onClick={() => void send()}
+              disabled={!text.trim()}
+              aria-label={editing ? "Save edit" : "Send"}
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground transition active:scale-95 disabled:opacity-40"
+            >
+              {editing ? <Check className="h-5 w-5" /> : <Send className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
       </div>
+
+      <MessageActionSheet
+        open={!!sheetFor}
+        preview={sheetFor?.content ?? ""}
+        actions={{
+          canEdit: !!sheetFor && (sheetFor.sender_ref === me?.ref || isSuper),
+          canDelete: isSuper,
+          canReact: true,
+        }}
+        myReactions={sheetFor ? reactionsFor(sheetFor.id).filter((r) => r.sender_ref === me?.ref).map((r) => r.emoji) : []}
+        onClose={() => setSheetFor(null)}
+        onReact={(e) => sheetFor && void react(sheetFor, e)}
+        onEdit={() => sheetFor && startEdit(sheetFor)}
+        onCopy={() => sheetFor && void copyMessage(sheetFor)}
+        onDelete={() => sheetFor && void removeMessage(sheetFor)}
+      />
     </AppShell>
+
   );
 }

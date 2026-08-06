@@ -354,6 +354,36 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_message_reactions: {
+        Row: {
+          chat: string
+          created_at: string
+          emoji: string
+          id: string
+          message_id: string
+          sender_name: string
+          sender_ref: string
+        }
+        Insert: {
+          chat: string
+          created_at?: string
+          emoji: string
+          id?: string
+          message_id: string
+          sender_name?: string
+          sender_ref: string
+        }
+        Update: {
+          chat?: string
+          created_at?: string
+          emoji?: string
+          id?: string
+          message_id?: string
+          sender_name?: string
+          sender_ref?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           channel: string
@@ -1047,11 +1077,42 @@ export type Database = {
     }
     Functions: {
       can_read_message: { Args: { _id: string }; Returns: boolean }
+      chat_delete_message: {
+        Args: { _chat: string; _id: string }
+        Returns: undefined
+      }
+      chat_edit_message: {
+        Args: { _chat: string; _content: string; _id: string }
+        Returns: undefined
+      }
       chat_heartbeat: { Args: { _chat: string }; Returns: undefined }
+      chat_react: {
+        Args: { _chat: string; _emoji: string; _message_id: string }
+        Returns: string
+      }
       chat_send: { Args: { _chat: string; _content: string }; Returns: string }
       chat_session_info: {
         Args: { _chat: string; _session: string }
         Returns: {
+          name: string
+          phone_number: string
+        }[]
+      }
+      congregation_admin_remove_user: {
+        Args: { _phone: string }
+        Returns: undefined
+      }
+      congregation_admin_update_user: {
+        Args: { _name: string; _phone: string }
+        Returns: undefined
+      }
+      congregation_admin_users: {
+        Args: never
+        Returns: {
+          is_online: boolean
+          joined_at: string
+          last_seen: string
+          message_count: number
           name: string
           phone_number: string
         }[]

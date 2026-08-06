@@ -148,16 +148,27 @@ const DockNav = memo(function DockNav() {
                   }`}
                   style={{ fontSize: "clamp(9px, 2.4vw, 11px)" }}
                 >
-                  <span className="nav-icon flex h-9 w-full max-w-12 items-center justify-center rounded-2xl">
-                    <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={Active ? 2.4 : 2} />
-                  </span>
-                  <span className="nav-label w-full truncate text-center leading-none">{it.label}</span>
+                  <motion.span
+                    className="nav-icon flex h-9 w-full max-w-12 items-center justify-center rounded-2xl"
+                    animate={reduce ? undefined : { y: Active ? -1.5 : 0, scale: Active ? 1.08 : 1 }}
+                    transition={IOS_SPRING_SNAP}
+                  >
+                    <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={Active ? 2.5 : 2} />
+                  </motion.span>
+                  <motion.span
+                    className="nav-label w-full truncate text-center leading-none"
+                    animate={reduce ? undefined : { opacity: Active ? 1 : 0.72, scale: Active ? 1 : 0.96 }}
+                    transition={IOS_SPRING_SNAP}
+                  >
+                    {it.label}
+                  </motion.span>
                 </Link>
 
               </motion.li>
             );
           })}
         </ul>
+
       </div>
     </nav>
   );
