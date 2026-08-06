@@ -352,6 +352,7 @@ function OfflineSection() {
           </button>
         )}
       </div>
+      </div>
     </SettingsGroup>
   );
 }
