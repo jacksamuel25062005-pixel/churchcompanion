@@ -11,9 +11,9 @@ export const Route = createFileRoute("/_authenticated/admin/chat")({
   head: () => ({
     meta: [
       { title: "Chat moderation · Church Companion" },
-      { name: "description", content: "Moderate congregation and youth chat: reports, mutes and the approved youth list." },
+      { name: "description", content: "Moderate congregation and youth chat: reports and mutes." },
       { property: "og:title", content: "Chat moderation · Church Companion" },
-      { property: "og:description", content: "Moderate congregation and youth chat: reports, mutes and the approved youth list." },
+      { property: "og:description", content: "Moderate congregation and youth chat: reports and mutes." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -22,7 +22,6 @@ export const Route = createFileRoute("/_authenticated/admin/chat")({
 
 function AdminChat() {
   const qc = useQueryClient();
-  const [youthForm, setYouthForm] = useState({ name: "", phone: "" });
   const [mute, setMute] = useState({ ref: "", minutes: "60" });
 
   const reportsQ = useQuery({
