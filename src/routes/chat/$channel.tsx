@@ -19,6 +19,8 @@ import {
   listReactions,
   editMessage,
   deleteMessage,
+  uncacheMessage,
+
   toggleReaction,
   heartbeat,
   refreshSession,
@@ -417,7 +419,11 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
       onPresence: setOnline,
       onEdited: ({ id, content }) =>
         setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, content, is_edited: true } : m))),
-      onDeleted: ({ id }) => setMessages((prev) => prev.filter((m) => m.id !== id)),
+      onDeleted: ({ id }) => {
+        void uncacheMessage(id);
+        setMessages((prev) => prev.filter((m) => m.id !== id));
+      },
+
       onReaction: () => { void refreshReactions(); },
     });
     room.current = r;
