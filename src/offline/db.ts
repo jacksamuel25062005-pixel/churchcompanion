@@ -134,6 +134,8 @@ export class ChurchDB extends Dexie {
   cached_images!: EntityTable<CachedImageRow, "url">;
   image_blobs!: EntityTable<ImageBlobRow, "key">;
   chat_outbox!: EntityTable<ChatOutboxRow, "id">;
+  chat_cache!: EntityTable<ChatCacheRow, "id">;
+
 
 
   constructor() {
