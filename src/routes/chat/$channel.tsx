@@ -646,9 +646,9 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
                   )}
                   <p className="whitespace-pre-wrap break-words">{m.content}</p>
                   <p className={cn("mt-1 flex items-center gap-1 text-[10px] tabular-nums", mine ? "text-primary-foreground/70" : "text-muted-foreground")}>
-                    {m.is_edited && <span className="italic">edited</span>}
                     {timeLabel(m.created_at)}
                   </p>
+
                 </motion.div>
 
                 {grouping.size > 0 && (
