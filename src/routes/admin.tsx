@@ -253,37 +253,77 @@ function RequestAdminAccess({ email, userId }: { email: string; userId: string }
 
   const signOut = async () => { await supabase.auth.signOut(); window.location.reload(); };
 
+  const statusTone =
+    existing?.status === "approved" ? "brand" : existing?.status === "rejected" ? "danger" : "muted";
+
   return (
     <AppShell title={t("admin.title")} left={<BackButton to="/" />} hideNav>
-      <div className="pt-4 space-y-4">
-        <Card className="p-5">
-          <p className="text-xs text-muted-foreground">Signed in as</p>
-          <p className="font-medium">{firstNameFrom({ email })}</p>
-        </Card>
+      <div className="space-y-6 pt-4">
+        <SettingsGroup label="Account">
+          <SettingsRow
+            icon={<RowIcon><UserPlus /></RowIcon>}
+            title={firstNameFrom({ email })}
+            subtitle={email}
+          />
+        </SettingsGroup>
 
         {existing ? (
-          <Card className="p-5">
-            <p className="text-sm font-medium">Request status: <span className="brand-text uppercase">{existing.status}</span></p>
-            {existing.status === "pending" && <p className="text-xs text-muted-foreground mt-1">Wait for an admin or the Super Admin to approve.</p>}
-            {existing.status === "rejected" && <p className="text-xs text-muted-foreground mt-1">Your previous request was rejected. You can submit a new one below.</p>}
+          <SettingsGroup
+            label="Request status"
+            hint={
+              existing.status === "pending"
+                ? "Wait for an admin or the Super Admin to approve."
+                : existing.status === "rejected"
+                  ? "Your previous request was rejected. You can submit a new one below."
+                  : undefined
+            }
+          >
+            <SettingsRow
+              icon={<RowIcon tone={statusTone as any}><Shield /></RowIcon>}
+              title={<span className="capitalize">{existing.status}</span>}
+              subtitle={existing.created_at ? new Date(existing.created_at).toLocaleString() : undefined}
+            />
             {existing.status === "approved" && (
-              <Link to="/admin/dashboard" className="mt-3 inline-flex rounded-xl brand-bg px-4 py-2 text-sm font-medium">Open dashboard</Link>
+              <div className="p-4">
+                <Link
+                  to="/admin/dashboard"
+                  className="tap-card focus-ring flex min-h-11 items-center justify-center rounded-full brand-bg text-[14px] font-semibold elev-1"
+                >
+                  Open dashboard
+                </Link>
+              </div>
             )}
-          </Card>
+          </SettingsGroup>
         ) : null}
 
         {(!existing || existing.status === "rejected") && (
-          <Card className="p-5">
-            <form onSubmit={submit} className="space-y-3">
+          <SettingsGroup label="Request admin access">
+            <form onSubmit={submit} className="space-y-3.5 p-4">
               <Field label={t("admin.request_reason")}>
-                <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={4} className="w-full rounded-xl border bg-secondary p-3 text-sm" required />
+                <textarea
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  rows={4}
+                  required
+                  className="w-full rounded-[0.9rem] border border-border bg-secondary p-3 text-sm outline-none focus:shadow-[0_0_0_2px_var(--brand)]"
+                />
               </Field>
-              <button disabled={loading} className="w-full rounded-xl brand-bg py-2.5 text-sm font-medium disabled:opacity-50">{t("admin.request_submit")}</button>
+              <button
+                disabled={loading}
+                className="tap-card focus-ring min-h-11 w-full rounded-full brand-bg text-[14px] font-semibold elev-1 disabled:opacity-50"
+              >
+                {t("admin.request_submit")}
+              </button>
             </form>
-          </Card>
+          </SettingsGroup>
         )}
 
-        <button onClick={signOut} className="w-full text-xs text-muted-foreground underline">{t("admin.sign_out")}</button>
+        <button
+          onClick={signOut}
+          className="focus-ring mx-auto block rounded-full px-3 py-1.5 text-[12px] font-medium text-muted-foreground underline-offset-4 hover:underline"
+        >
+          {t("admin.sign_out")}
+        </button>
       </div>
     </AppShell>
   );
