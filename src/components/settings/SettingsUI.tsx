@@ -154,7 +154,7 @@ export function Segmented<T extends string>({
   ariaLabel?: string;
 }) {
   const idx = Math.max(0, options.findIndex((o) => o.value === value));
-  const pct = 100 / options.length;
+  const n = options.length;
 
   return (
     <div
