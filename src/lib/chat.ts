@@ -339,7 +339,9 @@ export async function editMessage(channel: ChatChannel, id: string, content: str
 export async function deleteMessage(channel: ChatChannel, id: string) {
   const { error } = await supabase.rpc("chat_delete_message" as never, { _chat: channel, _id: id } as never);
   if (error) throw error;
+  await uncacheMessage(id);
 }
+
 
 /** Toggle an emoji reaction for the current chat session. */
 export async function toggleReaction(channel: ChatChannel, messageId: string, emoji: string) {
