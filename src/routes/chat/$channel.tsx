@@ -296,9 +296,11 @@ function Thread({ channel, title, onLeave }: { channel: ChatChannel; title: stri
   const send = async (media_url?: string) => {
     const content = draft.trim();
     if (!content && !media_url) return;
+    const reply_to = replyTo?.id ?? null;
     setDraft("");
+    setReplyTo(null);
     try {
-      await sendMessage(channel, { content: content || null, media_url: media_url ?? null });
+      await sendMessage(channel, { content: content || null, media_url: media_url ?? null, reply_to });
       void roomRef.current?.send({ type: "broadcast", event: "new-message", payload: {} });
       refresh();
     } catch (e) {
