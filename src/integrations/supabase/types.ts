@@ -496,6 +496,7 @@ export type Database = {
           id: string
           name: string
           phone: string
+          session_token: string
         }
         Insert: {
           created_at?: string
@@ -504,6 +505,7 @@ export type Database = {
           id?: string
           name: string
           phone: string
+          session_token: string
         }
         Update: {
           created_at?: string
@@ -512,6 +514,7 @@ export type Database = {
           id?: string
           name?: string
           phone?: string
+          session_token?: string
         }
         Relationships: []
       }
@@ -845,6 +848,8 @@ export type Database = {
         Returns: string
       }
       congregation_session_exists: { Args: { _sid: string }; Returns: boolean }
+      current_congregation_ref: { Args: never; Returns: string }
+      current_congregation_token: { Args: never; Returns: string }
       current_youth_id: { Args: never; Returns: string }
       current_youth_token: { Args: never; Returns: string }
       is_chat_admin: { Args: { _uid: string }; Returns: boolean }
