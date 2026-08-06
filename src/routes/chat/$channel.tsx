@@ -693,28 +693,69 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
         className="fixed inset-x-0 z-40 flex items-end gap-2 px-4"
         style={{ bottom: "calc(var(--dock-space) + 0.75rem)" }}
       >
-        <div className="glass mx-auto flex w-full max-w-screen-sm items-end gap-2 rounded-3xl p-2">
-          <textarea
-            value={text}
-            rows={1}
-            maxLength={500}
-            onChange={(e) => onType(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); }
-            }}
-            placeholder="Message"
-            className="max-h-28 flex-1 resize-none bg-transparent px-3 py-2 text-[15px] outline-none"
-          />
-          <button
-            onClick={() => void send()}
-            disabled={!text.trim()}
-            aria-label="Send"
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground transition active:scale-95 disabled:opacity-40"
-          >
-            <Send className="h-5 w-5" />
-          </button>
+        <div className="glass mx-auto w-full max-w-screen-sm rounded-3xl p-2">
+          <AnimatePresence>
+            {editing && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="mb-1.5 flex items-center gap-2 rounded-2xl bg-card/70 px-3 py-2">
+                  <Check className="h-4 w-4 shrink-0 text-primary" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-semibold text-primary">Editing message</p>
+                    <p className="truncate text-xs text-muted-foreground">{editing.content}</p>
+                  </div>
+                  <button onClick={cancelEdit} aria-label="Cancel edit" className="rounded-full p-1 hover:bg-accent">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="flex items-end gap-2">
+            <textarea
+              value={text}
+              rows={1}
+              maxLength={500}
+              onChange={(e) => onType(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); }
+              }}
+              placeholder={editing ? "Edit your message" : "Message"}
+              className="max-h-28 flex-1 resize-none bg-transparent px-3 py-2 text-[15px] outline-none"
+            />
+            <button
+              onClick={() => void send()}
+              disabled={!text.trim()}
+              aria-label={editing ? "Save edit" : "Send"}
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground transition active:scale-95 disabled:opacity-40"
+            >
+              {editing ? <Check className="h-5 w-5" /> : <Send className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
       </div>
+
+      <MessageActionSheet
+        open={!!sheetFor}
+        preview={sheetFor?.content ?? ""}
+        actions={{
+          canEdit: !!sheetFor && (sheetFor.sender_ref === me?.ref || isSuper),
+          canDelete: isSuper,
+          canReact: true,
+        }}
+        myReactions={sheetFor ? reactionsFor(sheetFor.id).filter((r) => r.sender_ref === me?.ref).map((r) => r.emoji) : []}
+        onClose={() => setSheetFor(null)}
+        onReact={(e) => sheetFor && void react(sheetFor, e)}
+        onEdit={() => sheetFor && startEdit(sheetFor)}
+        onCopy={() => sheetFor && void copyMessage(sheetFor)}
+        onDelete={() => sheetFor && void removeMessage(sheetFor)}
+      />
     </AppShell>
+
   );
 }
