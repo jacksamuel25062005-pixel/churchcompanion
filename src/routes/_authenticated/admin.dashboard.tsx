@@ -1,9 +1,13 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../../components/AppShell";
-import { Card, BackButton } from "../../components/ui-bits";
-import { Upload, ListMusic, UserCheck, LogOut, Shield, Database, Bell, Megaphone, BookImage, ChevronRight, History, MessagesSquare, KeyRound } from "lucide-react";
+import { BackButton } from "../../components/ui-bits";
+import {
+  Upload, ListMusic, UserCheck, LogOut, Shield, Database, Bell, Megaphone,
+  BookImage, History, MessagesSquare, KeyRound,
+} from "lucide-react";
+import { SettingsGroup, SettingsLinkRow, SettingsButtonRow, RowIcon } from "../../components/settings/SettingsUI";
 import { adminDisplayName } from "@/lib/admin-name";
 import { toast } from "sonner";
 
@@ -17,7 +21,6 @@ function Dashboard() {
   const [displayName, setDisplayName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [stats, setStats] = useState<{ songs: number; sections: number; pending: number } | null>(null);
-
 
   useEffect(() => {
     (async () => {
@@ -42,80 +45,139 @@ function Dashboard() {
     })();
   }, [navigate]);
 
-  const signOut = async () => { await supabase.auth.signOut(); navigate({ to: "/admin", replace: true }); toast.success("Signed out"); };
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    navigate({ to: "/admin", replace: true });
+    toast.success("Signed out");
+  };
 
   return (
     <AppShell title="Admin" left={<BackButton to="/" />} hideNav>
-      <div className="pt-4 space-y-4">
-        <Card className="p-5 brand-bg">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wider opacity-90">
-            <Shield className="h-3.5 w-3.5" /> {role === "super_admin" ? "Super Admin" : "Admin"}
+      <div className="space-y-6 pt-4">
+        {/* Identity hero */}
+        <section className="glass overflow-hidden rounded-[24px]">
+          <div className="brand-bg px-5 py-5">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em]">
+              <Shield className="h-3 w-3" /> {role === "super_admin" ? "Super Admin" : "Admin"}
+            </span>
+            <p className="mt-2 truncate text-[22px] font-semibold leading-tight tracking-tight">
+              {adminDisplayName({ role, displayName, email })}
+            </p>
+            {email && <p className="mt-0.5 truncate text-[12px] opacity-80">{email}</p>}
           </div>
-          <p className="mt-1 text-xl font-semibold tracking-tight">
-            {adminDisplayName({ role, displayName, email })}
-          </p>
-        </Card>
+          <div className="grid grid-cols-3 divide-x divide-border/50">
+            <Stat label="Songs" value={stats?.songs} loading={stats === null} />
+            <Stat label="Sections" value={stats?.sections} loading={stats === null} />
+            <Stat label="Pending" value={stats?.pending} loading={stats === null} />
+          </div>
+        </section>
 
-        <div className="grid grid-cols-3 gap-2">
-          <Stat label="Songs" value={stats?.songs} loading={stats === null} />
-          <Stat label="Sections" value={stats?.sections} loading={stats === null} />
-          <Stat label="Pending" value={stats?.pending} loading={stats === null} />
-        </div>
+        <SettingsGroup label="Content">
+          <SettingsLinkRow
+            to="/admin/upload"
+            icon={<RowIcon><Upload /></RowIcon>}
+            title="Upload content"
+            subtitle="PDF, DOCX, MD or TXT → parse → publish"
+          />
+          <SettingsLinkRow
+            to="/admin/book-import"
+            icon={<RowIcon><BookImage /></RowIcon>}
+            title="Book image import"
+            subtitle="Lord's Supper · Ashaya Rabbani · Prata Sayan"
+          />
+          <SettingsLinkRow
+            to="/admin/manage"
+            icon={<RowIcon><Database /></RowIcon>}
+            title="Manage content"
+            subtitle="Edit or delete songs & book sections"
+          />
+          <SettingsLinkRow
+            to="/admin/today"
+            icon={<RowIcon><ListMusic /></RowIcon>}
+            title="Today's Songs"
+            subtitle="Pick what users see today"
+          />
+        </SettingsGroup>
 
-        <div className="space-y-2">
-          <NavTile to="/admin/upload" icon={<Upload className="h-5 w-5" />} title="Upload content" subtitle="PDF, DOCX or TXT → parse → publish" />
-          <NavTile to="/admin/book-import" icon={<BookImage className="h-5 w-5" />} title="Book image import" subtitle="Lord's Supper · Ashaya Rabbani · Prata Sayan" />
-          <NavTile to="/admin/manage" icon={<Database className="h-5 w-5" />} title="Manage content" subtitle="Edit or delete songs & book sections" />
-          <NavTile to="/admin/today" icon={<ListMusic className="h-5 w-5" />} title="Today's Songs" subtitle="Pick what users see today" />
-          <NavTile to="/admin/notify" icon={<Bell className="h-5 w-5" />} title="Send notification" subtitle="Push to all subscribers (OneSignal)" />
-          <NavTile to="/admin/announcements" icon={<Megaphone className="h-5 w-5" />} title="Announcements" subtitle="Post to church members or youth group" />
-          <NavTile to="/admin/requests" icon={<UserCheck className="h-5 w-5" />} title="Admin requests" subtitle="Approve or reject" />
-          <NavTile to="/admin/audit" icon={<History className="h-5 w-5" />} title="Change history" subtitle="Who changed songs, books & Today's Songs" />
-          <NavTile to="/admin/chat" icon={<MessagesSquare className="h-5 w-5" />} title="Chat moderation" subtitle="Reports & mutes" />
-          <NavTile to="/admin/youth" icon={<UserCheck className="h-5 w-5" />} title="Youth admin" subtitle="Access requests & approved numbers" />
+        <SettingsGroup label="Communication">
+          <SettingsLinkRow
+            to="/admin/notify"
+            icon={<RowIcon><Bell /></RowIcon>}
+            title="Send notification"
+            subtitle="Push to all subscribers"
+          />
+          <SettingsLinkRow
+            to="/admin/announcements"
+            icon={<RowIcon><Megaphone /></RowIcon>}
+            title="Announcements"
+            subtitle="Post to church members or youth group"
+          />
+          <SettingsLinkRow
+            to="/admin/chat"
+            icon={<RowIcon><MessagesSquare /></RowIcon>}
+            title="Chat moderation"
+            subtitle="Reports & mutes"
+          />
+        </SettingsGroup>
 
-          <NavTile to="/admin/security" icon={<KeyRound className="h-5 w-5" />} title="Security" subtitle="Change password & sign out everywhere" />
+        <SettingsGroup label="People & access">
+          <SettingsLinkRow
+            to="/admin/requests"
+            icon={<RowIcon><UserCheck /></RowIcon>}
+            title="Admin requests"
+            subtitle="Approve or reject"
+            trailing={stats && stats.pending > 0 ? <Badge>{stats.pending}</Badge> : undefined}
+          />
+          <SettingsLinkRow
+            to="/admin/youth"
+            icon={<RowIcon><UserCheck /></RowIcon>}
+            title="Youth admin"
+            subtitle="Access requests & approved numbers"
+          />
+          <SettingsLinkRow
+            to="/admin/audit"
+            icon={<RowIcon tone="muted"><History /></RowIcon>}
+            title="Change history"
+            subtitle="Who changed songs, books & Today's Songs"
+          />
+          <SettingsLinkRow
+            to="/admin/security"
+            icon={<RowIcon tone="muted"><KeyRound /></RowIcon>}
+            title="Security"
+            subtitle="Change password & sign out everywhere"
+          />
+        </SettingsGroup>
 
-        </div>
-
-        <button
-          onClick={signOut}
-          className="tap-card focus-ring w-full inline-flex items-center justify-center gap-2 rounded-xl glass-chip py-3 min-h-11 text-sm font-medium"
-        >
-          <LogOut className="h-4 w-4" /> Sign out
-        </button>
+        <SettingsGroup>
+          <SettingsButtonRow
+            onClick={signOut}
+            icon={<RowIcon tone="danger"><LogOut /></RowIcon>}
+            title="Sign out"
+            subtitle="End this admin session on this device"
+          />
+        </SettingsGroup>
       </div>
     </AppShell>
   );
 }
 
+function Badge({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="grid h-6 min-w-6 shrink-0 place-items-center rounded-full bg-destructive px-1.5 text-[11px] font-bold text-destructive-foreground">
+      {children}
+    </span>
+  );
+}
+
 function Stat({ label, value, loading }: { label: string; value?: number; loading?: boolean }) {
   return (
-    <Card className="p-4 text-center">
+    <div className="px-3 py-3.5 text-center">
       {loading ? (
-        <div className="mx-auto h-7 w-10 rounded-md bg-muted/60 animate-pulse" />
+        <div className="mx-auto h-7 w-10 animate-pulse rounded-md bg-muted/60" />
       ) : (
-        <p className="text-2xl font-bold tabular-nums">{value ?? 0}</p>
+        <p className="text-[22px] font-bold tabular-nums leading-none">{value ?? 0}</p>
       )}
-      <p className="mt-1 text-[11px] uppercase tracking-wider text-muted-foreground">{label}</p>
-    </Card>
+      <p className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+    </div>
   );
 }
-
-
-function NavTile({ to, icon, title, subtitle }: { to: string; icon: React.ReactNode; title: string; subtitle: string }) {
-  return (
-    <Link
-      to={to as any}
-      className="premium-card tap-card focus-ring flex items-center gap-3 hover:bg-secondary/50 transition-colors"
-    >
-      <div className="grid place-items-center h-11 w-11 rounded-2xl brand-bg elev-1 shrink-0">{icon}</div>
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold">{title}</p>
-        <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
-      </div>
-      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-    </Link>
-  );
-}
-
