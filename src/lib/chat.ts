@@ -98,30 +98,33 @@ export async function refreshYouthSession(): Promise<YouthIdentity | null> {
 
 // ---------------- Clients ----------------
 
-let _youthClient: { token: string; client: SupabaseClient } | null = null;
+const _tokenClients = new Map<string, SupabaseClient>();
 
 /**
- * Youth messages are gated by RLS on a short-lived signed token, sent as the
- * `x-youth-token` request header — never a raw client-supplied sender_ref.
+ * Channel identity is proven with a device-held token sent as a request header
+ * (`x-youth-token` / `x-congregation-token`) — never a raw client-supplied
+ * sender_ref, which anyone could guess.
  */
-function youthClient(token: string): SupabaseClient {
-  if (_youthClient?.token === token) return _youthClient.client;
+function tokenClient(header: string, token: string): SupabaseClient {
+  const cacheKey = `${header}:${token}`;
+  const existing = _tokenClients.get(cacheKey);
+  if (existing) return existing;
   const url = import.meta.env.VITE_SUPABASE_URL as string;
   const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
   const client = createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
     global: {
-      headers: { "x-youth-token": token },
+      headers: { [header]: token },
       fetch: (input, init) => {
         const headers = new Headers(init?.headers);
         headers.delete("Authorization");
         headers.set("apikey", key);
-        headers.set("x-youth-token", token);
+        headers.set(header, token);
         return fetch(input, { ...init, headers });
       },
     },
   });
-  _youthClient = { token, client };
+  _tokenClients.set(cacheKey, client);
   return client;
 }
 
@@ -129,8 +132,10 @@ export function clientFor(channel: ChatChannel): SupabaseClient {
   if (channel === "youth") {
     const y = getYouthIdentity();
     if (!y) throw new Error("Youth access required");
-    return youthClient(y.token);
+    return tokenClient("x-youth-token", y.token);
   }
+  const c = getCongregationIdentity();
+  if (c) return tokenClient("x-congregation-token", c.sessionId);
   return supabase as unknown as SupabaseClient;
 }
 
@@ -262,9 +267,10 @@ export async function uploadChatImage(channel: ChatChannel, file: File): Promise
   return path;
 }
 
-export async function signChatMedia(paths: string[]): Promise<Record<string, string>> {
+export async function signChatMedia(channel: ChatChannel, paths: string[]): Promise<Record<string, string>> {
   if (!paths.length) return {};
-  const { data } = await supabase.storage.from("chat-media").createSignedUrls(paths, 60 * 60 * 6);
+  const db = clientFor(channel);
+  const { data } = await db.storage.from("chat-media").createSignedUrls(paths, 60 * 60 * 6);
   const out: Record<string, string> = {};
   for (const r of data ?? []) if (r.path && r.signedUrl) out[r.path] = r.signedUrl;
   return out;
