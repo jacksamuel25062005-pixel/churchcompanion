@@ -499,6 +499,71 @@ export type Database = {
         }
         Relationships: []
       }
+      congregation_chat_messages: {
+        Row: {
+          created_at: string
+          edited_at: string | null
+          id: string
+          is_edited: boolean
+          message_content: string
+          phone_number: string
+          sender_name: string
+        }
+        Insert: {
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          is_edited?: boolean
+          message_content: string
+          phone_number: string
+          sender_name: string
+        }
+        Update: {
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          is_edited?: boolean
+          message_content?: string
+          phone_number?: string
+          sender_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "congregation_chat_messages_phone_number_fkey"
+            columns: ["phone_number"]
+            isOneToOne: false
+            referencedRelation: "congregation_chat_users"
+            referencedColumns: ["phone_number"]
+          },
+        ]
+      }
+      congregation_chat_users: {
+        Row: {
+          is_online: boolean
+          joined_at: string
+          last_seen: string
+          name: string
+          phone_number: string
+          session_id: string
+        }
+        Insert: {
+          is_online?: boolean
+          joined_at?: string
+          last_seen?: string
+          name: string
+          phone_number: string
+          session_id?: string
+        }
+        Update: {
+          is_online?: boolean
+          joined_at?: string
+          last_seen?: string
+          name?: string
+          phone_number?: string
+          session_id?: string
+        }
+        Relationships: []
+      }
       congregation_profiles: {
         Row: {
           created_at: string
@@ -816,6 +881,134 @@ export type Database = {
         }
         Relationships: []
       }
+      youth_access_requests: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          name: string
+          phone_number: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          name: string
+          phone_number: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          name?: string
+          phone_number?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      youth_chat_messages: {
+        Row: {
+          created_at: string
+          edited_at: string | null
+          id: string
+          is_edited: boolean
+          message_content: string
+          phone_number: string
+          sender_name: string
+        }
+        Insert: {
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          is_edited?: boolean
+          message_content: string
+          phone_number: string
+          sender_name: string
+        }
+        Update: {
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          is_edited?: boolean
+          message_content?: string
+          phone_number?: string
+          sender_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "youth_chat_messages_phone_number_fkey"
+            columns: ["phone_number"]
+            isOneToOne: false
+            referencedRelation: "youth_chat_users"
+            referencedColumns: ["phone_number"]
+          },
+        ]
+      }
+      youth_chat_users: {
+        Row: {
+          is_online: boolean
+          joined_at: string
+          last_seen: string
+          name: string
+          phone_number: string
+          session_id: string
+        }
+        Insert: {
+          is_online?: boolean
+          joined_at?: string
+          last_seen?: string
+          name: string
+          phone_number: string
+          session_id?: string
+        }
+        Update: {
+          is_online?: boolean
+          joined_at?: string
+          last_seen?: string
+          name?: string
+          phone_number?: string
+          session_id?: string
+        }
+        Relationships: []
+      }
+      youth_phone_whitelist: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          id: string
+          name: string
+          phone_number: string
+          source: string
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          phone_number: string
+          source?: string
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          phone_number?: string
+          source?: string
+        }
+        Relationships: []
+      }
       youth_sessions: {
         Row: {
           created_at: string
@@ -854,17 +1047,38 @@ export type Database = {
     }
     Functions: {
       can_read_message: { Args: { _id: string }; Returns: boolean }
+      chat_heartbeat: { Args: { _chat: string }; Returns: undefined }
+      chat_send: { Args: { _chat: string; _content: string }; Returns: string }
+      chat_session_info: {
+        Args: { _chat: string; _session: string }
+        Returns: {
+          name: string
+          phone_number: string
+        }[]
+      }
+      congregation_join: {
+        Args: { _name: string; _phone: string }
+        Returns: {
+          name: string
+          phone_number: string
+          session_id: string
+        }[]
+      }
       congregation_register: {
         Args: { _email: string; _name: string; _phone: string }
         Returns: string
       }
       congregation_session_exists: { Args: { _sid: string }; Returns: boolean }
+      current_chat_session: { Args: never; Returns: string }
       current_congregation_ref: { Args: never; Returns: string }
       current_congregation_token: { Args: never; Returns: string }
       current_youth_id: { Args: never; Returns: string }
       current_youth_token: { Args: never; Returns: string }
+      has_congregation_session: { Args: never; Returns: boolean }
+      has_youth_session: { Args: never; Returns: boolean }
       is_chat_admin: { Args: { _uid: string }; Returns: boolean }
       is_super_admin: { Args: { _uid: string }; Returns: boolean }
+      normalize_phone: { Args: { _p: string }; Returns: string }
       search_content: {
         Args: { q: string }
         Returns: {
@@ -882,12 +1096,24 @@ export type Database = {
         Args: { p_article_id: string; p_client_id: string }
         Returns: undefined
       }
+      validate_chat_input: {
+        Args: { _name: string; _phone: string }
+        Returns: undefined
+      }
       youth_check_phone: {
         Args: { _phone: string }
         Returns: {
           name: string
           token: string
           youth_id: string
+        }[]
+      }
+      youth_join: {
+        Args: { _phone: string }
+        Returns: {
+          name: string
+          phone_number: string
+          session_id: string
         }[]
       }
       youth_refresh_session: {
@@ -897,6 +1123,22 @@ export type Database = {
           token: string
           youth_id: string
         }[]
+      }
+      youth_request_access: {
+        Args: { _message?: string; _name: string; _phone: string }
+        Returns: string
+      }
+      youth_request_status: {
+        Args: { _phone: string }
+        Returns: {
+          created_at: string
+          rejection_reason: string
+          status: string
+        }[]
+      }
+      youth_review_request: {
+        Args: { _approve: boolean; _id: string; _reason?: string }
+        Returns: undefined
       }
     }
     Enums: {
