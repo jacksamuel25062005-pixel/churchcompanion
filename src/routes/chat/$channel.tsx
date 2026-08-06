@@ -1,10 +1,13 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Loader2, Send, Users, WifiOff } from "lucide-react";
+import { Check, Loader2, Send, Users, WifiOff, X } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { BackButton, Card } from "../../components/ui-bits";
+import { MessageActionSheet } from "../../components/chat/MessageActionSheet";
 import { useT } from "../../lib/i18n";
+import { haptic } from "../../lib/haptics";
+import { useIsSuperAdmin } from "../../lib/use-admin";
 import { flushChatOutbox, pendingMessages, queueMessage } from "../../lib/chat-outbox";
 import {
   PAGE_SIZE,
@@ -13,6 +16,10 @@ import {
   joinRoom,
   joinYouth,
   listMessages,
+  listReactions,
+  editMessage,
+  deleteMessage,
+  toggleReaction,
   heartbeat,
   refreshSession,
   requestYouthAccess,
@@ -23,9 +30,11 @@ import {
   youthRequestStatus,
   type ChatChannel,
   type ChatMessage,
+  type ChatReaction,
   type OnlineUser,
 } from "../../lib/chat";
 import { cn } from "../../lib/utils";
+
 
 export const Route = createFileRoute("/chat/$channel")({
   component: ChatThread,
