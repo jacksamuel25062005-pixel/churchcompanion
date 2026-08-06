@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { Shield, UserPlus } from "lucide-react";
 import { firstNameFrom } from "@/lib/admin-name";
 import { PasswordField } from "@/components/security/PasswordField";
+import { submitAdminRequest } from "@/lib/admin-requests.functions";
+
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — Church Companion" }] }),
@@ -124,13 +126,23 @@ function LoginForm({ role }: { role: "super" | "admin" }) {
         if (error) throw error;
         const newUserId = signUpData.user?.id;
         if (newUserId) {
-          await supabase.from("admin_requests").insert({
-            user_id: newUserId,
-            reason: reason.trim() || "Requesting admin access",
-          });
+          if (signUpData.session) {
+            // We have a live session: insert directly under the user's own RLS policy.
+            const { error: reqErr } = await supabase.from("admin_requests").insert({
+              user_id: newUserId,
+              reason: reason.trim() || "Requesting admin access",
+            });
+            if (reqErr) throw reqErr;
+          } else {
+            // Email confirmation flow: no session yet, so file it server-side.
+            await submitAdminRequest({
+              data: { userId: newUserId, email: email.trim(), reason: reason.trim() || undefined },
+            });
+          }
         }
         await supabase.auth.signOut();
         toast.success("Request submitted. You can sign in after the Super Admin approves your account.");
+
         setMode("login");
         setReason("");
         setPassword("");
