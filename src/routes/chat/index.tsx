@@ -144,22 +144,8 @@ function ChatHome() {
         </header>
       )}
 
-      <AnimatePresence>
-        {menu && (
-          <motion.div
-            initial={{ opacity: 0, y: -6, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.98 }}
-            className="glass-strong mt-2 overflow-hidden rounded-2xl border border-border/40 p-1 text-sm"
-          >
-            {["Mark all read", "Notification settings", "Storage & data"].map((label) => (
-              <button key={label} onClick={() => setMenu(false)} className="tap-card block w-full rounded-xl px-3 py-2.5 text-left">
-                {label}
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+
+
 
       {/* ---------- Search ---------- */}
       <div className="mt-4 flex items-center gap-2 rounded-full bg-secondary/70 px-4 py-2.5">
