@@ -406,6 +406,9 @@ export interface RoomHandlers {
   onMessage?: (m: ChatMessage) => void;
   onTyping?: (p: TypingPayload) => void;
   onPresence?: (users: OnlineUser[]) => void;
+  onEdited?: (p: { id: string; content: string }) => void;
+  onDeleted?: (p: { id: string }) => void;
+  onReaction?: () => void;
 }
 
 /**
@@ -420,6 +423,15 @@ export function joinRoom(channel: ChatChannel, handlers: RoomHandlers) {
 
   ch.on("broadcast", { event: "new_message" }, ({ payload }) => {
     handlers.onMessage?.(payload as ChatMessage);
+  });
+  ch.on("broadcast", { event: "message_edited" }, ({ payload }) => {
+    handlers.onEdited?.(payload as { id: string; content: string });
+  });
+  ch.on("broadcast", { event: "message_deleted" }, ({ payload }) => {
+    handlers.onDeleted?.(payload as { id: string });
+  });
+  ch.on("broadcast", { event: "reaction" }, () => {
+    handlers.onReaction?.();
   });
   ch.on("broadcast", { event: "user_typing" }, ({ payload }) => {
     handlers.onTyping?.(payload as TypingPayload);
@@ -444,6 +456,15 @@ export function joinRoom(channel: ChatChannel, handlers: RoomHandlers) {
     broadcastMessage: (m: ChatMessage) => {
       void ch.send({ type: "broadcast", event: "new_message", payload: m });
     },
+    broadcastEdit: (id: string, content: string) => {
+      void ch.send({ type: "broadcast", event: "message_edited", payload: { id, content } });
+    },
+    broadcastDelete: (id: string) => {
+      void ch.send({ type: "broadcast", event: "message_deleted", payload: { id } });
+    },
+    broadcastReaction: () => {
+      void ch.send({ type: "broadcast", event: "reaction", payload: {} });
+    },
     sendTyping: (isTyping: boolean) => {
       if (!me) return;
       void ch.send({
@@ -455,6 +476,7 @@ export function joinRoom(channel: ChatChannel, handlers: RoomHandlers) {
     leave: () => { void supabase.removeChannel(ch); },
   };
 }
+
 
 // ---------------- Approved-youth roster sync ----------------
 //
