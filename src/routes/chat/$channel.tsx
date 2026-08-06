@@ -1,7 +1,7 @@
 import { createFileRoute, useParams, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Check, CheckCheck, ImagePlus, Send, Trash2, WifiOff } from "lucide-react";
+import { AlertTriangle, Check, CheckCheck, CornerUpLeft, ImagePlus, Send, Trash2, WifiOff, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../../components/AppShell";
@@ -198,8 +198,21 @@ function Thread({ channel, title, onLeave }: { channel: ChatChannel; title: stri
   const [lightbox, setLightbox] = useState<string | null>(null);
   const [queued, setQueued] = useState(0);
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
+  const [pad, setPad] = useState(96);
+  const composerRef = useRef<HTMLDivElement | null>(null);
   const roomRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const lastTypingRef = useRef(0);
+
+  // Keep the transcript clear of the floating composer at every size.
+  useEffect(() => {
+    const el = composerRef.current;
+    if (!el) return;
+    const measure = () => setPad(el.offsetHeight + 28);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const messagesQ = useQuery({
     queryKey: ["chat-messages", channel],
