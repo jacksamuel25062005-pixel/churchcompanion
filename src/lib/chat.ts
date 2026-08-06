@@ -191,12 +191,37 @@ export async function cacheMessages(channel: ChatChannel, messages: ChatMessage[
   try { await getDB().chat_cache.bulkPut(messages.map((m) => toRow(channel, m))); } catch { /* ignore */ }
 }
 
+/** Drop a single cached message so deletions don't resurrect from the offline cache. */
+export async function uncacheMessage(id: string) {
+  try { await getDB().chat_cache.delete(id); } catch { /* ignore */ }
+}
+
+/**
+ * Reconcile the offline cache with an authoritative newest page from the
+ * server: any cached row newer-or-equal to the oldest server row that the
+ * server no longer has was deleted elsewhere and must go.
+ */
+async function reconcileCache(channel: ChatChannel, serverRows: ChatMessage[]) {
+  try {
+    const db = getDB();
+    const rows = await db.chat_cache.where("channel").equals(channel).toArray();
+    if (!rows.length) return;
+    const keep = new Set(serverRows.map((m) => m.id));
+    const oldest = serverRows.length ? serverRows[0].created_at : null;
+    const stale = rows
+      .filter((r) => !keep.has(r.id) && (oldest === null || r.created_at >= oldest))
+      .map((r) => r.id);
+    if (stale.length) await db.chat_cache.bulkDelete(stale);
+  } catch { /* ignore */ }
+}
+
 export async function cachedMessages(channel: ChatChannel, limit = 100): Promise<ChatMessage[]> {
   try {
     const rows = await getDB().chat_cache.where("channel").equals(channel).sortBy("created_at");
     return rows.slice(-limit).map(fromRow);
   } catch { return []; }
 }
+
 
 // ---------------- Data access ----------------
 
