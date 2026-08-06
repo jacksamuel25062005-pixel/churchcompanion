@@ -496,9 +496,25 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
   const send = async () => {
     const body = text.trim();
     if (!body) return;
+
+    if (editing) {
+      const target = editing;
+      setText(""); setEditing(null); setError(null);
+      try {
+        await editMessage(channel, target.id, body);
+        setMessages((prev) => prev.map((m) => (m.id === target.id ? { ...m, content: body, is_edited: true } : m)));
+        room.current?.broadcastEdit(target.id, body);
+        haptic.success();
+      } catch (err) {
+        setError((err as Error).message || "Could not edit");
+      }
+      return;
+    }
+
     setText(""); setError(null);
     typingSent.current = false;
     room.current?.sendTyping(false);
+
     try {
       const msg = await sendMessage(channel, { content: body });
       merge([msg]);
