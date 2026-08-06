@@ -225,7 +225,7 @@ function Thread({ channel, title, onLeave }: { channel: ChatChannel; title: stri
   const mediaQ = useQuery({
     queryKey: ["chat-media", channel, mediaPaths.join("|")],
     enabled: mediaPaths.length > 0,
-    queryFn: () => signChatMedia(mediaPaths),
+    queryFn: () => signChatMedia(channel, mediaPaths),
   });
 
   const refresh = useCallback(() => {
