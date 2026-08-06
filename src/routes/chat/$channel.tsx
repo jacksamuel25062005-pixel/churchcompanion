@@ -19,6 +19,8 @@ import {
   listReactions,
   editMessage,
   deleteMessage,
+  uncacheMessage,
+
   toggleReaction,
   heartbeat,
   refreshSession,
