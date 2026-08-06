@@ -197,6 +197,7 @@ function Thread({ channel, title, onLeave }: { channel: ChatChannel; title: stri
   const [picker, setPicker] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<string | null>(null);
   const [queued, setQueued] = useState(0);
+  const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
   const roomRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const lastTypingRef = useRef(0);
 
