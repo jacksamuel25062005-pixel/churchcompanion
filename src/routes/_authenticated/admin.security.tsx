@@ -2,7 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../../components/AppShell";
-import { Card, BackButton } from "../../components/ui-bits";
+import { BackButton } from "../../components/ui-bits";
+import { SettingsGroup, SettingsRow, SettingsButtonRow, RowIcon } from "../../components/settings/SettingsUI";
 import { toast } from "sonner";
 import { ShieldCheck, LogOut } from "lucide-react";
 import { PasswordField, passwordScore, scoreLabel } from "@/components/security/PasswordField";
@@ -61,31 +62,37 @@ function AdminSecurity() {
 
   return (
     <AppShell title="Security" left={<BackButton to="/admin/dashboard" />} hideNav>
-      <div className="pt-4 space-y-4">
-        <Card className="p-5">
-          <div className="flex items-center gap-2 text-sm font-medium"><ShieldCheck className="h-4 w-4" /> Change password</div>
-          <p className="mt-1 text-xs text-muted-foreground">Signed in as {email}</p>
-          <form onSubmit={submit} className="mt-4 space-y-3">
+      <div className="space-y-6 pt-4">
+        <SettingsGroup label="Account">
+          <SettingsRow
+            icon={<RowIcon><ShieldCheck /></RowIcon>}
+            title="Change password"
+            subtitle={email ? `Signed in as ${email}` : "Signed in"}
+          />
+          <form onSubmit={submit} className="space-y-3 px-4 pb-5 pt-1">
             <PasswordField label="Current password" value={current} onChange={setCurrent} autoComplete="current-password" showMeter={false} />
             <PasswordField label="New password" value={next} onChange={setNext} autoComplete="new-password" />
             <PasswordField label="Confirm new password" value={confirm} onChange={setConfirm} autoComplete="new-password" showMeter={false} />
-            <p className="text-[11px] text-muted-foreground">Strength: {scoreLabel(score)} · use 12+ characters with a mix of cases, numbers and symbols.</p>
-            <button disabled={saving} className="tap-card focus-ring w-full rounded-xl brand-bg py-2.5 text-sm font-medium disabled:opacity-50">
+            <p className="text-[11px] leading-relaxed text-muted-foreground">
+              Strength: {scoreLabel(score)} · use 12+ characters with a mix of cases, numbers and symbols.
+            </p>
+            <button
+              disabled={saving}
+              className="tap-card focus-ring min-h-11 w-full rounded-full brand-bg text-[14px] font-semibold elev-1 disabled:opacity-50"
+            >
               {saving ? "Saving…" : "Update password"}
             </button>
           </form>
-        </Card>
+        </SettingsGroup>
 
-        <Card className="p-5">
-          <p className="text-sm font-medium">Sessions</p>
-          <p className="mt-1 text-xs text-muted-foreground">Lost a device? Sign out of every device where this account is signed in.</p>
-          <button
+        <SettingsGroup label="Sessions" hint="Lost a device? Sign out of every device where this account is signed in.">
+          <SettingsButtonRow
             onClick={signOutEverywhere}
-            className="tap-card focus-ring mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl glass-chip py-2.5 text-sm font-medium"
-          >
-            <LogOut className="h-4 w-4" /> Sign out everywhere
-          </button>
-        </Card>
+            icon={<RowIcon tone="danger"><LogOut /></RowIcon>}
+            title="Sign out everywhere"
+            subtitle="Ends every active session for this account"
+          />
+        </SettingsGroup>
       </div>
     </AppShell>
   );
