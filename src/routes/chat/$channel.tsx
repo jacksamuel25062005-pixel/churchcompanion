@@ -415,10 +415,15 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
         }
       },
       onPresence: setOnline,
+      onEdited: ({ id, content }) =>
+        setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, content, is_edited: true } : m))),
+      onDeleted: ({ id }) => setMessages((prev) => prev.filter((m) => m.id !== id)),
+      onReaction: () => { void refreshReactions(); },
     });
     room.current = r;
     return () => { r.leave(); room.current = null; };
-  }, [channel, me?.ref, merge, scrollToEnd]);
+  }, [channel, me?.ref, merge, scrollToEnd, refreshReactions]);
+
 
   // Presence heartbeat
   useEffect(() => {
