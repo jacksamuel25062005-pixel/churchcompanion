@@ -139,7 +139,6 @@ function RootComponent() {
     initOneSignal();
     initOffline();
     initHighRefreshRate();
-    initViewTransitions(router);
     // Request persistent storage so cached data survives OS eviction.
     if (typeof navigator !== "undefined" && navigator.storage?.persist) {
       navigator.storage.persisted().then((already) => {
