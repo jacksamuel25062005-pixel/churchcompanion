@@ -68,97 +68,108 @@ function SettingsPage() {
         </SettingsGroup>
 
         <SettingsGroup label="Appearance">
-          <SettingsRow
-            icon={<RowIcon><Type /></RowIcon>}
-            title={t("settings.font_size")}
-            subtitle="Reading size across books and songs"
-          />
-          <div className="px-4 pb-4">
-            <Segmented<FontSize>
-              ariaLabel={t("settings.font_size")}
-              value={s.fontSize}
-              onChange={s.setFontSize}
-              options={(["s", "m", "l", "xl"] as FontSize[]).map((sz) => ({ value: sz, label: t(`fs.${sz}`) }))}
+          <div>
+            <SettingsRow
+              icon={<RowIcon><Type /></RowIcon>}
+              title={t("settings.font_size")}
+              subtitle="Reading size across books and songs"
             />
+            <div className="px-4 pb-4">
+              <Segmented<FontSize>
+                ariaLabel={t("settings.font_size")}
+                value={s.fontSize}
+                onChange={s.setFontSize}
+                options={(["s", "m", "l", "xl"] as FontSize[]).map((sz) => ({ value: sz, label: t(`fs.${sz}`) }))}
+              />
+            </div>
           </div>
 
-          <SettingsRow
-            icon={<RowIcon><SunMoon /></RowIcon>}
-            title={t("settings.theme")}
-            subtitle="Light, dark, or follow the device"
-          />
-          <div className="px-4 pb-4">
-            <Segmented<ThemeMode>
-              ariaLabel={t("settings.theme")}
-              value={s.theme}
-              onChange={s.setTheme}
-              options={(["light", "dark", "system"] as ThemeMode[]).map((m) => ({ value: m, label: t(`settings.${m}`) }))}
+          <div>
+            <SettingsRow
+              icon={<RowIcon><SunMoon /></RowIcon>}
+              title={t("settings.theme")}
+              subtitle="Light, dark, or follow the device"
             />
+            <div className="px-4 pb-4">
+              <Segmented<ThemeMode>
+                ariaLabel={t("settings.theme")}
+                value={s.theme}
+                onChange={s.setTheme}
+                options={(["light", "dark", "system"] as ThemeMode[]).map((m) => ({ value: m, label: t(`settings.${m}`) }))}
+              />
+            </div>
           </div>
 
-          <SettingsRow
-            icon={<RowIcon><Palette /></RowIcon>}
-            title={t("settings.accent")}
-            subtitle="Highlight colour for buttons and tabs"
-          />
-          <div className="flex flex-wrap gap-3 px-4 pb-4">
-            {ACCENT_PRESETS.map((a) => {
-              const active = s.accent === a.value;
-              return (
-                <button
-                  key={a.id}
-                  aria-label={a.name}
-                  aria-pressed={active}
-                  onClick={() => s.setAccent(a.value)}
-                  className={`focus-ring relative grid h-10 w-10 place-items-center rounded-full transition-transform duration-200 active:scale-90 ${active ? "scale-105" : ""}`}
-                  style={{
-                    backgroundColor: a.value,
-                    boxShadow: active
-                      ? `0 0 0 2px var(--background), 0 0 0 4px ${a.value}, var(--elev-1)`
-                      : "inset 0 0 0 1px color-mix(in oklab, black 12%, transparent)",
-                  }}
-                >
-                  {active && <CheckCircle2 className="h-4 w-4 text-white drop-shadow" />}
-                </button>
-              );
-            })}
+          <div>
+            <SettingsRow
+              icon={<RowIcon><Palette /></RowIcon>}
+              title={t("settings.accent")}
+              subtitle="Highlight colour for buttons and tabs"
+            />
+            <div className="flex flex-wrap gap-3.5 px-5 pb-5 pt-0.5">
+              {ACCENT_PRESETS.map((a) => {
+                const active = s.accent === a.value;
+                return (
+                  <button
+                    key={a.id}
+                    aria-label={a.name}
+                    aria-pressed={active}
+                    onClick={() => s.setAccent(a.value)}
+                    className={`focus-ring relative grid h-9 w-9 place-items-center rounded-full transition-transform duration-200 active:scale-90 ${active ? "scale-105" : ""}`}
+                    style={{
+                      backgroundColor: a.value,
+                      boxShadow: active
+                        ? `0 0 0 2px var(--background), 0 0 0 4px ${a.value}`
+                        : "inset 0 0 0 1px color-mix(in oklab, black 12%, transparent)",
+                    }}
+                  >
+                    {active && <CheckCircle2 className="h-4 w-4 text-white drop-shadow" />}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          <SettingsRow
-            icon={<RowIcon><Sparkles /></RowIcon>}
-            title="Dock glass blur"
-            subtitle="Lower is solid, higher is more frosted"
-            trailing={<RowValue>{Math.round(s.dockBlur)}px</RowValue>}
-          />
-          <div className="px-4 pb-5">
-            <Slider
-              min={0}
-              max={60}
-              step={1}
-              value={[s.dockBlur]}
-              onValueChange={(v) => s.setDockBlur(v[0] ?? 45)}
-              aria-label="Home dock blur strength"
+          <div>
+            <SettingsRow
+              icon={<RowIcon><Sparkles /></RowIcon>}
+              title="Dock glass blur"
+              subtitle="Lower is solid, higher is more frosted"
+              trailing={<RowValue>{Math.round(s.dockBlur)}px</RowValue>}
             />
+            <div className="px-5 pb-5">
+              <Slider
+                min={0}
+                max={60}
+                step={1}
+                value={[s.dockBlur]}
+                onValueChange={(v) => s.setDockBlur(v[0] ?? 45)}
+                aria-label="Home dock blur strength"
+              />
+            </div>
           </div>
         </SettingsGroup>
 
         <SettingsGroup label={t("settings.language")}>
-          <SettingsRow
-            icon={<RowIcon><Languages /></RowIcon>}
-            title={t("settings.language")}
-            subtitle="App text and labels"
-          />
-          <div className="px-4 pb-4">
-            <Segmented<Language>
-              ariaLabel={t("settings.language")}
-              value={s.language}
-              onChange={s.setLanguage}
-              options={[
-                { value: "en", label: "English" },
-                { value: "hi", label: "हिन्दी" },
-              ]}
+          <div>
+            <SettingsRow
+              icon={<RowIcon><Languages /></RowIcon>}
+              title={t("settings.language")}
+              subtitle="App text and labels"
             />
+            <div className="px-4 pb-4">
+              <Segmented<Language>
+                ariaLabel={t("settings.language")}
+                value={s.language}
+                onChange={s.setLanguage}
+                options={[
+                  { value: "en", label: "English" },
+                  { value: "hi", label: "हिन्दी" },
+                ]}
+              />
+            </div>
           </div>
+
         </SettingsGroup>
 
         <NotificationsSection />
