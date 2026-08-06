@@ -1,7 +1,7 @@
 import { createFileRoute, useParams, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Check, CheckCheck, ImagePlus, Send, Trash2, WifiOff } from "lucide-react";
+import { AlertTriangle, Check, CheckCheck, CornerUpLeft, ImagePlus, Send, Trash2, WifiOff, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "../../components/AppShell";
@@ -197,8 +197,22 @@ function Thread({ channel, title, onLeave }: { channel: ChatChannel; title: stri
   const [picker, setPicker] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<string | null>(null);
   const [queued, setQueued] = useState(0);
+  const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
+  const [pad, setPad] = useState(96);
+  const composerRef = useRef<HTMLDivElement | null>(null);
   const roomRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const lastTypingRef = useRef(0);
+
+  // Keep the transcript clear of the floating composer at every size.
+  useEffect(() => {
+    const el = composerRef.current;
+    if (!el) return;
+    const measure = () => setPad(el.offsetHeight + 28);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const messagesQ = useQuery({
     queryKey: ["chat-messages", channel],
@@ -207,6 +221,7 @@ function Thread({ channel, title, onLeave }: { channel: ChatChannel; title: stri
   });
   const messages = useMemo(() => messagesQ.data ?? [], [messagesQ.data]);
   const ids = useMemo(() => messages.map((m) => m.id), [messages]);
+  const byId = useMemo(() => new Map(messages.map((m) => [m.id, m])), [messages]);
 
   const reactionsQ = useQuery({
     queryKey: ["chat-reactions", channel, ids.length, ids[ids.length - 1] ?? ""],
@@ -295,9 +310,11 @@ function Thread({ channel, title, onLeave }: { channel: ChatChannel; title: stri
   const send = async (media_url?: string) => {
     const content = draft.trim();
     if (!content && !media_url) return;
+    const reply_to = replyTo?.id ?? null;
     setDraft("");
+    setReplyTo(null);
     try {
-      await sendMessage(channel, { content: content || null, media_url: media_url ?? null });
+      await sendMessage(channel, { content: content || null, media_url: media_url ?? null, reply_to });
       void roomRef.current?.send({ type: "broadcast", event: "new-message", payload: {} });
       refresh();
     } catch (e) {
@@ -353,35 +370,51 @@ function Thread({ channel, title, onLeave }: { channel: ChatChannel; title: stri
         <p className="mt-2 text-[11px] text-muted-foreground font-hi">{t("chat.queued")} ({queued})</p>
       )}
 
-      <div className="space-y-1.5 pb-32 pt-3">
+      <div className="space-y-1 pt-3" style={{ paddingBottom: pad }}>
         {messagesQ.isLoading ? (
           <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
         ) : messages.length === 0 ? (
           <p className="py-10 text-center text-sm text-muted-foreground font-hi">{t("chat.no_messages")}</p>
         ) : (
-          messages.map((m, i) => {
-            const mine = m.sender_ref === me.ref;
-            const prev = messages[i - 1];
-            const startsRun = !prev || prev.sender_ref !== m.sender_ref;
-            return (
-              <MessageBubble
-                key={m.id}
-                message={m}
-                mine={mine}
-                showName={startsRun && !mine}
-                reactions={reactionsFor(m.id)}
-                readBy={receiptsQ.data?.[m.id] ?? 0}
-                mediaUrl={m.media_url ? mediaQ.data?.[m.media_url] : undefined}
-                open={picker === m.id}
-                isAdmin={isAdmin}
-                onOpen={() => setPicker(picker === m.id ? null : m.id)}
-                onReact={(e) => react(m.id, e)}
-                onReport={() => report(m.id)}
-                onDelete={() => adminDelete(m.id)}
-                onExpand={(url) => setLightbox(url)}
-              />
-            );
-          })
+          <AnimatePresence initial={false}>
+            {messages.map((m, i) => {
+              const mine = m.sender_ref === me.ref;
+              const prev = messages[i - 1];
+              const next = messages[i + 1];
+              const startsRun = !prev || prev.sender_ref !== m.sender_ref;
+              const endsRun = !next || next.sender_ref !== m.sender_ref;
+              const showDay = !prev || new Date(prev.created_at).toDateString() !== new Date(m.created_at).toDateString();
+              return (
+                <div key={m.id}>
+                  {showDay && (
+                    <div className="flex justify-center py-3">
+                      <span className="glass rounded-full px-3 py-1 text-[11px] text-muted-foreground">
+                        {dayLabel(m.created_at)}
+                      </span>
+                    </div>
+                  )}
+                  <MessageBubble
+                    message={m}
+                    mine={mine}
+                    showName={startsRun && !mine}
+                    endsRun={endsRun}
+                    replyTarget={m.reply_to ? byId.get(m.reply_to) ?? null : null}
+                    reactions={reactionsFor(m.id)}
+                    readBy={receiptsQ.data?.[m.id] ?? 0}
+                    mediaUrl={m.media_url ? mediaQ.data?.[m.media_url] : undefined}
+                    open={picker === m.id}
+                    isAdmin={isAdmin}
+                    onOpen={() => setPicker(picker === m.id ? null : m.id)}
+                    onReply={() => { setPicker(null); setReplyTo(m); }}
+                    onReact={(e) => react(m.id, e)}
+                    onReport={() => report(m.id)}
+                    onDelete={() => adminDelete(m.id)}
+                    onExpand={(url) => setLightbox(url)}
+                  />
+                </div>
+              );
+            })}
+          </AnimatePresence>
         )}
 
         <AnimatePresence>
@@ -409,6 +442,7 @@ function Thread({ channel, title, onLeave }: { channel: ChatChannel; title: stri
 
       {/* Composer */}
       <div
+        ref={composerRef}
         className="fixed inset-x-0 z-30 flex justify-center"
         style={{
           bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)",
@@ -416,33 +450,60 @@ function Thread({ channel, title, onLeave }: { channel: ChatChannel; title: stri
           paddingRight: "calc(var(--app-gutter) + var(--sar))",
         }}
       >
-        <div className="dock-pill flex w-full max-w-[min(100%,var(--app-max-w))] items-center gap-2 rounded-full px-2 py-1.5">
-          <label className="grid h-10 w-10 shrink-0 cursor-pointer place-items-center rounded-full text-muted-foreground active:scale-95 transition">
-            <ImagePlus className="h-5 w-5" />
-            <span className="sr-only">{t("chat.attach")}</span>
+        <div className="w-full max-w-[min(100%,var(--app-max-w))]">
+          <AnimatePresence>
+            {replyTo && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: "auto" }}
+                exit={{ opacity: 0, y: 10, height: 0 }}
+                transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                className="overflow-hidden"
+              >
+                <div className="glass-strong mb-1.5 flex items-start gap-2 rounded-2xl border-l-2 px-3 py-2" style={{ borderColor: "var(--brand)" }}>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[11px] font-semibold brand-text font-hi">{replyTo.sender_name}</p>
+                    <p className="truncate text-xs text-muted-foreground font-hi">
+                      {replyTo.content || (replyTo.media_url ? "Photo" : "")}
+                    </p>
+                  </div>
+                  <button onClick={() => setReplyTo(null)} aria-label="Cancel reply" className="shrink-0 text-muted-foreground">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="dock-pill flex items-center gap-2 rounded-full px-2 py-1.5">
+            <label className="grid h-10 w-10 shrink-0 cursor-pointer place-items-center rounded-full text-muted-foreground active:scale-95 transition">
+              <ImagePlus className="h-5 w-5" />
+              <span className="sr-only">{t("chat.attach")}</span>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) void attach(f); e.currentTarget.value = ""; }}
+              />
+            </label>
             <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) void attach(f); e.currentTarget.value = ""; }}
+              value={draft}
+              onChange={(e) => onType(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); } }}
+              placeholder={t("chat.message_ph")}
+              className="min-w-0 flex-1 bg-transparent px-1 text-sm outline-none font-hi"
             />
-          </label>
-          <input
-            value={draft}
-            onChange={(e) => onType(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); } }}
-            placeholder={t("chat.message_ph")}
-            className="min-w-0 flex-1 bg-transparent px-1 text-sm outline-none font-hi"
-          />
-          <button
-            onClick={() => void send()}
-            aria-label={t("chat.send")}
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--brand)] text-white active:scale-95 transition"
-          >
-            <Send className="h-4 w-4" />
-          </button>
+            <button
+              onClick={() => void send()}
+              aria-label={t("chat.send")}
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--brand)] text-white active:scale-95 transition"
+            >
+              <Send className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
+
 
       {lightbox && (
         <ImageLightbox images={[lightbox]} index={0} onClose={() => setLightbox(null)} />
@@ -452,19 +513,31 @@ function Thread({ channel, title, onLeave }: { channel: ChatChannel; title: stri
   );
 }
 
+function dayLabel(iso: string) {
+  const d = new Date(iso);
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) return "Today";
+  const y = new Date(now.getTime() - 86400000);
+  if (d.toDateString() === y.toDateString()) return "Yesterday";
+  return d.toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" });
+}
+
 function MessageBubble({
-  message, mine, showName, reactions, readBy, mediaUrl, open, isAdmin,
-  onOpen, onReact, onReport, onDelete, onExpand,
+  message, mine, showName, endsRun, replyTarget, reactions, readBy, mediaUrl, open, isAdmin,
+  onOpen, onReply, onReact, onReport, onDelete, onExpand,
 }: {
   message: ChatMessage;
   mine: boolean;
   showName: boolean;
+  endsRun: boolean;
+  replyTarget: ChatMessage | null;
   reactions: { emoji: string }[];
   readBy: number;
   mediaUrl?: string;
   open: boolean;
   isAdmin: boolean;
   onOpen: () => void;
+  onReply: () => void;
   onReact: (emoji: string) => void;
   onReport: () => void;
   onDelete: () => void;
@@ -472,11 +545,8 @@ function MessageBubble({
 }) {
   const { t } = useT();
   const pressTimer = useRef<number | null>(null);
-  const [showTime, setShowTime] = useState(false);
 
-  const startPress = () => {
-    pressTimer.current = window.setTimeout(() => { onOpen(); setShowTime(true); }, 420);
-  };
+  const startPress = () => { pressTimer.current = window.setTimeout(onOpen, 420); };
   const endPress = () => { if (pressTimer.current) window.clearTimeout(pressTimer.current); };
 
   const grouped = reactions.reduce<Record<string, number>>((acc, r) => {
@@ -484,39 +554,80 @@ function MessageBubble({
     return acc;
   }, {});
 
+  const time = new Date(message.created_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
   return (
-    <div className={`flex flex-col ${mine ? "items-end" : "items-start"}`}>
-      {showName && <span className="px-2 pb-0.5 text-[11px] font-medium text-muted-foreground font-hi">{message.sender_name}</span>}
+    <motion.div
+      layout="position"
+      initial={{ opacity: 0, y: 12, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.97 }}
+      transition={{ type: "spring", stiffness: 460, damping: 34, mass: 0.7 }}
+      className={`flex flex-col ${mine ? "items-end" : "items-start"} ${endsRun ? "mb-2" : "mb-0.5"}`}
+    >
+      {showName && (
+        <span className="px-3 pb-0.5 text-[11px] font-semibold brand-text font-hi">{message.sender_name}</span>
+      )}
+
       <motion.div
-        initial={{ opacity: 0, y: 8, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ type: "spring", stiffness: 420, damping: 32 }}
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.2}
+        dragSnapToOrigin
+        onDragEnd={(_, info) => { if (Math.abs(info.offset.x) > 56) onReply(); }}
         onPointerDown={startPress}
         onPointerUp={endPress}
+        onPointerCancel={endPress}
         onPointerLeave={endPress}
         onContextMenu={(e) => { e.preventDefault(); onOpen(); }}
-        className={`max-w-[82%] rounded-2xl px-3 py-2 text-sm ${
+        className={`relative max-w-[82%] touch-pan-y px-3 py-2 text-sm shadow-[0_2px_10px_rgba(0,0,0,0.18)] ${
           mine
-            ? "bg-[var(--brand)] text-white rounded-br-md"
-            : "glass rounded-bl-md"
+            ? `bg-[var(--brand)] text-white rounded-2xl ${endsRun ? "rounded-br-md" : ""}`
+            : `glass rounded-2xl ${endsRun ? "rounded-bl-md" : ""}`
         }`}
       >
+        {replyTarget && (
+          <div
+            className={`mb-1.5 rounded-xl border-l-2 px-2 py-1 ${mine ? "bg-white/15 border-white/60" : "bg-foreground/5"}`}
+            style={mine ? undefined : { borderColor: "var(--brand)" }}
+          >
+            <p className={`truncate text-[11px] font-semibold font-hi ${mine ? "text-white/90" : "brand-text"}`}>
+              {replyTarget.sender_name}
+            </p>
+            <p className={`truncate text-[11px] font-hi ${mine ? "text-white/75" : "text-muted-foreground"}`}>
+              {replyTarget.content || (replyTarget.media_url ? "Photo" : "")}
+            </p>
+          </div>
+        )}
+
         {mediaUrl && (
           <button type="button" onClick={() => onExpand(mediaUrl)} className="mb-1 block overflow-hidden rounded-xl">
             <img src={mediaUrl} alt="" className="max-h-64 w-full object-cover" loading="lazy" />
           </button>
         )}
+
         {message.content && <p className="whitespace-pre-wrap break-words font-hi">{message.content}</p>}
+
         <div className={`mt-0.5 flex items-center justify-end gap-1 text-[10px] ${mine ? "text-white/70" : "text-muted-foreground"}`}>
-          {showTime && <span>{new Date(message.created_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</span>}
-          {mine && (readBy > 0 ? <CheckCheck className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />)}
+          <span className="tabular-nums">{time}</span>
+          {mine && (readBy > 0
+            ? <span className="flex items-center gap-0.5"><CheckCheck className="h-3.5 w-3.5" />{readBy > 1 ? readBy : ""}</span>
+            : <Check className="h-3.5 w-3.5" />)}
         </div>
       </motion.div>
 
       {Object.keys(grouped).length > 0 && (
-        <div className="-mt-1 flex gap-1 px-1">
+        <div className="-mt-1.5 flex gap-1 px-2">
           {Object.entries(grouped).map(([emoji, count]) => (
-            <span key={emoji} className="glass rounded-full px-1.5 py-0.5 text-[11px]">{emoji} {count}</span>
+            <motion.span
+              key={emoji}
+              initial={{ scale: 0.6, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 500, damping: 26 }}
+              className="glass rounded-full px-1.5 py-0.5 text-[11px]"
+            >
+              {emoji} {count}
+            </motion.span>
           ))}
         </div>
       )}
@@ -527,11 +638,14 @@ function MessageBubble({
             initial={{ opacity: 0, scale: 0.9, y: -4 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="glass mt-1 flex items-center gap-1 rounded-full px-2 py-1"
+            className="glass-strong mt-1 flex items-center gap-1 rounded-full px-2 py-1"
           >
             {REACTION_EMOJIS.map((e) => (
               <button key={e} onClick={() => onReact(e)} className="px-1 text-base active:scale-90 transition">{e}</button>
             ))}
+            <button onClick={onReply} aria-label="Reply" className="px-1 text-muted-foreground">
+              <CornerUpLeft className="h-4 w-4" />
+            </button>
             <button onClick={onReport} aria-label={t("chat.report")} className="px-1 text-muted-foreground">
               <AlertTriangle className="h-4 w-4" />
             </button>
@@ -543,6 +657,6 @@ function MessageBubble({
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }

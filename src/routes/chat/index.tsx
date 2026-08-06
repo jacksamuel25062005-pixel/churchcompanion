@@ -1,10 +1,10 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
-  Archive, Bell, BellOff, Camera, Check, CheckCheck, FileText, Image as ImageIcon,
-  Lock, MessagesSquare, Mic, MoreVertical, Pin, PinOff, Search, Sparkles, Star, Users, X,
+  Archive, Bell, BellOff, Check, CheckCheck, FileText, Image as ImageIcon,
+  Lock, MessagesSquare, Mic, Pin, PinOff, Search, Star, Users, X,
 } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { BackButton } from "../../components/ui-bits";
@@ -67,13 +67,11 @@ function previewOf(m: ChatMessage | null | undefined) {
 
 function ChatHome() {
   const { t } = useT();
-  const navigate = useNavigate();
   const reduce = useReducedMotion();
 
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FilterKey>("all");
   const [selected, setSelected] = useState<ChatChannel[]>([]);
-  const [menu, setMenu] = useState(false);
   const [prefsTick, setPrefsTick] = useState(0);
 
   useEffect(() => onPrefsChange(() => setPrefsTick((n) => n + 1)), []);
@@ -129,17 +127,6 @@ function ChatHome() {
               <p className="truncate text-[11px] text-muted-foreground">Church Companion messaging</p>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-1">
-            <IconButton label="Camera" onClick={() => navigate({ to: "/chat/$channel", params: { channel: "congregation" } })}>
-              <Camera className="h-[18px] w-[18px]" />
-            </IconButton>
-            <IconButton label="AI assistant" onClick={() => setMenu(false)}>
-              <Sparkles className="h-[18px] w-[18px]" />
-            </IconButton>
-            <IconButton label="More options" onClick={() => setMenu((m) => !m)}>
-              <MoreVertical className="h-[18px] w-[18px]" />
-            </IconButton>
-          </div>
         </header>
       ) : (
         <header className="flex items-center justify-between gap-2 pt-4">
@@ -155,22 +142,8 @@ function ChatHome() {
         </header>
       )}
 
-      <AnimatePresence>
-        {menu && (
-          <motion.div
-            initial={{ opacity: 0, y: -6, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.98 }}
-            className="glass-strong mt-2 overflow-hidden rounded-2xl border border-border/40 p-1 text-sm"
-          >
-            {["Mark all read", "Notification settings", "Storage & data"].map((label) => (
-              <button key={label} onClick={() => setMenu(false)} className="tap-card block w-full rounded-xl px-3 py-2.5 text-left">
-                {label}
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+
+
 
       {/* ---------- Search ---------- */}
       <div className="mt-4 flex items-center gap-2 rounded-full bg-secondary/70 px-4 py-2.5">

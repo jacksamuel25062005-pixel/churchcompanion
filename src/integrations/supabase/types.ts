@@ -362,6 +362,7 @@ export type Database = {
           deleted: boolean
           id: string
           media_url: string | null
+          reply_to: string | null
           sender_name: string
           sender_ref: string
         }
@@ -372,6 +373,7 @@ export type Database = {
           deleted?: boolean
           id?: string
           media_url?: string | null
+          reply_to?: string | null
           sender_name: string
           sender_ref: string
         }
@@ -382,10 +384,19 @@ export type Database = {
           deleted?: boolean
           id?: string
           media_url?: string | null
+          reply_to?: string | null
           sender_name?: string
           sender_ref?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_reply_to_fkey"
+            columns: ["reply_to"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       chat_mutes: {
         Row: {

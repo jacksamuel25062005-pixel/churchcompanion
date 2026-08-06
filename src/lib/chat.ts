@@ -18,6 +18,7 @@ export interface ChatMessage {
   media_url: string | null;
   created_at: string;
   deleted: boolean;
+  reply_to?: string | null;
 }
 
 export interface Reaction {
@@ -179,7 +180,7 @@ export async function lastMessage(channel: ChatChannel): Promise<ChatMessage | n
 
 export async function sendMessage(
   channel: ChatChannel,
-  payload: { content?: string | null; media_url?: string | null },
+  payload: { content?: string | null; media_url?: string | null; reply_to?: string | null },
 ): Promise<ChatMessage> {
   const sender = senderFor(channel);
   if (!sender) throw new Error("No identity");
@@ -192,6 +193,7 @@ export async function sendMessage(
       sender_ref: sender.ref,
       content: payload.content ?? null,
       media_url: payload.media_url ?? null,
+      reply_to: payload.reply_to ?? null,
     })
     .select("*")
     .single();
