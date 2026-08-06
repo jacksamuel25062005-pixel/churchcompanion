@@ -166,8 +166,8 @@ export function Segmented<T extends string>({
         aria-hidden
         className="pointer-events-none absolute inset-y-1 left-1 -z-10 rounded-full brand-bg elev-1 will-change-transform"
         style={{
-          width: `calc(${pct}% - 0.5rem + ${pct / 100} * 0.5rem)`,
-          transform: `translate3d(calc(${idx} * (100% + ${(0.5 / options.length).toFixed(4)}rem) + ${idx} * 0px), 0, 0)`,
+          width: `calc((100% - 0.5rem) / ${n})`,
+          transform: `translate3d(calc(${idx} * 100%), 0, 0)`,
           transition: "transform 320ms cubic-bezier(0.22, 1, 0.36, 1)",
         }}
       />
