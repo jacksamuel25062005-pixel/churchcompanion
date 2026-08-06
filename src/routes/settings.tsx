@@ -310,6 +310,7 @@ function OfflineSection() {
       label="Offline access"
       hint="Every book, song and today's set is stored on this device so the app opens without internet."
     >
+      <div>
       <SettingsRow
         icon={<RowIcon><HardDrive /></RowIcon>}
         title="Whole app offline"
