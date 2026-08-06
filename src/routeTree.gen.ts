@@ -33,6 +33,7 @@ import { Route as AuthenticatedAdminRequestsRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminSecurityRouteImport } from './routes/_authenticated/admin.security'
 import { Route as AuthenticatedAdminTodayRouteImport } from './routes/_authenticated/admin.today'
 import { Route as AuthenticatedAdminUploadRouteImport } from './routes/_authenticated/admin.upload'
+import { Route as AuthenticatedAdminYouthRouteImport } from './routes/_authenticated/admin.youth'
 import { Route as AboutChurchIndexRouteImport } from './routes/about/church.index'
 import { Route as AboutChurchIdRouteImport } from './routes/about/church.$id'
 import { Route as AboutTimelineIndexRouteImport } from './routes/about/timeline.index'
@@ -169,6 +170,11 @@ const AuthenticatedAdminUploadRoute =
     path: '/admin/upload',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminYouthRoute = AuthenticatedAdminYouthRouteImport.update({
+  id: '/admin/youth',
+  path: '/admin/youth',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AboutChurchIndexRoute = AboutChurchIndexRouteImport.update({
   id: '/about/church/',
   path: '/about/church/',
@@ -234,6 +240,7 @@ export interface FileRoutesByFullPath {
   '/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/admin/today': typeof AuthenticatedAdminTodayRoute
   '/admin/upload': typeof AuthenticatedAdminUploadRoute
+  '/admin/youth': typeof AuthenticatedAdminYouthRoute
   '/about/church/$id': typeof AboutChurchIdRoute
   '/about/timeline/$id': typeof AboutTimelineIdRoute
   '/books/song-book/$id': typeof BooksSongBookIdRoute
@@ -267,6 +274,7 @@ export interface FileRoutesByTo {
   '/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/admin/today': typeof AuthenticatedAdminTodayRoute
   '/admin/upload': typeof AuthenticatedAdminUploadRoute
+  '/admin/youth': typeof AuthenticatedAdminYouthRoute
   '/about/church/$id': typeof AboutChurchIdRoute
   '/about/timeline/$id': typeof AboutTimelineIdRoute
   '/books/song-book/$id': typeof BooksSongBookIdRoute
@@ -302,6 +310,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/_authenticated/admin/today': typeof AuthenticatedAdminTodayRoute
   '/_authenticated/admin/upload': typeof AuthenticatedAdminUploadRoute
+  '/_authenticated/admin/youth': typeof AuthenticatedAdminYouthRoute
   '/about/church/$id': typeof AboutChurchIdRoute
   '/about/timeline/$id': typeof AboutTimelineIdRoute
   '/books/song-book/$id': typeof BooksSongBookIdRoute
@@ -337,6 +346,7 @@ export interface FileRouteTypes {
     | '/admin/security'
     | '/admin/today'
     | '/admin/upload'
+    | '/admin/youth'
     | '/about/church/$id'
     | '/about/timeline/$id'
     | '/books/song-book/$id'
@@ -370,6 +380,7 @@ export interface FileRouteTypes {
     | '/admin/security'
     | '/admin/today'
     | '/admin/upload'
+    | '/admin/youth'
     | '/about/church/$id'
     | '/about/timeline/$id'
     | '/books/song-book/$id'
@@ -404,6 +415,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/security'
     | '/_authenticated/admin/today'
     | '/_authenticated/admin/upload'
+    | '/_authenticated/admin/youth'
     | '/about/church/$id'
     | '/about/timeline/$id'
     | '/books/song-book/$id'
@@ -608,6 +620,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminUploadRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/youth': {
+      id: '/_authenticated/admin/youth'
+      path: '/admin/youth'
+      fullPath: '/admin/youth'
+      preLoaderRoute: typeof AuthenticatedAdminYouthRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/about/church/': {
       id: '/about/church/'
       path: '/about/church'
@@ -679,6 +698,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminSecurityRoute: typeof AuthenticatedAdminSecurityRoute
   AuthenticatedAdminTodayRoute: typeof AuthenticatedAdminTodayRoute
   AuthenticatedAdminUploadRoute: typeof AuthenticatedAdminUploadRoute
+  AuthenticatedAdminYouthRoute: typeof AuthenticatedAdminYouthRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -693,6 +713,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminSecurityRoute: AuthenticatedAdminSecurityRoute,
   AuthenticatedAdminTodayRoute: AuthenticatedAdminTodayRoute,
   AuthenticatedAdminUploadRoute: AuthenticatedAdminUploadRoute,
+  AuthenticatedAdminYouthRoute: AuthenticatedAdminYouthRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
