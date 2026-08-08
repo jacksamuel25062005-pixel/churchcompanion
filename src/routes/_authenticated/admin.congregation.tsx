@@ -118,7 +118,8 @@ function ManageCongregation() {
                 disabled={!isSuper}
                 onClick={() => { haptic.light(); setEditRow(m); }}
                 aria-label={`Edit ${m.name}`}
-                className="grid h-9 w-9 place-items-center rounded-full hover:bg-accent disabled:opacity-30"
+                data-icon-button
+                className="hit-target grid h-9 w-9 place-items-center rounded-full transition-colors duration-200 hover:bg-accent disabled:opacity-30"
               >
                 <Pencil className="h-4 w-4" />
               </motion.button>
@@ -127,7 +128,8 @@ function ManageCongregation() {
                 disabled={!isSuper}
                 onClick={() => { haptic.warning(); setRemoveRow(m); }}
                 aria-label={`Remove ${m.name}`}
-                className="grid h-9 w-9 place-items-center rounded-full text-destructive hover:bg-destructive/10 disabled:opacity-30"
+                data-icon-button
+                className="hit-target grid h-9 w-9 place-items-center rounded-full text-destructive transition-colors duration-200 hover:bg-destructive/10 disabled:opacity-30"
               >
                 <Trash2 className="h-4 w-4" />
               </motion.button>

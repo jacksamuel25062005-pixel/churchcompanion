@@ -789,9 +789,53 @@ html {
   .premium-card { padding: 24px 22px; }
 }
 
-/* Guarantee comfortable touch targets on every density */
+/* Guarantee comfortable touch targets on every density.
+   Inline chips (reaction pills, tag filters) opt out via data-compact and
+   instead get an invisible expanded hit area from .hit-target below. */
 @media (pointer: coarse) {
-  button, a[role="button"], [data-touch-target] {
+  button:not([data-compact]), a[role="button"], [data-touch-target] {
     min-height: 44px;
   }
+  button[data-icon-button]:not([data-compact]) { min-width: 44px; }
 }
+
+/* ─── Interaction base: pointer, focus and motion hygiene ─── */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+a[href],
+label:has(input[type="checkbox"]),
+label:has(input[type="radio"]),
+summary,
+select {
+  cursor: pointer;
+}
+button:disabled,
+[aria-disabled="true"] { cursor: not-allowed; }
+
+/* Never let a double-tap zoom fight a tap on controls */
+button, [role="button"], a[href], input, select, textarea, summary {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Visible keyboard focus everywhere, even where .focus-ring isn't applied */
+:where(button, [role="button"], a[href], input, select, textarea, summary,
+       [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+/* Expand an icon button's hit area to 44px without changing its visual size */
+@utility hit-target {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+  }
+}
+

@@ -172,8 +172,8 @@ function ChatHome() {
                 key={f.key}
                 onClick={() => setFilter(f.key)}
                 className={cn(
-                  "focus-ring shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors duration-200",
-                  active ? "brand-bg text-white" : "glass-chip text-muted-foreground",
+                  "focus-ring tap-card inline-flex min-h-10 shrink-0 items-center rounded-full px-4 py-2 text-xs font-medium transition-colors duration-200",
+                  active ? "brand-bg text-[var(--brand-foreground)]" : "glass-chip text-muted-foreground",
                 )}
                 aria-pressed={active}
               >

@@ -32,11 +32,13 @@ export function BackButton({ to = "/", label }: { to?: string; label?: string })
     <Link
       to={to}
       onClick={onClick}
-      className="-ml-2 inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium hover:bg-accent focus-visible:outline-none focus-visible:ring-2 brand-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      aria-label={typeof label === "string" && label ? `Back to ${label}` : "Go back"}
+      className="-ml-2 inline-flex min-h-11 items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium transition-colors duration-200 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 brand-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
     >
-      <ChevronLeft className="h-5 w-5" />
+      <ChevronLeft className="h-5 w-5" aria-hidden="true" />
       {label}
     </Link>
+
   );
 }
 

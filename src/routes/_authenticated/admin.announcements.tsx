@@ -271,14 +271,16 @@ function Row({ a, onEdit, onDelete }: { a: Announcement; onEdit: () => void; onD
       <button
         onClick={onEdit}
         aria-label="Edit"
-        className="grid h-9 w-9 place-items-center rounded-lg hover:bg-accent"
+        data-icon-button
+        className="hit-target grid h-9 w-9 place-items-center rounded-lg transition-colors duration-200 hover:bg-accent"
       >
         <Pencil className="h-4 w-4" />
       </button>
       <button
         onClick={onDelete}
         aria-label="Delete"
-        className="grid h-9 w-9 place-items-center rounded-lg text-destructive hover:bg-destructive/10"
+        data-icon-button
+        className="hit-target grid h-9 w-9 place-items-center rounded-lg text-destructive transition-colors duration-200 hover:bg-destructive/10"
       >
         <Trash2 className="h-4 w-4" />
       </button>

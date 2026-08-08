@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Image as ImageIcon } from "lucide-react";
+
 
 import { AppShell } from "../../components/AppShell";
 import { BackButton, Card } from "../../components/ui-bits";
@@ -79,7 +81,7 @@ function AdminChat() {
           {(reportsQ.data ?? []).map((r: any) => (
             <div key={r.id} className="rounded-xl border p-3 text-xs">
               <p className="font-medium">{r.chat_messages?.sender_name} · {r.chat_messages?.channel}</p>
-              <p className="mt-1 text-muted-foreground font-hi">{r.chat_messages?.content ?? "📷 image"}</p>
+              <p className="mt-1 text-muted-foreground font-hi">{r.chat_messages?.content ?? (<span className="inline-flex items-center gap-1"><ImageIcon className="h-3.5 w-3.5" aria-hidden="true" />Image</span>)}</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <button className={btn} onClick={() => softDelete(r.chat_messages.id, r.id)}>Delete message</button>
                 <button className={btn} onClick={() => addMute(r.chat_messages.sender_ref)}>Mute sender</button>
