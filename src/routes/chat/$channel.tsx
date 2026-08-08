@@ -696,9 +696,12 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
 
       {error && <p className="pt-2 text-xs text-destructive">{error}</p>}
 
-      <div
+      <motion.div
         className="fixed inset-x-0 z-40 flex items-end gap-2 px-4"
-        style={{ bottom: "calc(var(--dock-space) + 0.75rem)" }}
+        initial={{ y: 24, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 420, damping: 34 }}
+        style={{ bottom: "calc(env(safe-area-inset-bottom) + var(--dock-gap))" }}
       >
         <div className="glass mx-auto w-full max-w-screen-sm rounded-3xl p-2">
           <AnimatePresence>
