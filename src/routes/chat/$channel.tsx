@@ -541,6 +541,7 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
 
   return (
     <AppShell
+      hideNav
       left={<BackButton to="/chat" />}
       right={
         <button
