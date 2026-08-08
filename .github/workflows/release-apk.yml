@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      issues: write
 
     steps:
       - name: Checkout repository
@@ -38,7 +39,9 @@ jobs:
           echo "<html><body>Church Companion</body></html>" > dist/index.html
 
       - name: Sync Capacitor Android project
-        run: npx cap sync android
+        run: |
+          set -o pipefail
+          npx cap sync android 2>&1 | tee cap-sync-debug.log
 
       - name: Decode release keystore
         env:
@@ -53,9 +56,36 @@ jobs:
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
         run: |
+          set -o pipefail
           cd android
           chmod +x ./gradlew
-          ./gradlew assembleRelease
+          ./gradlew assembleRelease 2>&1 | tee ../gradle-build-debug.log
+
+      - name: Report failure details to a GitHub issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo "Run: ${{ github.run_id }} attempt ${{ github.run_attempt }}"
+            echo
+            echo "## cap-sync-debug.log"
+            echo '```'
+            tail -c 40000 cap-sync-debug.log 2>/dev/null || echo "(no file)"
+            echo '```'
+            echo
+            echo "## gradle-build-debug.log"
+            echo '```'
+            tail -c 40000 gradle-build-debug.log 2>/dev/null || echo "(no file)"
+            echo '```'
+          } > /tmp/issue-body.md
+          jq -n --rawfile body /tmp/issue-body.md \
+            '{title:"CI Debug: workflow failure run '"${{ github.run_id }}"'", body:$body}' > /tmp/issue.json
+          curl -s -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/issues" \
+            -d @/tmp/issue.json
 
       - name: Clean up keystore from filesystem
         if: always()
