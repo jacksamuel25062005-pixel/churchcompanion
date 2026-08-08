@@ -747,8 +747,8 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
               {editing ? <Check className="h-5 w-5" /> : <Send className="h-5 w-5" />}
             </button>
           </div>
+        </div>
       </motion.div>
-      </div>
 
       <MessageActionSheet
         open={!!sheetFor}
