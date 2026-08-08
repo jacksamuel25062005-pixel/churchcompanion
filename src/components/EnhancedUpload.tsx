@@ -308,14 +308,14 @@ export function EnhancedUpload({ onExtracted }: { onExtracted?: (text: string) =
 }
 
 function ErrorPanel({ error, onRetry, onReset }: { error: ErrorInfo; onRetry: () => void; onReset: () => void }) {
-  const palette = "rounded-2xl border border-red-200 bg-red-50/70 p-4 text-sm text-red-900";
+  const palette = "rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-foreground";
   if (error.kind === "size") {
     const mb = error.sizeBytes ? (error.sizeBytes / (1024 * 1024)).toFixed(2) : "?";
     return (
       <div className={palette}>
         <p className="font-semibold">File too large</p>
         <p className="mt-1">This file is {mb} MB. The maximum allowed size is 10 MB.</p>
-        <div className="mt-3"><button onClick={onReset} className="rounded-full bg-red-900 px-3 py-1.5 text-xs font-semibold text-white">Choose another file</button></div>
+        <div className="mt-3"><button onClick={onReset} className="tap-card focus-ring rounded-full bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground transition-colors duration-200">Choose another file</button></div>
       </div>
     );
   }
@@ -325,8 +325,8 @@ function ErrorPanel({ error, onRetry, onReset }: { error: ErrorInfo; onRetry: ()
         <p className="font-semibold">OCR failed</p>
         <p className="mt-1">{error.message}</p>
         <div className="mt-3 flex gap-2">
-          <button onClick={onRetry} className="inline-flex items-center gap-1 rounded-full bg-red-900 px-3 py-1.5 text-xs font-semibold text-white"><RefreshCw className="h-3 w-3" /> Retry</button>
-          <button onClick={onReset} className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-red-900 border border-red-200">Cancel</button>
+          <button onClick={onRetry} className="tap-card focus-ring inline-flex items-center gap-1 rounded-full bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground transition-colors duration-200"><RefreshCw className="h-3 w-3" /> Retry</button>
+          <button onClick={onReset} className="tap-card focus-ring rounded-full border border-destructive/40 bg-card px-3 py-1.5 text-xs font-semibold text-foreground transition-colors duration-200 hover:bg-accent">Cancel</button>
         </div>
       </div>
     );
@@ -337,7 +337,7 @@ function ErrorPanel({ error, onRetry, onReset }: { error: ErrorInfo; onRetry: ()
         <p className="font-semibold">Unsupported file type</p>
         <p className="mt-1">{error.message}</p>
         <p className="mt-2 text-xs">Allowed: PNG, JPG, WEBP, PDF, TXT, and MD (Markdown).</p>
-        <div className="mt-3"><button onClick={onReset} className="rounded-full bg-red-900 px-3 py-1.5 text-xs font-semibold text-white">Choose another file</button></div>
+        <div className="mt-3"><button onClick={onReset} className="tap-card focus-ring rounded-full bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground transition-colors duration-200">Choose another file</button></div>
       </div>
     );
   }
@@ -347,8 +347,8 @@ function ErrorPanel({ error, onRetry, onReset }: { error: ErrorInfo; onRetry: ()
         <p className="font-semibold">Could not read PDF</p>
         <p className="mt-1">{error.message}</p>
         <div className="mt-3 flex gap-2">
-          <button onClick={onRetry} className="inline-flex items-center gap-1 rounded-full bg-red-900 px-3 py-1.5 text-xs font-semibold text-white"><RefreshCw className="h-3 w-3" /> Retry</button>
-          <button onClick={onReset} className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-red-900 border border-red-200">Cancel</button>
+          <button onClick={onRetry} className="tap-card focus-ring inline-flex items-center gap-1 rounded-full bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground transition-colors duration-200"><RefreshCw className="h-3 w-3" /> Retry</button>
+          <button onClick={onReset} className="tap-card focus-ring rounded-full border border-destructive/40 bg-card px-3 py-1.5 text-xs font-semibold text-foreground transition-colors duration-200 hover:bg-accent">Cancel</button>
         </div>
       </div>
     );
@@ -359,8 +359,8 @@ function ErrorPanel({ error, onRetry, onReset }: { error: ErrorInfo; onRetry: ()
       <p className="font-semibold">Network error</p>
       <p className="mt-1">{error.message} Check your connection and try again.</p>
       <div className="mt-3 flex gap-2">
-        <button onClick={onRetry} className="inline-flex items-center gap-1 rounded-full bg-red-900 px-3 py-1.5 text-xs font-semibold text-white"><RefreshCw className="h-3 w-3" /> Retry</button>
-        <button onClick={onReset} className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-red-900 border border-red-200">Cancel</button>
+        <button onClick={onRetry} className="tap-card focus-ring inline-flex items-center gap-1 rounded-full bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground transition-colors duration-200"><RefreshCw className="h-3 w-3" /> Retry</button>
+        <button onClick={onReset} className="tap-card focus-ring rounded-full border border-destructive/40 bg-card px-3 py-1.5 text-xs font-semibold text-foreground transition-colors duration-200 hover:bg-accent">Cancel</button>
       </div>
     </div>
   );

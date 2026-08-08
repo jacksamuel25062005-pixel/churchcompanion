@@ -413,7 +413,7 @@ function MonthView({
                     <span
                       className={cn(
                         "h-1.5 w-1.5 rounded-full",
-                        isBookmarked ? "bg-yellow-400" : "bg-primary/70",
+                        isBookmarked ? "bg-[var(--brand)]" : "bg-primary/40",
                       )}
                     />
                   )}
@@ -433,7 +433,7 @@ function MonthView({
               Has entry
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-yellow-400" />
+              <span className="h-2 w-2 rounded-full bg-[var(--brand)]" />
               Bookmarked
             </span>
           </div>
@@ -641,7 +641,7 @@ function DayDetail({ row, monthCtx, onDeleted }: { row: AlmanacRow; monthCtx: { 
               </button>
               <button
                 onClick={onDelete}
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-red-300/60 bg-red-500/10 px-3 py-2 text-sm font-semibold text-red-600 backdrop-blur hover:bg-red-500/20 dark:border-red-500/30"
+                className="tap-card focus-ring inline-flex items-center justify-center gap-1.5 rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive backdrop-blur transition-colors duration-200 hover:bg-destructive/20"
               >
                 <Trash2 className="h-4 w-4" /> Delete
               </button>
@@ -804,7 +804,8 @@ function EditDay({ row, onCancel, onSaved }: { row: AlmanacRow; onCancel: () => 
         </div>
         <button
           onClick={onCancel}
-          className="grid h-9 w-9 place-items-center rounded-xl border border-white/40 bg-white/50 backdrop-blur hover:bg-accent dark:bg-white/5 dark:border-white/10"
+          data-icon-button
+          className="hit-target grid h-9 w-9 place-items-center rounded-xl border border-white/40 bg-white/50 backdrop-blur transition-colors duration-200 hover:bg-accent dark:bg-white/5 dark:border-white/10"
           aria-label="Cancel"
         >
           <X className="h-4 w-4" />
@@ -862,7 +863,7 @@ function EditDay({ row, onCancel, onSaved }: { row: AlmanacRow; onCancel: () => 
           <textarea className={"mt-1 " + areaCls} value={lsGospel} onChange={(e) => setLsGospel(e.target.value)} />
         </label>
 
-        {err && <p className="text-sm text-red-600">{err}</p>}
+        {err && <p role="alert" className="text-sm text-destructive">{err}</p>}
 
         <div className="flex gap-2 pt-2">
           <button

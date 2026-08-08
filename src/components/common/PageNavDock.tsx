@@ -64,20 +64,20 @@ export function PageNavDock({
             prevDisabled && "opacity-30 pointer-events-none"
           )}
         >
-          <ChevronLeft className="h-5 w-5 shrink-0 text-neutral-900" strokeWidth={2} />
+          <ChevronLeft className="h-5 w-5 shrink-0 text-foreground" strokeWidth={2} />
           <div className="hidden min-[380px]:flex flex-col items-start leading-tight">
-            <span className="text-sm font-semibold text-neutral-900 truncate">
+            <span className="text-sm font-semibold text-foreground truncate">
               Previous
             </span>
-            <span className="text-[11px] text-neutral-500">
+            <span className="text-[11px] text-muted-foreground">
               Page {Math.max(1, currentPage - 1)}
             </span>
           </div>
         </button>
 
-        <div className="flex shrink-0 items-center gap-1.5 px-3 mx-1 h-10 rounded-full bg-neutral-100/80">
-          <FileText className="h-4 w-4 shrink-0 text-neutral-600" strokeWidth={2} />
-          <span className="text-sm font-semibold tabular-nums text-neutral-800">
+        <div className="flex shrink-0 items-center gap-1.5 px-3 mx-1 h-10 rounded-full bg-secondary/70">
+          <FileText className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
+          <span className="text-sm font-semibold tabular-nums text-foreground">
             {currentPage} / {totalPages}
           </span>
         </div>
@@ -94,14 +94,14 @@ export function PageNavDock({
           )}
         >
           <div className="hidden min-[380px]:flex flex-col items-end leading-tight">
-            <span className="text-sm font-semibold text-neutral-900 truncate">
+            <span className="text-sm font-semibold text-foreground truncate">
               Next
             </span>
-            <span className="text-[11px] text-neutral-500">
+            <span className="text-[11px] text-muted-foreground">
               Page {Math.min(totalPages, currentPage + 1)}
             </span>
           </div>
-          <ChevronRight className="h-5 w-5 shrink-0 text-neutral-900" strokeWidth={2} />
+          <ChevronRight className="h-5 w-5 shrink-0 text-foreground" strokeWidth={2} />
         </button>
       </div>
     </div>

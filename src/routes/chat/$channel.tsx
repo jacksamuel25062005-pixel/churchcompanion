@@ -665,6 +665,9 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
                         key={emoji}
                         whileTap={{ scale: 0.88 }}
                         onClick={() => void react(m, emoji)}
+                        data-compact
+                        aria-label={`${info.mine ? "Remove" : "Add"} ${emoji} reaction`}
+                        aria-pressed={info.mine}
                         className={cn(
                           "flex items-center gap-1 rounded-full border px-2 py-0.5 text-[12px] leading-none",
                           info.mine ? "border-primary/60 bg-primary/15" : "border-border bg-card",

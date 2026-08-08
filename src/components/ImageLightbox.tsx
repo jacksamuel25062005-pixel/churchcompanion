@@ -92,7 +92,7 @@ export function ImageLightbox({ images, index, onClose, onIndexChange }: Props) 
       <img
         key={images[i]}
         src={images[i]}
-        alt=""
+        alt={`Image ${i + 1} of ${images.length}`}
         onClick={stop}
         className="max-h-[92vh] max-w-[96vw] select-none rounded-lg object-contain animate-in zoom-in-95 duration-200"
         draggable={false}

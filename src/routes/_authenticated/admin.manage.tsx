@@ -141,14 +141,14 @@ function SongsManager() {
                     <input type="checkbox" checked={selected.has(s.id)} onChange={() => toggle(s.id)} className="h-4 w-4 accent-primary" />
                   )}
                   <span className="w-10 text-xs text-muted-foreground tabular-nums">{s.number ?? "—"}</span>
-                  <div className="flex-1 min-w-0" onClick={() => selectMode && toggle(s.id)}>
+                  <div className="flex-1 min-w-0" role={selectMode ? "button" : undefined} tabIndex={selectMode ? 0 : undefined} onKeyDown={(e) => { if (selectMode && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); toggle(s.id); } }} onClick={() => selectMode && toggle(s.id)}>
                     <p className="text-sm font-medium truncate font-hi">{s.title_hi}</p>
                     {s.title_en && <p className="text-[11px] text-muted-foreground truncate">{s.title_en}</p>}
                   </div>
                   {!selectMode && (
                     <>
-                      <button onClick={() => setEditing(s)} className="p-2 rounded-lg hover:bg-accent" aria-label="Edit"><Pencil className="h-4 w-4" /></button>
-                      <button onClick={() => del(s.id)} className="p-2 rounded-lg hover:bg-destructive/10 text-destructive" aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
+                      <button onClick={() => setEditing(s)} data-icon-button className="hit-target p-2 rounded-lg transition-colors duration-200 hover:bg-accent" aria-label="Edit"><Pencil className="h-4 w-4" /></button>
+                      <button onClick={() => del(s.id)} data-icon-button className="hit-target p-2 rounded-lg text-destructive transition-colors duration-200 hover:bg-destructive/10" aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
                     </>
                   )}
                 </Card>
@@ -307,13 +307,13 @@ function SectionsManager() {
                     <input type="checkbox" checked={selected.has(s.id)} onChange={() => toggle(s.id)} className="h-4 w-4 accent-primary" />
                   )}
                   <span className="w-10 text-xs text-muted-foreground tabular-nums">{s.number ?? "—"}</span>
-                  <div className="flex-1 min-w-0" onClick={() => selectMode && toggle(s.id)}>
+                  <div className="flex-1 min-w-0" role={selectMode ? "button" : undefined} tabIndex={selectMode ? 0 : undefined} onKeyDown={(e) => { if (selectMode && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); toggle(s.id); } }} onClick={() => selectMode && toggle(s.id)}>
                     <p className="text-sm font-medium truncate font-hi">{s.title_hi ?? s.title_en ?? "(untitled)"}</p>
                   </div>
                   {!selectMode && (
                     <>
-                      <button onClick={() => setEditing(s)} className="p-2 rounded-lg hover:bg-accent" aria-label="Edit"><Pencil className="h-4 w-4" /></button>
-                      <button onClick={() => del(s.id)} className="p-2 rounded-lg hover:bg-destructive/10 text-destructive" aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
+                      <button onClick={() => setEditing(s)} data-icon-button className="hit-target p-2 rounded-lg transition-colors duration-200 hover:bg-accent" aria-label="Edit"><Pencil className="h-4 w-4" /></button>
+                      <button onClick={() => del(s.id)} data-icon-button className="hit-target p-2 rounded-lg text-destructive transition-colors duration-200 hover:bg-destructive/10" aria-label="Delete"><Trash2 className="h-4 w-4" /></button>
                     </>
                   )}
                 </Card>

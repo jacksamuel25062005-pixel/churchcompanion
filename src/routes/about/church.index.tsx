@@ -199,7 +199,7 @@ function EntryEditor({ entry, onClose, onSaved }: { entry: Entry | null; onClose
     <Card className="mt-4 p-4 space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="font-semibold">{entry ? "Edit entry" : "New entry"}</h2>
-        <button onClick={onClose} className="p-1.5 rounded hover:bg-accent"><X className="h-4 w-4" /></button>
+        <button type="button" onClick={onClose} aria-label="Close editor" data-icon-button className="hit-target focus-ring grid h-9 w-9 place-items-center rounded-full transition-colors duration-200 hover:bg-accent"><X className="h-4 w-4" /></button>
       </div>
       <div className="grid grid-cols-2 gap-2">
         <input value={titleEn} onChange={(e) => setTitleEn(e.target.value)} placeholder="Title (EN) *" className="rounded-lg border px-3 py-2 text-sm bg-background" />

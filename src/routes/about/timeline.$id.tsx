@@ -143,7 +143,7 @@ function TimelineDetail() {
 
           <div className="mt-4 flex items-center gap-3">
             <button onClick={toggleLike}
-              className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm ${likesQ.data?.liked ? "text-red-600 border-red-300 bg-red-50 dark:bg-red-950/30" : "hover:bg-accent"}`}>
+              className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm ${likesQ.data?.liked ? "text-destructive border-destructive/40 bg-destructive/10" : "hover:bg-accent"}`}>
               <Heart className={`h-4 w-4 ${likesQ.data?.liked ? "fill-current" : ""}`} />
               {likesQ.data?.count ?? 0}
             </button>

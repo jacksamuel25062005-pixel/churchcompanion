@@ -115,7 +115,9 @@ function SettingsPage() {
                     aria-label={a.name}
                     aria-pressed={active}
                     onClick={() => s.setAccent(a.value)}
-                    className={`focus-ring relative grid h-9 w-9 place-items-center rounded-full transition-transform duration-200 active:scale-90 ${active ? "scale-105" : ""}`}
+                    data-compact
+                    data-icon-button
+                    className={`hit-target focus-ring relative grid h-9 w-9 place-items-center rounded-full transition-transform duration-200 active:scale-90 ${active ? "scale-105" : ""}`}
                     style={{
                       backgroundColor: a.value,
                       boxShadow: active
