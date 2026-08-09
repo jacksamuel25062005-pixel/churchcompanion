@@ -30,14 +30,16 @@ export function ChatFab() {
 
   return (
     <motion.div
-      className="fixed z-40"
+      className="fixed z-50"
       style={{
         right: "max(calc(var(--app-gutter) + var(--sar)), calc(var(--sar) + 0.75rem))",
         /* Sits above the dock, which itself already clears the gesture bar /
-           home indicator via --sab. Extra 3mm breathing room. */
+           home indicator via --sab. Extra 3mm breathing room.
+           z-50 keeps it above the dock (z-40) on every screen size. */
         bottom: "calc(var(--dock-space) + 3mm)",
-        
+        willChange: "transform",
       }}
+
 
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
