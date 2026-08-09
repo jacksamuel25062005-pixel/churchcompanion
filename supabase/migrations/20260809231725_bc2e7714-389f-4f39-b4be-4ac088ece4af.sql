@@ -1,0 +1,10 @@
+GRANT EXECUTE ON FUNCTION public.has_youth_session() TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.has_congregation_session() TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.current_chat_session() TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.is_chat_admin(uuid) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.is_super_admin(uuid) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.chat_send(text, text) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.chat_heartbeat(text) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.chat_react(text, uuid, text) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.chat_edit_message(text, uuid, text) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.chat_session_info(text, text) TO anon, authenticated;
