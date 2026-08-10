@@ -404,7 +404,7 @@ export async function receiptState(
   } catch { return {}; }
 }
 
-/** Map counts to a tick state: everyone must receive / read it, like WhatsApp groups. */
+/** Map counts to a tick state: received by another member → double, read → blue. */
 export function statusFor(state: ReceiptState | undefined): ReceiptStatus {
   if (!state || state.audience === 0) return "sent";
   if (state.read >= 1) return "read";
