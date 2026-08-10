@@ -42,9 +42,9 @@ function TimelineDetail() {
   const likesQ = useQuery({
     queryKey: ["timeline_likes", id],
     queryFn: async () => {
-      const { count } = await supabase.from("timeline_article_likes").select("id", { count: "exact", head: true }).eq("article_id", id);
-      const { data } = await supabase.from("timeline_article_likes").select("id").eq("article_id", id).eq("liker_client_id", clientId).maybeSingle();
-      return { count: count ?? 0, liked: !!data };
+      const { data } = await supabase.rpc("timeline_like_state", { p_article_id: id, p_client_secret: clientId });
+      const row = Array.isArray(data) ? data[0] : data;
+      return { count: Number(row?.total ?? 0), liked: !!row?.liked };
     },
   });
 
@@ -61,9 +61,9 @@ function TimelineDetail() {
   const toggleLike = async () => {
     if (!likesQ.data) return;
     if (likesQ.data.liked) {
-      await supabase.rpc("unlike_timeline_article", { p_article_id: id, p_client_id: clientId });
+      await supabase.rpc("unlike_timeline_article", { p_article_id: id, p_client_secret: clientId });
     } else {
-      await supabase.from("timeline_article_likes").insert({ article_id: id, liker_client_id: clientId });
+      await supabase.rpc("like_timeline_article", { p_article_id: id, p_client_secret: clientId });
     }
     qc.invalidateQueries({ queryKey: ["timeline_likes", id] });
   };
