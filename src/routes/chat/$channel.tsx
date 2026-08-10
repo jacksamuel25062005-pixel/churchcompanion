@@ -39,6 +39,7 @@ import {
   type ChatReaction,
   type OnlineUser,
   type ReceiptState,
+  type ReceiptStatus,
 } from "../../lib/chat";
 import { cn } from "../../lib/utils";
 
