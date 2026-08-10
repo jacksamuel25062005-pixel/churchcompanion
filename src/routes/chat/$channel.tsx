@@ -61,7 +61,7 @@ function dayLabel(iso: string) {
   return d.toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" });
 }
 const timeLabel = (iso: string) =>
-  new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
 
 function ChatThread() {
   const { channel: raw } = useParams({ from: "/chat/$channel" });
@@ -279,6 +279,7 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
   const [error, setError] = useState<string | null>(null);
   const [reactions, setReactions] = useState<ChatReaction[]>([]);
   const [sheetFor, setSheetFor] = useState<ChatMessage | null>(null);
+  const [timeFor, setTimeFor] = useState<string | null>(null);
   const [editing, setEditing] = useState<ChatMessage | null>(null);
   const isSuper = useIsSuperAdmin();
 
@@ -658,9 +659,10 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
               >
                 <motion.div
                   {...longPress(m)}
+                  onClick={() => setTimeFor((cur) => (cur === m.id ? null : m.id))}
                   whileTap={{ scale: 0.985 }}
                   className={cn(
-                    "max-w-[80%] select-none rounded-2xl px-3.5 py-2 text-[15px] leading-snug shadow-sm",
+                    "max-w-[80%] cursor-pointer select-none rounded-2xl px-3.5 py-2 text-[15px] leading-snug shadow-sm",
                     mine ? "bg-primary text-primary-foreground rounded-br-md" : "bg-card rounded-bl-md",
                     editing?.id === m.id && "ring-2 ring-primary/60",
                   )}
@@ -669,11 +671,25 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
                     <p className="mb-0.5 text-xs font-semibold text-primary">{m.sender_name}</p>
                   )}
                   <p className="whitespace-pre-wrap break-words">{m.content}</p>
-                  <p className={cn("mt-1 flex items-center gap-1 text-[10px] tabular-nums", mine ? "text-primary-foreground/70" : "text-muted-foreground")}>
-                    {timeLabel(m.created_at)}
-                  </p>
-
+                  <AnimatePresence initial={false}>
+                    {timeFor === m.id && (
+                      <motion.p
+                        key="time"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.18, ease: "easeOut" }}
+                        className={cn(
+                          "overflow-hidden text-[10px] tabular-nums",
+                          mine ? "text-right text-primary-foreground/70" : "text-muted-foreground",
+                        )}
+                      >
+                        <span className="mt-1 inline-block">{timeLabel(m.created_at)}</span>
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
+
 
                 {grouping.size > 0 && (
                   <div className={cn("mt-1 flex flex-wrap gap-1", mine ? "justify-end" : "justify-start")}>
