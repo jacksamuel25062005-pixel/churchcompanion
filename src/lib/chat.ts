@@ -365,6 +365,53 @@ export async function listReactions(channel: ChatChannel, messageIds: string[]):
   } catch { return []; }
 }
 
+// ---------------- Read receipts (WhatsApp-style ticks) ----------------
+
+export type ReceiptStatus = "pending" | "sent" | "delivered" | "read";
+
+export interface ReceiptState {
+  delivered: number;
+  read: number;
+  audience: number;
+}
+
+/** Record that the current member received (and optionally read) messages. */
+export async function markReceipts(channel: ChatChannel, ids: string[], read: boolean) {
+  if (!ids.length) return;
+  try {
+    const db = clientFor(channel);
+    await db.rpc("chat_mark_receipts", { _chat: channel, _ids: ids, _read: read });
+  } catch { /* offline — receipts catch up on the next sync */ }
+}
+
+/** Receipt counts for the caller's own messages, keyed by message id. */
+export async function receiptState(
+  channel: ChatChannel,
+  ids: string[],
+): Promise<Record<string, ReceiptState>> {
+  if (!ids.length) return {};
+  try {
+    const db = clientFor(channel);
+    const { data, error } = await db.rpc("chat_receipt_state", { _chat: channel, _ids: ids });
+    if (error) throw error;
+    const out: Record<string, ReceiptState> = {};
+    for (const r of (data ?? []) as Array<{
+      message_id: string; delivered_count: number; read_count: number; audience: number;
+    }>) {
+      out[r.message_id] = { delivered: r.delivered_count, read: r.read_count, audience: r.audience };
+    }
+    return out;
+  } catch { return {}; }
+}
+
+/** Map counts to a tick state: everyone must receive / read it, like WhatsApp groups. */
+export function statusFor(state: ReceiptState | undefined): ReceiptStatus {
+  if (!state || state.audience === 0) return "sent";
+  if (state.read >= state.audience) return "read";
+  if (state.delivered >= state.audience) return "delivered";
+  return "sent";
+}
+
 // ---------------- Congregation member admin (super admin) ----------------
 
 export interface CongregationMember {
