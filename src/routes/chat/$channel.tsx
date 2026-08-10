@@ -1,7 +1,7 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Loader2, Send, Users, WifiOff, X } from "lucide-react";
+import { Check, CheckCheck, Clock, Loader2, Send, Users, WifiOff, X } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { BackButton, Card } from "../../components/ui-bits";
 import { MessageActionSheet } from "../../components/chat/MessageActionSheet";
