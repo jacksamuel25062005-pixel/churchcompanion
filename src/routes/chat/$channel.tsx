@@ -279,6 +279,7 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
   const [error, setError] = useState<string | null>(null);
   const [reactions, setReactions] = useState<ChatReaction[]>([]);
   const [sheetFor, setSheetFor] = useState<ChatMessage | null>(null);
+  const [timeFor, setTimeFor] = useState<string | null>(null);
   const [editing, setEditing] = useState<ChatMessage | null>(null);
   const isSuper = useIsSuperAdmin();
 
