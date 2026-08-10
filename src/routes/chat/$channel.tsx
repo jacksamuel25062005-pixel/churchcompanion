@@ -390,6 +390,23 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
     return () => { alive = false; };
   }, [channel, scrollToEnd]);
 
+  // Re-sync from the database whenever the tab becomes visible again, so the
+  // thread never depends on realtime alone (refresh / resume / reconnect).
+  useEffect(() => {
+    const resync = () => {
+      if (document.visibilityState !== "visible") return;
+      listMessages(channel).then(merge).catch(() => { /* offline */ });
+    };
+    document.addEventListener("visibilitychange", resync);
+    window.addEventListener("focus", resync);
+    return () => {
+      document.removeEventListener("visibilitychange", resync);
+      window.removeEventListener("focus", resync);
+    };
+  }, [channel, merge]);
+
+
+
   // Realtime room: presence, typing, message fan-out
   useEffect(() => {
     const r = joinRoom(channel, {
