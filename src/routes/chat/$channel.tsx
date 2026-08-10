@@ -20,6 +20,10 @@ import {
   editMessage,
   deleteMessage,
   uncacheMessage,
+  markReceipts,
+  receiptState,
+  statusFor,
+
 
   toggleReaction,
   heartbeat,
