@@ -485,6 +485,7 @@ export interface RoomHandlers {
   onEdited?: (p: { id: string; content: string }) => void;
   onDeleted?: (p: { id: string }) => void;
   onReaction?: () => void;
+  onReceipts?: () => void;
 }
 
 /**
