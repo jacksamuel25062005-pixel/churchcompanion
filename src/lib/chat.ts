@@ -407,8 +407,8 @@ export async function receiptState(
 /** Map counts to a tick state: everyone must receive / read it, like WhatsApp groups. */
 export function statusFor(state: ReceiptState | undefined): ReceiptStatus {
   if (!state || state.audience === 0) return "sent";
-  if (state.read >= state.audience) return "read";
-  if (state.delivered >= state.audience) return "delivered";
+  if (state.read >= 1) return "read";
+  if (state.delivered >= 1) return "delivered";
   return "sent";
 }
 
