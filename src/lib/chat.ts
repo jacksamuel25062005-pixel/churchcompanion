@@ -545,6 +545,9 @@ export function joinRoom(channel: ChatChannel, handlers: RoomHandlers) {
     broadcastReaction: () => {
       void ch.send({ type: "broadcast", event: "reaction", payload: {} });
     },
+    broadcastReceipts: () => {
+      void ch.send({ type: "broadcast", event: "receipts", payload: {} });
+    },
     sendTyping: (isTyping: boolean) => {
       if (!me) return;
       void ch.send({
