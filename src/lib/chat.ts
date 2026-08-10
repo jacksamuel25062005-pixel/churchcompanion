@@ -365,6 +365,53 @@ export async function listReactions(channel: ChatChannel, messageIds: string[]):
   } catch { return []; }
 }
 
+// ---------------- Read receipts (WhatsApp-style ticks) ----------------
+
+export type ReceiptStatus = "pending" | "sent" | "delivered" | "read";
+
+export interface ReceiptState {
+  delivered: number;
+  read: number;
+  audience: number;
+}
+
+/** Record that the current member received (and optionally read) messages. */
+export async function markReceipts(channel: ChatChannel, ids: string[], read: boolean) {
+  if (!ids.length) return;
+  try {
+    const db = clientFor(channel);
+    await db.rpc("chat_mark_receipts", { _chat: channel, _ids: ids, _read: read });
+  } catch { /* offline — receipts catch up on the next sync */ }
+}
+
+/** Receipt counts for the caller's own messages, keyed by message id. */
+export async function receiptState(
+  channel: ChatChannel,
+  ids: string[],
+): Promise<Record<string, ReceiptState>> {
+  if (!ids.length) return {};
+  try {
+    const db = clientFor(channel);
+    const { data, error } = await db.rpc("chat_receipt_state", { _chat: channel, _ids: ids });
+    if (error) throw error;
+    const out: Record<string, ReceiptState> = {};
+    for (const r of (data ?? []) as Array<{
+      message_id: string; delivered_count: number; read_count: number; audience: number;
+    }>) {
+      out[r.message_id] = { delivered: r.delivered_count, read: r.read_count, audience: r.audience };
+    }
+    return out;
+  } catch { return {}; }
+}
+
+/** Map counts to a tick state: received by another member → double, read → blue. */
+export function statusFor(state: ReceiptState | undefined): ReceiptStatus {
+  if (!state) return "sent";
+  if (state.read >= 1) return "read";
+  if (state.delivered >= 1) return "delivered";
+  return "sent";
+}
+
 // ---------------- Congregation member admin (super admin) ----------------
 
 export interface CongregationMember {
@@ -438,6 +485,7 @@ export interface RoomHandlers {
   onEdited?: (p: { id: string; content: string }) => void;
   onDeleted?: (p: { id: string }) => void;
   onReaction?: () => void;
+  onReceipts?: () => void;
 }
 
 /**
@@ -461,6 +509,9 @@ export function joinRoom(channel: ChatChannel, handlers: RoomHandlers) {
   });
   ch.on("broadcast", { event: "reaction" }, () => {
     handlers.onReaction?.();
+  });
+  ch.on("broadcast", { event: "receipts" }, () => {
+    handlers.onReceipts?.();
   });
   ch.on("broadcast", { event: "user_typing" }, ({ payload }) => {
     handlers.onTyping?.(payload as TypingPayload);
@@ -493,6 +544,9 @@ export function joinRoom(channel: ChatChannel, handlers: RoomHandlers) {
     },
     broadcastReaction: () => {
       void ch.send({ type: "broadcast", event: "reaction", payload: {} });
+    },
+    broadcastReceipts: () => {
+      void ch.send({ type: "broadcast", event: "receipts", payload: {} });
     },
     sendTyping: (isTyping: boolean) => {
       if (!me) return;

@@ -1,7 +1,7 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Loader2, Send, Users, WifiOff, X } from "lucide-react";
+import { Check, CheckCheck, Clock, Loader2, Send, Users, WifiOff, X } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { BackButton, Card } from "../../components/ui-bits";
 import { MessageActionSheet } from "../../components/chat/MessageActionSheet";
@@ -20,6 +20,10 @@ import {
   editMessage,
   deleteMessage,
   uncacheMessage,
+  markReceipts,
+  receiptState,
+  statusFor,
+
 
   toggleReaction,
   heartbeat,
@@ -34,11 +38,16 @@ import {
   type ChatMessage,
   type ChatReaction,
   type OnlineUser,
+  type ReceiptState,
+  type ReceiptStatus,
 } from "../../lib/chat";
 import { cn } from "../../lib/utils";
 
 
 export const Route = createFileRoute("/chat/$channel")({
+  // Identity lives in localStorage, so rendering this screen on the server
+  // would always mismatch on hydration.
+  ssr: false,
   component: ChatThread,
   head: () => ({
     meta: [
@@ -62,6 +71,34 @@ function dayLabel(iso: string) {
 }
 const timeLabel = (iso: string) =>
   new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+
+/** WhatsApp-style delivery ticks: clock → single → double → blue double. */
+function Ticks({ status }: { status: ReceiptStatus }) {
+  const label =
+    status === "pending" ? "Sending" :
+    status === "sent" ? "Sent" :
+    status === "delivered" ? "Delivered" : "Read";
+  const cls = "h-3.5 w-3.5";
+  return (
+    <motion.span
+      key={status}
+      initial={{ scale: 0.7, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.18, ease: "easeOut" }}
+      role="img"
+      aria-label={label}
+      title={label}
+      className={cn(
+        "inline-flex items-center",
+        status === "read" ? "text-sky-300" : "text-primary-foreground/70",
+      )}
+    >
+      {status === "pending" ? <Clock className={cls} />
+        : status === "sent" ? <Check className={cls} />
+        : <CheckCheck className={cls} />}
+    </motion.span>
+  );
+}
 
 function ChatThread() {
   const { channel: raw } = useParams({ from: "/chat/$channel" });
@@ -321,6 +358,49 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
     void refreshReactions();
   }, [idsKey, refreshReactions]);
 
+  // ---- Read receipts (single / double / blue ticks) --------------------
+  const [receipts, setReceipts] = useState<Record<string, ReceiptState>>({});
+  const mineRef = useRef<string[]>([]);
+  mineRef.current = messages.filter((m) => m.sender_ref === me?.ref).map((m) => m.id);
+  const ackedDelivered = useRef<Set<string>>(new Set());
+  const ackedRead = useRef<Set<string>>(new Set());
+
+  const refreshReceipts = useCallback(async () => {
+    if (!mineRef.current.length) { setReceipts({}); return; }
+    setReceipts(await receiptState(channel, mineRef.current));
+  }, [channel]);
+
+  // Acknowledge other people's messages: delivered always, read while visible.
+  const ackIncoming = useCallback(async () => {
+    const read = typeof document === "undefined" || document.visibilityState === "visible";
+    const others = messages.filter((m) => m.sender_ref !== me?.ref).map((m) => m.id);
+    const seen = read ? ackedRead.current : ackedDelivered.current;
+    const todo = others.filter((id) => !seen.has(id));
+    if (!todo.length) return;
+    todo.forEach((id) => {
+      ackedDelivered.current.add(id);
+      if (read) ackedRead.current.add(id);
+    });
+    await markReceipts(channel, todo, read);
+    room.current?.broadcastReceipts();
+  }, [channel, me?.ref, messages]);
+
+  useEffect(() => {
+    if (!idsKey) return;
+    void ackIncoming();
+    void refreshReceipts();
+  }, [idsKey, ackIncoming, refreshReceipts]);
+
+  useEffect(() => {
+    const onVisible = () => { if (document.visibilityState === "visible") void ackIncoming(); };
+    document.addEventListener("visibilitychange", onVisible);
+    const poll = setInterval(() => void refreshReceipts(), 10000);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      clearInterval(poll);
+    };
+  }, [ackIncoming, refreshReceipts]);
+
   const reactionsFor = useCallback(
     (id: string) => reactions.filter((r) => r.message_id === id),
     [reactions],
@@ -443,10 +523,11 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
       },
 
       onReaction: () => { void refreshReactions(); },
+      onReceipts: () => { void refreshReceipts(); },
     });
     room.current = r;
     return () => { r.leave(); room.current = null; };
-  }, [channel, me?.ref, merge, scrollToEnd, refreshReactions]);
+  }, [channel, me?.ref, merge, scrollToEnd, refreshReactions, refreshReceipts]);
 
 
   // Presence heartbeat
@@ -688,7 +769,13 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
                       </motion.p>
                     )}
                   </AnimatePresence>
+                  {mine && (
+                    <span className="mt-0.5 flex justify-end">
+                      <Ticks status={offline ? "pending" : statusFor(receipts[m.id])} />
+                    </span>
+                  )}
                 </motion.div>
+
 
 
                 {grouping.size > 0 && (
