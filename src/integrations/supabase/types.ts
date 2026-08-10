@@ -325,6 +325,7 @@ export type Database = {
           description_en: string | null
           description_hi: string | null
           id: string
+          is_published: boolean
           slug: string
           sort_order: number
           title_en: string
@@ -336,6 +337,7 @@ export type Database = {
           description_en?: string | null
           description_hi?: string | null
           id?: string
+          is_published?: boolean
           slug: string
           sort_order?: number
           title_en: string
@@ -347,6 +349,7 @@ export type Database = {
           description_en?: string | null
           description_hi?: string | null
           id?: string
+          is_published?: boolean
           slug?: string
           sort_order?: number
           title_en?: string
@@ -1139,6 +1142,10 @@ export type Database = {
       has_youth_session: { Args: never; Returns: boolean }
       is_chat_admin: { Args: { _uid: string }; Returns: boolean }
       is_super_admin: { Args: { _uid: string }; Returns: boolean }
+      like_timeline_article: {
+        Args: { p_article_id: string; p_client_secret: string }
+        Returns: undefined
+      }
       normalize_phone: { Args: { _p: string }; Returns: string }
       search_content: {
         Args: { q: string }
@@ -1153,8 +1160,15 @@ export type Database = {
       }
       server_now: { Args: never; Returns: string }
       sync_pull: { Args: { since?: string }; Returns: Json }
+      timeline_like_state: {
+        Args: { p_article_id: string; p_client_secret: string }
+        Returns: {
+          liked: boolean
+          total: number
+        }[]
+      }
       unlike_timeline_article: {
-        Args: { p_article_id: string; p_client_id: string }
+        Args: { p_article_id: string; p_client_secret: string }
         Returns: undefined
       }
       validate_chat_input: {
