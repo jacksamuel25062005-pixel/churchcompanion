@@ -61,7 +61,7 @@ function dayLabel(iso: string) {
   return d.toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" });
 }
 const timeLabel = (iso: string) =>
-  new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
 
 function ChatThread() {
   const { channel: raw } = useParams({ from: "/chat/$channel" });
