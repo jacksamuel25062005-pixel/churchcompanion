@@ -68,6 +68,34 @@ function dayLabel(iso: string) {
 const timeLabel = (iso: string) =>
   new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
 
+/** WhatsApp-style delivery ticks: clock → single → double → blue double. */
+function Ticks({ status }: { status: ReceiptStatus }) {
+  const label =
+    status === "pending" ? "Sending" :
+    status === "sent" ? "Sent" :
+    status === "delivered" ? "Delivered" : "Read";
+  const cls = "h-3.5 w-3.5";
+  return (
+    <motion.span
+      key={status}
+      initial={{ scale: 0.7, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.18, ease: "easeOut" }}
+      role="img"
+      aria-label={label}
+      title={label}
+      className={cn(
+        "inline-flex items-center",
+        status === "read" ? "text-sky-300" : "text-primary-foreground/70",
+      )}
+    >
+      {status === "pending" ? <Clock className={cls} />
+        : status === "sent" ? <Check className={cls} />
+        : <CheckCheck className={cls} />}
+    </motion.span>
+  );
+}
+
 function ChatThread() {
   const { channel: raw } = useParams({ from: "/chat/$channel" });
   const channel: ChatChannel = raw === "youth" ? "youth" : "congregation";
