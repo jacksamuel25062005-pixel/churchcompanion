@@ -455,6 +455,33 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_receipts: {
+        Row: {
+          chat: string
+          delivered_at: string
+          id: string
+          message_id: string
+          read_at: string | null
+          reader_ref: string
+        }
+        Insert: {
+          chat: string
+          delivered_at?: string
+          id?: string
+          message_id: string
+          read_at?: string | null
+          reader_ref: string
+        }
+        Update: {
+          chat?: string
+          delivered_at?: string
+          id?: string
+          message_id?: string
+          read_at?: string | null
+          reader_ref?: string
+        }
+        Relationships: []
+      }
       chat_reports: {
         Row: {
           created_at: string
@@ -1089,9 +1116,22 @@ export type Database = {
         Returns: undefined
       }
       chat_heartbeat: { Args: { _chat: string }; Returns: undefined }
+      chat_mark_receipts: {
+        Args: { _chat: string; _ids: string[]; _read: boolean }
+        Returns: undefined
+      }
       chat_react: {
         Args: { _chat: string; _emoji: string; _message_id: string }
         Returns: string
+      }
+      chat_receipt_state: {
+        Args: { _chat: string; _ids: string[] }
+        Returns: {
+          audience: number
+          delivered_count: number
+          message_id: string
+          read_count: number
+        }[]
       }
       chat_send: { Args: { _chat: string; _content: string }; Returns: string }
       chat_session_info: {
