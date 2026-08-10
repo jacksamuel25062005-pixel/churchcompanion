@@ -733,7 +733,13 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
                       </motion.p>
                     )}
                   </AnimatePresence>
+                  {mine && (
+                    <span className="mt-0.5 flex justify-end">
+                      <Ticks status={offline ? "pending" : statusFor(receipts[m.id])} />
+                    </span>
+                  )}
                 </motion.div>
+
 
 
                 {grouping.size > 0 && (
