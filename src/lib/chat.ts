@@ -508,7 +508,6 @@ export function joinRoom(channel: ChatChannel, handlers: RoomHandlers) {
     handlers.onDeleted?.(payload as { id: string });
   });
   ch.on("broadcast", { event: "reaction" }, () => {
-  ch.on("broadcast", { event: "reaction" }, () => {
     handlers.onReaction?.();
   });
   ch.on("broadcast", { event: "receipts" }, () => {
