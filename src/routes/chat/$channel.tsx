@@ -321,6 +321,45 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
     void refreshReactions();
   }, [idsKey, refreshReactions]);
 
+  // ---- Read receipts (single / double / blue ticks) --------------------
+  const [receipts, setReceipts] = useState<Record<string, ReceiptState>>({});
+  const mineRef = useRef<string[]>([]);
+  mineRef.current = messages.filter((m) => m.sender_ref === me?.ref).map((m) => m.id);
+  const ackedDelivered = useRef<Set<string>>(new Set());
+  const ackedRead = useRef<Set<string>>(new Set());
+
+  const refreshReceipts = useCallback(async () => {
+    if (!mineRef.current.length) { setReceipts({}); return; }
+    setReceipts(await receiptState(channel, mineRef.current));
+  }, [channel]);
+
+  // Acknowledge other people's messages: delivered always, read while visible.
+  const ackIncoming = useCallback(async () => {
+    const read = typeof document === "undefined" || document.visibilityState === "visible";
+    const others = messages.filter((m) => m.sender_ref !== me?.ref).map((m) => m.id);
+    const seen = read ? ackedRead.current : ackedDelivered.current;
+    const todo = others.filter((id) => !seen.has(id));
+    if (!todo.length) return;
+    todo.forEach((id) => {
+      ackedDelivered.current.add(id);
+      if (read) ackedRead.current.add(id);
+    });
+    await markReceipts(channel, todo, read);
+    room.current?.broadcastReceipts();
+  }, [channel, me?.ref, messages]);
+
+  useEffect(() => {
+    if (!idsKey) return;
+    void ackIncoming();
+    void refreshReceipts();
+  }, [idsKey, ackIncoming, refreshReceipts]);
+
+  useEffect(() => {
+    const onVisible = () => { if (document.visibilityState === "visible") void ackIncoming(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [ackIncoming]);
+
   const reactionsFor = useCallback(
     (id: string) => reactions.filter((r) => r.message_id === id),
     [reactions],
