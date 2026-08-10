@@ -38,6 +38,7 @@ import {
   type ChatMessage,
   type ChatReaction,
   type OnlineUser,
+  type ReceiptState,
 } from "../../lib/chat";
 import { cn } from "../../lib/utils";
 
