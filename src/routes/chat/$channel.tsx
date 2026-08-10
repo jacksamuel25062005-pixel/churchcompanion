@@ -491,7 +491,7 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
     });
     room.current = r;
     return () => { r.leave(); room.current = null; };
-  }, [channel, me?.ref, merge, scrollToEnd, refreshReactions]);
+  }, [channel, me?.ref, merge, scrollToEnd, refreshReactions, refreshReceipts]);
 
 
   // Presence heartbeat
