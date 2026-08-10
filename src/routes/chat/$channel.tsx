@@ -45,6 +45,9 @@ import { cn } from "../../lib/utils";
 
 
 export const Route = createFileRoute("/chat/$channel")({
+  // Identity lives in localStorage, so rendering this screen on the server
+  // would always mismatch on hydration.
+  ssr: false,
   component: ChatThread,
   head: () => ({
     meta: [
