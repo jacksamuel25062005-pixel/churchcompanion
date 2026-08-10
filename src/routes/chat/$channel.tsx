@@ -394,8 +394,12 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
   useEffect(() => {
     const onVisible = () => { if (document.visibilityState === "visible") void ackIncoming(); };
     document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
-  }, [ackIncoming]);
+    const poll = setInterval(() => void refreshReceipts(), 10000);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      clearInterval(poll);
+    };
+  }, [ackIncoming, refreshReceipts]);
 
   const reactionsFor = useCallback(
     (id: string) => reactions.filter((r) => r.message_id === id),
