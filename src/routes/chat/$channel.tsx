@@ -487,6 +487,7 @@ function Room({ channel, title }: { channel: ChatChannel; title: string }) {
       },
 
       onReaction: () => { void refreshReactions(); },
+      onReceipts: () => { void refreshReceipts(); },
     });
     room.current = r;
     return () => { r.leave(); room.current = null; };
