@@ -406,7 +406,7 @@ export async function receiptState(
 
 /** Map counts to a tick state: received by another member → double, read → blue. */
 export function statusFor(state: ReceiptState | undefined): ReceiptStatus {
-  if (!state || state.audience === 0) return "sent";
+  if (!state) return "sent";
   if (state.read >= 1) return "read";
   if (state.delivered >= 1) return "delivered";
   return "sent";
