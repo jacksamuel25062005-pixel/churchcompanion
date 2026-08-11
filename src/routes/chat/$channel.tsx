@@ -28,6 +28,7 @@ import {
   toggleReaction,
   heartbeat,
   refreshSession,
+  hydrateIdentities,
   requestYouthAccess,
   senderFor,
   sendMessage,
@@ -107,7 +108,9 @@ function ChatThread() {
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    void refreshSession(channel).then(() => setTick((n) => n + 1));
+    void hydrateIdentities()
+      .then(() => { setTick((n) => n + 1); return refreshSession(channel); })
+      .then(() => setTick((n) => n + 1));
     const off = channel === "youth"
       ? onYouthRosterChange(() => void refreshSession(channel).then(() => setTick((n) => n + 1)))
       : () => {};

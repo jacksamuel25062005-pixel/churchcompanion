@@ -110,7 +110,18 @@ export interface ChatCacheRow {
   created_at: string; // ISO
 }
 
+/** Durable chat identity so a verified member never sees the entry screen again. */
+export interface ChatIdentityRow {
+  channel: "congregation" | "youth";  // primary key
+  member_id: string;                  // server-issued session id
+  display_name: string;
+  phone_number: string;
+  verified_at: number;
+  last_synced_at: number;
+}
+
 export interface ImageBlobRow {
+
 
 
   key: string;      // `${bucket}/${path}`
@@ -135,6 +146,7 @@ export class ChurchDB extends Dexie {
   image_blobs!: EntityTable<ImageBlobRow, "key">;
   chat_outbox!: EntityTable<ChatOutboxRow, "id">;
   chat_cache!: EntityTable<ChatCacheRow, "id">;
+  chat_identity!: EntityTable<ChatIdentityRow, "channel">;
 
 
 
@@ -161,6 +173,9 @@ export class ChurchDB extends Dexie {
     });
     this.version(5).stores({
       chat_cache: "id, channel, created_at",
+    });
+    this.version(6).stores({
+      chat_identity: "channel, member_id",
     });
 
 
