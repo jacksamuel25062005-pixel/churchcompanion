@@ -130,6 +130,7 @@ export async function joinCongregation(name: string, phone: string): Promise<Cha
   if (!row) throw new Error("Could not join the chat");
   const identity: ChatIdentity = { sessionId: row.session_id, name: row.name, phone: row.phone_number };
   write(KEYS.congregation, identity);
+  void persistIdentity("congregation", identity);
   return identity;
 }
 
@@ -141,6 +142,7 @@ export async function joinYouth(phone: string): Promise<ChatIdentity | null> {
   if (!row) return null;
   const identity: ChatIdentity = { sessionId: row.session_id, name: row.name, phone: row.phone_number };
   write(KEYS.youth, identity);
+  void persistIdentity("youth", identity);
   return identity;
 }
 
@@ -157,6 +159,7 @@ export async function refreshSession(channel: ChatChannel): Promise<ChatIdentity
     if (!row) { clearIdentity(channel); return null; }
     const next: ChatIdentity = { ...current, name: row.name, phone: row.phone_number };
     write(KEYS[channel], next);
+    void persistIdentity(channel, next);
     return next;
   } catch { return current; }
 }
