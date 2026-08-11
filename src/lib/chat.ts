@@ -67,8 +67,51 @@ export function getCongregationIdentity() { return getIdentity("congregation"); 
 export function getYouthIdentity() { return getIdentity("youth"); }
 export function clearIdentity(channel: ChatChannel) {
   try { window.localStorage.removeItem(KEYS[channel]); } catch { /* ignore */ }
+  void forgetIdentity(channel);
 }
 export function clearYouthIdentity() { clearIdentity("youth"); }
+
+// ---- Durable identity mirror (Dexie) --------------------------------
+// localStorage can be evicted; Dexie keeps the server-issued session id so a
+// verified member is never re-prompted. The stored value is always a real
+// server session — never a local "isVerified" boolean.
+
+async function persistIdentity(channel: ChatChannel, id: ChatIdentity) {
+  try {
+    const db = getDB();
+    const existing = await db.chat_identity.get(channel);
+    await db.chat_identity.put({
+      channel,
+      member_id: id.sessionId,
+      display_name: id.name,
+      phone_number: id.phone,
+      verified_at: existing?.verified_at ?? Date.now(),
+      last_synced_at: Date.now(),
+    });
+  } catch { /* ignore */ }
+}
+
+async function forgetIdentity(channel: ChatChannel) {
+  try { await getDB().chat_identity.delete(channel); } catch { /* ignore */ }
+}
+
+/**
+ * Restore identities from Dexie into localStorage when the fast path is empty.
+ * Call once before deciding whether to show the entry screen.
+ */
+export async function hydrateIdentities(): Promise<void> {
+  if (typeof window === "undefined") return;
+  try {
+    const rows = await getDB().chat_identity.toArray();
+    for (const r of rows) {
+      if (getIdentity(r.channel)) continue;
+      write(KEYS[r.channel], {
+        sessionId: r.member_id, name: r.display_name, phone: r.phone_number,
+      } satisfies ChatIdentity);
+    }
+  } catch { /* ignore */ }
+}
+
 
 export function senderFor(channel: ChatChannel): { ref: string; name: string } | null {
   const id = getIdentity(channel);
