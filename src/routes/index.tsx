@@ -174,7 +174,11 @@ function Home() {
           <img src="/icon-192.png" alt="" width={44} height={44} className="rounded-2xl elev-1 lit-ring-gold" />
           <div className="min-w-0 flex-1">
             <p className="text-[12px] font-medium text-muted-foreground">{t("home.greeting")}</p>
-            <h1 className="font-display text-[22px] font-bold leading-tight truncate">{t("app.name")}</h1>
+            <h1 className="font-display text-[22px] font-bold leading-tight truncate">
+              {t("app.name")}
+              <span className="sr-only"> — Hindi worship songs, almanac and church library</span>
+            </h1>
+
           </div>
           <AnnouncementBell />
         </div>
