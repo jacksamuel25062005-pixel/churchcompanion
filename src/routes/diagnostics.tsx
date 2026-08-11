@@ -20,7 +20,10 @@ export const Route = createFileRoute("/diagnostics")({
       { property: "og:description", content: "Connectivity, storage, sync status and app logs for this device." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { property: "og:url", content: "https://churchcompanion.lovable.app/diagnostics" },
+      { name: "robots", content: "noindex" },
     ],
+    links: [{ rel: "canonical", href: "https://churchcompanion.lovable.app/diagnostics" }],
   }),
   component: DiagnosticsPage,
 });

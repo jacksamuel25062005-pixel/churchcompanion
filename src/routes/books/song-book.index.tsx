@@ -16,7 +16,11 @@ export const Route = createFileRoute("/books/song-book/")({
       { name: "description", content: "Choose a Song Book category — Church Song Book or Additional Songs." },
       { property: "og:title", content: "Song Book — Church Companion" },
       { property: "og:description", content: "Choose a Song Book category." },
+      { property: "og:url", content: "https://churchcompanion.lovable.app/books/song-book" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: "https://churchcompanion.lovable.app/books/song-book" }],
   }),
   component: SongBookLanding,
 });

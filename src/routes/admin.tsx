@@ -13,7 +13,19 @@ import { submitAdminRequest } from "@/lib/admin-requests.functions";
 
 
 export const Route = createFileRoute("/admin")({
-  head: () => ({ meta: [{ title: "Admin — Church Companion" }] }),
+  head: () => ({
+    meta: [
+      { title: "Admin — Church Companion" },
+      { name: "description", content: "Staff sign-in for Church Companion administrators who publish songs, worship sets, announcements and almanac entries." },
+      { property: "og:title", content: "Admin — Church Companion" },
+      { property: "og:description", content: "Staff sign-in for Church Companion administrators." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://churchcompanion.lovable.app/admin" },
+      { name: "robots", content: "noindex" },
+      { name: "twitter:card", content: "summary" },
+    ],
+    links: [{ rel: "canonical", href: "https://churchcompanion.lovable.app/admin" }],
+  }),
   component: AdminGate,
 });
 

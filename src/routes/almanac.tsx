@@ -21,7 +21,18 @@ import { cn } from "@/lib/utils";
 
 
 export const Route = createFileRoute("/almanac")({
-  head: () => ({ meta: [{ title: "Almanac — Church Companion" }] }),
+  head: () => ({
+    meta: [
+      { title: "Almanac — Daily Readings & Liturgical Colours" },
+      { name: "description", content: "The church almanac: each day's theme, liturgical colour, memorial and the morning and evening Bible readings." },
+      { property: "og:title", content: "Almanac — Daily Readings & Liturgical Colours" },
+      { property: "og:description", content: "Daily theme, liturgical colour and morning and evening readings." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://churchcompanion.lovable.app/almanac" },
+      { name: "twitter:card", content: "summary" },
+    ],
+    links: [{ rel: "canonical", href: "https://churchcompanion.lovable.app/almanac" }],
+  }),
   component: AlmanacPage,
 });
 
