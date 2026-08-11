@@ -146,6 +146,7 @@ export class ChurchDB extends Dexie {
   image_blobs!: EntityTable<ImageBlobRow, "key">;
   chat_outbox!: EntityTable<ChatOutboxRow, "id">;
   chat_cache!: EntityTable<ChatCacheRow, "id">;
+  chat_identity!: EntityTable<ChatIdentityRow, "channel">;
 
 
 
@@ -172,6 +173,9 @@ export class ChurchDB extends Dexie {
     });
     this.version(5).stores({
       chat_cache: "id, channel, created_at",
+    });
+    this.version(6).stores({
+      chat_identity: "channel, member_id",
     });
 
 
