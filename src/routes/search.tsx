@@ -20,8 +20,14 @@ export const Route = createFileRoute("/search")({
   head: () => ({
     meta: [
       { title: "Search — Church Companion" },
-      { name: "description", content: "Full-text search across songs and books." },
+      { name: "description", content: "Search every Hindi worship song and book section in the Church Companion library by title, number or lyric." },
+      { property: "og:title", content: "Search — Church Companion" },
+      { property: "og:description", content: "Find songs and book sections by title, number or lyric." },
+      { property: "og:url", content: "https://churchcompanion.lovable.app/search" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: "https://churchcompanion.lovable.app/search" }],
   }),
   component: SearchPage,
 });

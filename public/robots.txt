@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /diagnostics
+Disallow: /reset-password
+Disallow: /chat
+Disallow: /chat/
+
+Sitemap: https://churchcompanion.lovable.app/sitemap.xml

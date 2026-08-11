@@ -1,0 +1,25 @@
+# Church Companion
+
+> A Hindi-English digital church library and worship companion for the CNI congregation — song books, daily worship sets, the liturgical almanac and church history.
+
+Church Companion is an offline-first web app. Members read the church song book
+and additional songs in Hindi with English titles, follow the day's worship set,
+check the liturgical almanac (theme, colour and readings), and browse the
+church's story and timeline.
+
+## Pages
+
+- [Home](/): Today's worship songs, announcements and quick links to the library.
+- [Song Book](/books/song-book): Choose between the Church Song Book and Additional Songs.
+- [Church Song Book](/books/song-book/church): Numbered Hindi hymns used in regular worship.
+- [Additional Songs](/books/song-book/additional): Extra worship songs beyond the main hymnal.
+- [Almanac](/almanac): Daily liturgical theme, colour, and morning and evening readings.
+- [About](/about): About the church, its ministries and its history.
+- [Church](/about/church): Articles about the congregation and its life.
+- [Timeline](/about/timeline): Dated articles and photos from the church's history.
+- [Search](/search): Full-text search across songs and book sections.
+
+## Optional
+
+- [Bookmarks](/bookmarks): Saved songs and sections on this device.
+- [Settings](/settings): Language, appearance, notifications and offline downloads.

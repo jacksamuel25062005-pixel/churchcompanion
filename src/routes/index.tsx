@@ -18,12 +18,43 @@ import { IOS_SPRING, IOS_SPRING_SNAP, STAGGER_FADE, staggerContainer } from "../
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Church Companion — Worship & Library" },
-      { name: "description", content: "Today's worship songs and the full church library, in Hindi." },
-      { property: "og:title", content: "Church Companion" },
+      { title: "Church Companion — Hindi Worship & Library" },
+      { name: "description", content: "Today's worship songs, announcements, the Hindi song book, liturgical almanac and church history — all in one offline-ready companion." },
+      { property: "og:title", content: "Church Companion — Hindi Worship & Library" },
       { property: "og:description", content: "Today's worship songs and the full church library, in Hindi." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://churchcompanion.lovable.app/" },
+      { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: "https://churchcompanion.lovable.app/" }],
+    scripts: [{
+      type: "application/ld+json",
+      children: JSON.stringify({
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            name: "Church Companion",
+            url: "https://churchcompanion.lovable.app/",
+            inLanguage: ["hi", "en"],
+            description: "A Hindi-language digital church library and worship companion.",
+            potentialAction: {
+              "@type": "SearchAction",
+              target: "https://churchcompanion.lovable.app/search?q={search_term_string}",
+              "query-input": "required name=search_term_string",
+            },
+          },
+          {
+            "@type": "Organization",
+            name: "Church Companion",
+            url: "https://churchcompanion.lovable.app/",
+            logo: "https://churchcompanion.lovable.app/icon-512.png",
+          },
+        ],
+      }),
+    }],
   }),
+
   component: HomePage,
 });
 
@@ -143,7 +174,11 @@ function Home() {
           <img src="/icon-192.png" alt="" width={44} height={44} className="rounded-2xl elev-1 lit-ring-gold" />
           <div className="min-w-0 flex-1">
             <p className="text-[12px] font-medium text-muted-foreground">{t("home.greeting")}</p>
-            <h1 className="font-display text-[22px] font-bold leading-tight truncate">{t("app.name")}</h1>
+            <h1 className="font-display text-[22px] font-bold leading-tight truncate">
+              {t("app.name")}
+              <span className="sr-only"> — Hindi worship songs, almanac and church library</span>
+            </h1>
+
           </div>
           <AnnouncementBell />
         </div>

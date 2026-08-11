@@ -9,7 +9,18 @@ import { Trash2, ArrowRight, Bookmark as BookmarkIcon } from "lucide-react";
 
 
 export const Route = createFileRoute("/bookmarks")({
-  head: () => ({ meta: [{ title: "Bookmarks — Church Companion" }] }),
+  head: () => ({
+    meta: [
+      { title: "Bookmarks — Church Companion" },
+      { name: "description", content: "Your saved songs and book sections, kept on this device and available offline." },
+      { property: "og:title", content: "Bookmarks — Church Companion" },
+      { property: "og:description", content: "Songs and sections you saved for quick access." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://churchcompanion.lovable.app/bookmarks" },
+      { name: "twitter:card", content: "summary" },
+    ],
+    links: [{ rel: "canonical", href: "https://churchcompanion.lovable.app/bookmarks" }],
+  }),
   component: BookmarksPage,
 });
 

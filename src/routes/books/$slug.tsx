@@ -15,6 +15,38 @@ import { BookPageViewer } from "../../components/BookPageViewer";
 
 export const Route = createFileRoute("/books/$slug")({
   component: BookView,
+  head: ({ params }) => {
+    const name = params.slug
+      .split("-")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+    const title = `${name} — Church Companion`;
+    const description = `Read ${name} in Hindi: chapters and sections from the Church Companion library, available offline.`;
+    const url = `https://churchcompanion.lovable.app/books/${params.slug}`;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "article" },
+        { property: "og:url", content: url },
+        { name: "twitter:card", content: "summary" },
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: [{
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Book",
+          name,
+          url,
+          inLanguage: "hi",
+          publisher: { "@type": "Organization", name: "Church Companion" },
+        }),
+      }],
+    };
+  },
 });
 
 function BookView() {
@@ -99,7 +131,7 @@ function BookView() {
             style={{ background: `linear-gradient(140deg, ${bookQ.data.accent_color}, ${bookQ.data.accent_color}cc)` }}
           >
             <p className="text-[11px] uppercase tracking-wide opacity-80">{bookQ.data.title_en}</p>
-            <h1 className="font-hi text-2xl font-bold leading-tight">{bookQ.data.title_hi}</h1>
+            <h2 className="font-hi text-2xl font-bold leading-tight">{bookQ.data.title_hi}</h2>
             {bookQ.data.description_hi && (
               <p className="mt-2 text-sm opacity-90 font-hi">{bookQ.data.description_hi}</p>
             )}

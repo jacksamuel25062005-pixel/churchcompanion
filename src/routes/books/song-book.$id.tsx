@@ -14,6 +14,34 @@ import type { Book, Song } from "../../lib/types";
 
 export const Route = createFileRoute("/books/song-book/$id")({
   component: SongReader,
+  head: ({ params }) => {
+    const url = `https://churchcompanion.lovable.app/books/song-book/${params.id}`;
+    const title = "Worship song — Church Companion Song Book";
+    const description = "Hindi worship song lyrics from the Church Companion song book, with English title and offline reading.";
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "article" },
+        { property: "og:url", content: url },
+        { name: "twitter:card", content: "summary" },
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: [{
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "MusicComposition",
+          url,
+          inLanguage: "hi",
+          musicCompositionForm: "Hymn",
+          includedComposition: { "@type": "MusicComposition", name: "Church Companion Song Book" },
+        }),
+      }],
+    };
+  },
 });
 
 function SongReader() {
@@ -89,7 +117,7 @@ function SongReader() {
           )}
           <span className="text-muted-foreground">{t("song.number")}</span>
         </div>
-        <h1 className="mt-3 text-2xl font-bold font-hi leading-tight">{s.title_hi}</h1>
+        <h2 className="mt-3 text-2xl font-bold font-hi leading-tight">{s.title_hi}</h2>
         {s.title_en && <p className="text-sm text-muted-foreground mt-1">{s.title_en}</p>}
 
         <div className="mt-4 flex gap-2 flex-wrap">

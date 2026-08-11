@@ -46,7 +46,9 @@ export const Route = createFileRoute("/settings")({
       { property: "og:description", content: "Personalise appearance, language, notifications and offline access." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { property: "og:url", content: "https://churchcompanion.lovable.app/settings" },
     ],
+    links: [{ rel: "canonical", href: "https://churchcompanion.lovable.app/settings" }],
   }),
   component: SettingsPage,
 });
